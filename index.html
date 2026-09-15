@@ -28,18 +28,47 @@ h2,h3{margin:0}
 .draft-note{position:fixed; left:12px; bottom:12px; z-index:9; background:#18191b; color:#fff; font-size:12px; padding:8px 12px; border-radius:6px; opacity:.85}
 @media print{ .draft-note{display:none} .todo{background:none; color:inherit} }
 
-/* ── layout ── */
-.main-head,.main-body{margin:0 auto; max-width:960px; padding:0 40px; position:relative; width:100%}
-.main-head{padding-top:120px}
-.main-body>.inner{border-top:2px solid var(--text); padding-top:var(--padding-section-top)}
-@media (max-width:768px){ .main-head,.main-body{padding:0 24px} .main-head{padding-top:90px} }
+/* ── layout: 좌측 고정 사이드 내비 + 넓은 본문 ── */
+:root{ --side-w:240px; --content-max:1240px; }
+.side{position:fixed; left:0; top:0; bottom:0; width:var(--side-w); border-right:1px solid var(--line); background:var(--bg); padding:48px 28px 32px; display:flex; flex-direction:column; z-index:5}
+.side .who{margin-bottom:36px}
+.side .who .nm{font-size:18px; font-weight:700; line-height:1.3}
+.side .who .jt{font-size:13px; color:var(--sub); margin-top:4px}
+.side nav a{display:block; font-size:14px; font-weight:500; line-height:1.4; color:var(--sub); padding:9px 12px; border-radius:6px; margin-bottom:2px; position:relative; transition:color .15s, background .15s}
+.side nav a:hover{color:var(--text); background:rgba(204,209,223,.2)}
+.side nav a.on{color:var(--point); font-weight:700; background:rgba(50,125,245,.08)}
+.side nav a.on::before{content:""; position:absolute; left:0; top:9px; bottom:9px; width:3px; border-radius:3px; background:var(--point)}
+.side .foot{margin-top:auto; font-size:12px; color:var(--sub); line-height:1.6}
+.side .foot a{color:var(--point)}
 
-section{padding-bottom:var(--padding-section-bottom)}
+.t-content{margin-left:var(--side-w)}
+.main-head,.main-body{margin:0 auto; max-width:var(--content-max); padding:0 64px; position:relative; width:100%}
+.main-head{padding-top:96px}
+.main-body>.inner{border-top:2px solid var(--text); padding-top:var(--padding-section-top)}
+
+section{padding-bottom:var(--padding-section-bottom); scroll-margin-top:24px}
 section .inner{position:relative}
 section .inner::after{content:""; display:block; clear:both}
-.section-title{float:left; width:100%; max-width:200px; font-size:20px; font-weight:700; line-height:1.4}
-.section-content{padding-left:220px; width:100%}
-@media (max-width:768px){ .section-title{float:none; max-width:none; margin-bottom:24px} .section-content{padding-left:0} }
+.section-title{float:left; width:100%; max-width:160px; font-size:20px; font-weight:700; line-height:1.4}
+.section-content{padding-left:180px; width:100%}
+
+@media (max-width:1024px){
+  .side{position:sticky; top:0; bottom:auto; width:auto; border-right:0; border-bottom:1px solid var(--line); padding:12px 24px; flex-direction:row; align-items:center; gap:16px; overflow-x:auto; -webkit-overflow-scrolling:touch}
+  .side .who{margin:0; flex:none; padding-right:16px; border-right:1px solid var(--line)}
+  .side .who .jt{display:none}
+  .side nav{display:flex; gap:2px; flex:none}
+  .side nav a{white-space:nowrap; padding:7px 10px; margin:0}
+  .side nav a.on::before{display:none}
+  .side .foot{display:none}
+  .t-content{margin-left:0}
+  .main-head,.main-body{padding:0 40px} .main-head{padding-top:64px}
+  section{scroll-margin-top:72px}
+}
+@media (max-width:768px){
+  .main-head,.main-body{padding:0 24px} .main-head{padding-top:48px}
+  .section-title{float:none; max-width:none; margin-bottom:24px} .section-content{padding-left:0}
+}
+@media print{ .side{display:none} .t-content{margin-left:0} .section-title{max-width:160px} }
 
 /* basic */
 .basic{padding-bottom:48px; position:relative}
@@ -114,6 +143,25 @@ section .inner::after{content:""; display:block; clear:both}
 
 <div class="draft-note">초안 — 노란 [대괄호]를 채우면 완성</div>
 
+<aside class="side">
+  <div class="who">
+    <div class="nm"><span class="todo">[이름]</span></div>
+    <div class="jt">SI Project Manager</div>
+  </div>
+  <nav>
+    <a href="#intro">소개</a>
+    <a href="#experience">경력</a>
+    <a href="#project">프로젝트</a>
+    <a href="#portfolio">포트폴리오</a>
+    <a href="#specialty">전문 분야</a>
+    <a href="#education">학력</a>
+    <a href="#activity">활동</a>
+    <a href="#certificate">자격증</a>
+    <a href="#language">언어</a>
+  </nav>
+  <div class="foot"><a href="https://ramseok.github.io/">ramseok.github.io</a></div>
+</aside>
+
 <main class="t-content">
 
   <!-- ───────── 기본 정보 ───────── -->
@@ -133,7 +181,7 @@ section .inner::after{content:""; display:block; clear:both}
   <div class="main-body"><div class="inner">
 
     <!-- ───────── 소개 ───────── -->
-    <section class="intro">
+    <section class="intro" id="intro">
       <div class="inner">
         <h2 class="section-title">소개</h2>
         <div class="section-content">
@@ -148,7 +196,7 @@ section .inner::after{content:""; display:block; clear:both}
     </section>
 
     <!-- ───────── 경력 ───────── -->
-    <section class="experience">
+    <section class="experience" id="experience">
       <div class="inner">
         <h2 class="section-title">경력</h2>
         <div class="section-content">
@@ -176,7 +224,7 @@ section .inner::after{content:""; display:block; clear:both}
     </section>
 
     <!-- ───────── 프로젝트 ───────── -->
-    <section class="project">
+    <section class="project" id="project">
       <div class="inner">
         <h2 class="section-title">프로젝트</h2>
         <div class="section-content">
@@ -277,7 +325,7 @@ section .inner::after{content:""; display:block; clear:both}
     </section>
 
     <!-- ───────── 포트폴리오 ───────── -->
-    <section class="portfolio">
+    <section class="portfolio" id="portfolio">
       <div class="inner">
         <h2 class="section-title">포트폴리오</h2>
         <div class="section-content">
@@ -299,7 +347,7 @@ section .inner::after{content:""; display:block; clear:both}
     </section>
 
     <!-- ───────── 전문 분야 ───────── -->
-    <section class="specialty">
+    <section class="specialty" id="specialty">
       <div class="inner">
         <h2 class="section-title">전문 분야</h2>
         <div class="section-content">
@@ -323,7 +371,7 @@ section .inner::after{content:""; display:block; clear:both}
     </section>
 
     <!-- ───────── 학력 ───────── -->
-    <section class="education">
+    <section class="education" id="education">
       <div class="inner">
         <h2 class="section-title">학력</h2>
         <div class="section-content">
@@ -339,7 +387,7 @@ section .inner::after{content:""; display:block; clear:both}
     </section>
 
     <!-- ───────── 활동 ───────── -->
-    <section class="activity">
+    <section class="activity" id="activity">
       <div class="inner">
         <h2 class="section-title">활동</h2>
         <div class="section-content">
@@ -356,7 +404,7 @@ section .inner::after{content:""; display:block; clear:both}
     </section>
 
     <!-- ───────── 자격증 ───────── -->
-    <section class="certificate">
+    <section class="certificate" id="certificate">
       <div class="inner">
         <h2 class="section-title">자격증</h2>
         <div class="section-content">
@@ -372,7 +420,7 @@ section .inner::after{content:""; display:block; clear:both}
     </section>
 
     <!-- ───────── 언어 ───────── -->
-    <section class="language">
+    <section class="language" id="language">
       <div class="inner">
         <h2 class="section-title">언어</h2>
         <div class="section-content">
@@ -390,5 +438,18 @@ section .inner::after{content:""; display:block; clear:both}
 
   </div></div>
 </main>
+<script>
+(function(){
+  var links=[].slice.call(document.querySelectorAll('.side nav a')), map={};
+  links.forEach(function(a){ map[a.getAttribute('href').slice(1)]=a; });
+  function set(id){ links.forEach(function(a){ a.classList.remove('on'); }); if(map[id]) map[id].classList.add('on'); }
+  set('intro');
+  if(!('IntersectionObserver' in window)) return;
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting) set(e.target.id); });
+  },{rootMargin:'-15% 0px -70% 0px'});
+  document.querySelectorAll('main section[id]').forEach(function(s){ io.observe(s); });
+})();
+</script>
 </body>
 </html>
