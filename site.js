@@ -40,7 +40,7 @@
     if (has(b.phone)) contact.push('<span>' + fmt(b.phone) + '</span>');
     (b.links || []).forEach(function (l) { if (l && has(l.url)) contact.push('<span><a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + fmt(l.label || l.url) + '</a></span>'); });
     $('#basic').innerHTML =
-      '<div class="photo">' + (has(b.photoUrl) ? '<img src="' + esc(b.photoUrl) + '" alt="">' : '<span class="todo">[사진]</span>') + '</div>' +
+      '<div class="photo">' + (has(b.photoUrl) ? '<span class="bg" style="background-image:url(&quot;' + esc(b.photoUrl) + '&quot;)"></span><img src="' + esc(b.photoUrl) + '" alt="">' : '<span class="todo">[사진]</span>') + '</div>' +
       '<div class="name"><span>' + fmt(b.name) + '</span>' + tags + '</div>' +
       '<div class="job-title">' + fmt(b.jobTitle) + '</div>' +
       '<div class="contact">' + contact.join('') + '</div>';
