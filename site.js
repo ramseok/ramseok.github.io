@@ -160,15 +160,26 @@
   }
 
   // 사이드 내비 활성 상태
-  var io;
+  var io, lockUntil = 0, navBound = false;
   function initNav() {
     var links = [].slice.call(document.querySelectorAll('.side nav a')), map = {};
     links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
     function set(id) { links.forEach(function (a) { a.classList.remove('on'); }); if (map[id]) map[id].classList.add('on'); }
     set('intro');
+    if (!navBound) {
+      navBound = true;
+      document.querySelector('.side nav').addEventListener('click', function (e) {
+        var a = e.target.closest('a'); if (!a) return;
+        var id = a.getAttribute('href').slice(1), sec = document.getElementById(id); if (!sec) return;
+        e.preventDefault();
+        set(id); lockUntil = Date.now() + 900;
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      });
+    }
     if (!('IntersectionObserver' in window)) return;
     if (io) io.disconnect();
-    io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) set(e.target.id); }); }, { rootMargin: '-15% 0px -70% 0px' });
+    io = new IntersectionObserver(function (es) { if (Date.now() < lockUntil) return; es.forEach(function (e) { if (e.isIntersecting) set(e.target.id); }); }, { rootMargin: '-15% 0px -70% 0px' });
     document.querySelectorAll('main section[id]:not([hidden])').forEach(function (s) { io.observe(s); });
   }
 

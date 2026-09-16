@@ -57,9 +57,10 @@ input[type=file]{font-size:12px; margin:6px 0}
 .row-btns{display:inline-flex; gap:4px}
 .sub-head{display:flex; align-items:center; gap:10px; margin-bottom:8px} .sub-head label{margin:0} .sub-head small{margin:0; flex:1}
 .upload{display:flex; gap:14px; align-items:flex-start} .upload.row{flex-direction:column; gap:4px}
-.upload>div{flex:1}
+.upload>.ctl{flex:1; min-width:0}
 .upload .url{margin-top:6px; font-size:12px}
-.thumb{width:96px; height:96px; border-radius:50%; object-fit:cover; border:1px solid var(--line); background:#eceef2; flex:none}
+.thumb{width:96px; height:96px; min-width:96px; aspect-ratio:1/1; border-radius:50%; overflow:hidden; border:1px solid var(--line); background:#eceef2; flex:none}
+.thumb img{display:block; width:100%; height:100%; object-fit:cover; object-position:center}
 .thumb.empty{display:flex; align-items:center; justify-content:center; color:var(--sub); font-size:12px}
 .img-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin-bottom:6px}
 .img-item{border:1px solid var(--line); border-radius:8px; padding:6px; background:#fff}
