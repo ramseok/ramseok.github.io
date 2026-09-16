@@ -4,7 +4,7 @@
 
 -- ── 0. 관리자 이메일 (본인 계정으로 바꿀 것) ──
 create or replace function public.portfolio_owner_email() returns text
-language sql immutable as $$ select 'xerosts701@gmail.com'::text $$;
+language sql immutable as $$ select 'kimseoknam@icloud.com'::text $$;
 
 create or replace function public.is_portfolio_owner() returns boolean
 language sql stable as $$
