@@ -71,23 +71,20 @@ section .inner::after{content:""; display:block; clear:both}
 
 /* basic */
 .basic{padding-bottom:48px; position:relative}
-.basic .photo{position:absolute; right:0; top:0; width:208px; height:208px; border-radius:50%; overflow:hidden; background:#eceef2; display:flex; align-items:center; justify-content:center; color:var(--sub); font-size:13px}
-/* 사진 전체가 원 안에 다 보이도록: 원에 내접하는 3:4 영역에 contain, 남는 배경은 같은 사진을 흐리게 깔아 메움 */
-.basic .photo .bg{position:absolute; inset:0; background-position:center; background-size:cover; filter:blur(18px) saturate(1.15); transform:scale(1.25)}
-.basic .photo img{position:relative; width:72%; height:95%; object-fit:contain; object-position:center; -webkit-mask-image:radial-gradient(ellipse 70% 66% at 50% 44%, #000 58%, transparent 100%); mask-image:radial-gradient(ellipse 70% 66% at 50% 44%, #000 58%, transparent 100%)}
-.basic .name{width:calc(100% - 236px)}
+.basic .photo{position:absolute; right:0; top:0; width:140px; height:140px; border-radius:50%; overflow:hidden; background:#eceef2; display:flex; align-items:center; justify-content:center; color:var(--sub); font-size:13px}
+.basic .photo img{width:100%; height:100%; object-fit:cover}
+.basic .name{width:calc(100% - 160px)}
 .basic .name span{display:inline-block; font-size:40px; font-weight:700; line-height:1.4; margin:0 12px 6px 0}
 .basic .name .tag{display:inline-block; vertical-align:middle; font-size:13px; font-weight:600; color:var(--point); border:1px solid var(--point); border-radius:100px; padding:3px 10px; margin-bottom:6px; font-style:normal}
-.basic .job-title{font-size:24px; font-weight:400; line-height:1.4; margin-bottom:24px; padding-bottom:24px; position:relative; width:calc(100% - 236px)}
+.basic .job-title{font-size:24px; font-weight:400; line-height:1.4; margin-bottom:24px; padding-bottom:24px; position:relative; width:calc(100% - 160px)}
 .basic .job-title::after{content:""; position:absolute; left:0; bottom:0; width:60px; height:1px; background:var(--text)}
 .basic .contact{font-size:16px; font-weight:500; line-height:1.6}
 .basic .contact span+span::before{content:" · "}
 .basic .contact a:hover{color:var(--point)}
 @media (max-width:768px){
-  .basic .photo{width:128px; height:128px}
-  .basic .photo .bg{filter:blur(10px) saturate(1.15)}
-  .basic .name{width:calc(100% - 148px)} .basic .name span{font-size:30px; margin-bottom:4px}
-  .basic .job-title{font-size:18px; width:calc(100% - 148px)}
+  .basic .photo{width:80px; height:80px}
+  .basic .name{width:calc(100% - 100px)} .basic .name span{font-size:30px; margin-bottom:4px}
+  .basic .job-title{font-size:18px; width:calc(100% - 100px)}
   .basic .contact{font-size:15px} .basic .contact span{display:block} .basic .contact span+span::before{content:""}
 }
 

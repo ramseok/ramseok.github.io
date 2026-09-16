@@ -85,7 +85,7 @@
         return '<div class="field">' + label + '<select id="' + id + '" data-path="' + path + '">' + f.options.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === val ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select></div>';
       case 'image':
         return '<div class="field wide">' + label + '<div class="upload">' +
-          '<div class="thumb' + (val ? '' : ' empty') + '">' + (val ? '<span class="bg" style="background-image:url(&quot;' + esc(val) + '&quot;)"></span><img src="' + esc(val) + '" alt="">' : '없음') + '</div>' +
+          '<div class="thumb' + (val ? '' : ' empty') + '">' + (val ? '<img src="' + esc(val) + '" alt="">' : '없음') + '</div>' +
           '<div class="ctl"><input type="file" accept="image/*" data-upload="image" data-path="' + path + '"> ' +
           (val ? '<button type="button" class="btn sm ghost" data-clear="' + path + '">제거</button>' : '') +
           '<input class="url" data-path="' + path + '" placeholder="또는 이미지 URL 직접 입력" value="' + esc(val) + '"></div></div></div>';
