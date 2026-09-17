@@ -17,7 +17,8 @@
     ] },
     { key: 'intro', label: '소개', kind: 'object', fields: [
       { k: 'brief', label: '한 줄 소개', type: 'textarea', hint: '큰 글씨로 표시됩니다. 줄바꿈 가능' },
-      { k: 'bullets', label: '성과 요약', type: 'lines', hint: '한 줄에 하나. **굵게** 표기 가능' },
+      { k: 'stats', label: '숫자 요약 (프로필 아래 타일)', type: 'array', fields: [{ k: 'value', label: '숫자' }, { k: 'label', label: '설명' }] },
+      { k: 'bullets', label: '성과 요약', type: 'lines', hint: '한 줄에 하나. **굵게** 표기 가능 — 맨 앞에 "**규모** — " 처럼 쓰면 스캔하기 좋습니다' },
     ] },
     { key: 'experience', label: '경력', kind: 'array', itemLabel: function (o) { return o.org; }, fields: [
       { k: 'org', label: '회사' }, { k: 'dept', label: '부서' }, { k: 'position', label: '직책' },
@@ -28,8 +29,10 @@
     { key: 'project', label: '프로젝트', kind: 'array', itemLabel: function (o) { return o.name; }, fields: [
       { k: 'name', label: '프로젝트명' }, { k: 'org', label: '조직 / 고객사' }, { k: 'role', label: '역할' },
       { k: 'start', label: '시작', hint: 'YYYY.MM' }, { k: 'end', label: '종료', hint: 'YYYY.MM' }, { k: 'current', label: '진행 중', type: 'bool' },
+      { k: 'grouped', label: '묶음 카드 (여러 건을 하나로)', type: 'bool' },
+      { k: 'tags', label: '태그', type: 'chips', hint: '카드 접힌 상태에서 보입니다 — 도메인·역할 등' },
       { k: 'problem', label: '문제점', type: 'textarea' }, { k: 'solution', label: '해결', type: 'textarea' },
-      { k: 'results', label: '성과', type: 'lines', hint: '한 줄에 하나 — 숫자를 넣을 것' },
+      { k: 'results', label: '성과', type: 'lines', hint: '한 줄에 하나 — 숫자를 넣을 것. 첫 줄이 접힌 카드의 요약으로 표시됩니다' },
       { k: 'url', label: '관련 링크' },
       { k: 'images', label: '이미지', type: 'images', hint: '화면 캡처·산출물 이미지. 여러 장 선택 가능, 최대 3열로 표시' },
     ] },

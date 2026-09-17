@@ -54,7 +54,7 @@
     var html = '';
     if (has(i.brief)) html += '<p class="brief">' + fmt(i.brief) + '</p>';
     var bs = list(i.bullets);
-    if (bs.length) html += '<div class="text">' + bs.map(function (b) { return '<p>- ' + fmt(b) + '</p>'; }).join('') + '</div>';
+    if (bs.length) html += '<div class="text">' + bs.map(function (b) { return '<p>' + (/^\*\*/.test(b) ? '' : '- ') + fmt(b) + '</p>'; }).join('') + '</div>';
     return html;
   }
 
@@ -70,27 +70,56 @@
     }).join('') + '</ul>';
   }
 
+  // 성과 문장의 수치를 포인트 컬러로 강조 (연도·버전 표기는 제외)
+  function hl(html) {
+    return html.replace(/(\d[\d,]*(?:\.\d+)?)\s*(개사|개월|건|개|명|종|곳|회|차례|차|%|억|만|천|주|일|년|배|위|시간|분)(?![가-힣])/g,
+      function (m) { return '<b class="num">' + m + '</b>'; });
+  }
+
   function renderProject(arr) {
     arr = (arr || []).filter(function (p) { return p && has(p.name); });
     if (!arr.length) return '';
-    return '<ul class="item-text">' + arr.map(function (p) {
+    return '<ul class="item-text pcards">' + arr.map(function (p, idx) {
       var sub = [p.org, p.role].filter(has).map(function (s) { return '<span>' + fmt(s) + '</span>'; }).join('');
-      var text = '';
-      if (has(p.problem)) text += '<p><b>문제점</b><br>' + fmt(p.problem) + '</p>';
-      if (has(p.solution)) text += '<p><b>해결</b><br>' + fmt(p.solution) + '</p>';
-      if (list(p.results).length) text += '<p><b>성과</b></p>' + bullets(p.results);
+      var res = list(p.results);
+      var body = '';
+      if (has(p.problem)) body += '<p><b>문제점</b><br>' + fmt(p.problem) + '</p>';
+      if (has(p.solution)) body += '<p><b>해결</b><br>' + fmt(p.solution) + '</p>';
+      if (res.length) body += '<p><b>성과</b></p><ul>' + res.map(function (b) { return '<li>' + hl(fmt(b)) + '</li>'; }).join('') + '</ul>';
       var imgs = (p.images || []).filter(function (im) { return im && has(im.url); });
       if (imgs.length) {
-        text += '<div class="img-grid col-' + Math.min(imgs.length, 3) + '">' + imgs.map(function (im) {
+        body += '<div class="img-grid col-' + Math.min(imgs.length, 3) + '">' + imgs.map(function (im) {
           return '<figure><a href="' + esc(im.url) + '" class="lightbox" data-caption="' + esc(im.caption || '') + '"><img src="' + esc(im.url) + '" alt="' + esc(im.caption || '') + '" loading="lazy"></a>' +
             (has(im.caption) ? '<figcaption>' + fmt(im.caption) + '</figcaption>' : '') + '</figure>';
         }).join('') + '</div>';
       }
-      var link = has(p.url) ? '<a class="link" href="' + esc(safeUrl(p.url)) + '" target="_blank" rel="noopener">' + ICON_LINK + '<span>' + esc(p.url) + '</span></a>' : '';
-      return '<li><div class="title">' + fmt(p.name) + '</div><div class="subtitle">' + sub + '</div>' +
-        '<div class="date"><span>' + dateRange({ start: p.start, end: p.end, current: p.current, currentLabel: '진행 중' }) + '</span></div>' +
-        (text ? '<div class="text">' + text + '</div>' : '') + link + '</li>';
+      if (has(p.url)) body += '<a class="link" href="' + esc(safeUrl(p.url)) + '" target="_blank" rel="noopener">' + ICON_LINK + '<span>' + esc(p.url) + '</span></a>';
+
+      var badge = p.current ? '<em class="badge live">진행 중</em>' : (has(p.end) ? '<em class="badge done">완료</em>' : '');
+      var tagsHtml = list(p.tags).length ? '<ul class="item-tag tags">' + list(p.tags).map(function (t) { return '<li>' + fmt(t) + '</li>'; }).join('') + '</ul>' : '';
+      var lead = res.length ? '<div class="lead">' + hl(fmt(res[0])) + '</div>' : '';
+      var id = 'pc' + idx;
+      return '<li class="pcard' + (p.grouped ? ' grouped' : '') + '">' +
+        '<div class="pcard-head" role="button" tabindex="0" aria-expanded="false" aria-controls="' + id + '">' +
+          '<div class="pcard-main">' +
+            '<div class="title">' + fmt(p.name) + badge + '</div>' +
+            '<div class="subtitle">' + sub + '</div>' + lead + tagsHtml +
+          '</div>' +
+          '<div class="date"><span>' + dateRange({ start: p.start, end: p.end, current: p.current, currentLabel: '진행 중' }) + '</span></div>' +
+          '<span class="chev" aria-hidden="true"></span>' +
+        '</div>' +
+        (body ? '<div class="pcard-body text" id="' + id + '" hidden>' + body + '</div>' : '') +
+      '</li>';
     }).join('') + '</ul>';
+  }
+
+  function renderStats(arr) {
+    arr = (arr || []).filter(function (s) { return s && (has(s.value) || has(s.label)); });
+    var el = $('#stats');
+    el.innerHTML = arr.map(function (s) {
+      return '<div class="stat"><b>' + fmt(s.value) + '</b><span>' + fmt(s.label) + '</span></div>';
+    }).join('');
+    el.hidden = !arr.length;
   }
 
   function renderPortfolio(pf) {
@@ -144,6 +173,7 @@
 
   function render(d) {
     renderBasic(d.basic);
+    renderStats((d.intro && d.intro.stats) || d.stats);
     setSection('intro', renderIntro(d.intro));
     setSection('experience', renderExperience(d.experience));
     setSection('project', renderProject(d.project));
@@ -182,6 +212,32 @@
     io = new IntersectionObserver(function (es) { if (Date.now() < lockUntil) return; es.forEach(function (e) { if (e.isIntersecting) set(e.target.id); }); }, { rootMargin: '-15% 0px -70% 0px' });
     document.querySelectorAll('main section[id]:not([hidden])').forEach(function (s) { io.observe(s); });
   }
+
+  // 프로젝트 카드 펼치기 / 접기
+  function togglePcard(head) {
+    var li = head.parentNode, body = li.querySelector('.pcard-body');
+    if (!body) return;
+    var open = li.classList.toggle('open');
+    body.hidden = !open;
+    head.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('a')) return;
+    var head = e.target.closest && e.target.closest('.pcard-head');
+    if (head) togglePcard(head);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var head = e.target.closest && e.target.closest('.pcard-head');
+    if (head) { e.preventDefault(); togglePcard(head); }
+  });
+  // 인쇄 시에는 전부 펼침
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('.pcard-body').forEach(function (b) { b.hidden = false; });
+  });
+  window.addEventListener('afterprint', function () {
+    document.querySelectorAll('.pcard:not(.open) .pcard-body').forEach(function (b) { b.hidden = true; });
+  });
 
   // 라이트박스
   document.addEventListener('click', function (e) {
