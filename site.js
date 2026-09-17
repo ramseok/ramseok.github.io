@@ -39,11 +39,16 @@
     if (has(b.email)) contact.push('<span><a href="mailto:' + esc(b.email) + '">' + fmt(b.email) + '</a></span>');
     if (has(b.phone)) contact.push('<span>' + fmt(b.phone) + '</span>');
     (b.links || []).forEach(function (l) { if (l && has(l.url)) contact.push('<span><a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + fmt(l.label || l.url) + '</a></span>'); });
+    var i = (window.__introData) || {};
+    var headline = has(i.brief) ? '<p class="headline">' + fmt(i.brief) + '</p>' : '';
+    var pts = list(i.bullets);
+    var points = pts.length ? '<ul class="head-points">' + pts.map(function (t) { return '<li>' + hl(fmt(t)) + '</li>'; }).join('') + '</ul>' : '';
     $('#basic').innerHTML =
       '<div class="photo">' + (has(b.photoUrl) ? '<img src="' + esc(b.photoUrl) + '" alt="">' : '<span class="todo">[사진]</span>') + '</div>' +
       '<div class="name"><span>' + fmt(b.name) + '</span>' + tags + '</div>' +
       '<div class="job-title">' + fmt(b.jobTitle) + '</div>' +
-      '<div class="contact">' + contact.join('') + '</div>';
+      '<div class="contact">' + contact.join('') + '</div>' +
+      headline + points;
     $('#side-name').innerHTML = fmt(b.name);
     $('#side-job').textContent = b.jobTitle || '';
     document.title = (b.name || '') + ' | ' + (b.jobTitle || '');
@@ -172,9 +177,11 @@
   }
 
   function render(d) {
+    // 소개(한 줄 소개 · 요약)는 프로필 헤더 영역에 표시한다
+    window.__introData = d.intro || {};
     renderBasic(d.basic);
     renderStats((d.intro && d.intro.stats) || d.stats);
-    setSection('intro', renderIntro(d.intro));
+    setSection('intro', '');
     setSection('experience', renderExperience(d.experience));
     setSection('project', renderProject(d.project));
     setSection('portfolio', renderPortfolio(d.portfolio));

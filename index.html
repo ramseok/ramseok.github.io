@@ -78,6 +78,10 @@ section .inner::after{content:""; display:block; clear:both}
 .basic .name .tag{display:inline-block; vertical-align:middle; font-size:13px; font-weight:600; color:var(--point); border:1px solid var(--point); border-radius:100px; padding:3px 10px; margin-bottom:6px; font-style:normal}
 .basic .job-title{font-size:24px; font-weight:400; line-height:1.4; margin-bottom:24px; padding-bottom:24px; position:relative; width:calc(100% - 160px)}
 .basic .job-title::after{content:""; position:absolute; left:0; bottom:0; width:60px; height:1px; background:var(--text)}
+.basic .headline{font-size:19px; font-weight:500; line-height:1.55; margin:22px 0 0; letter-spacing:-.01em}
+.basic .head-points{display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:12px}
+.basic .head-points li{font-size:14px; line-height:1.6; color:var(--sub); padding-left:12px; position:relative}
+.basic .head-points li::before{content:""; position:absolute; left:0; top:9px; width:4px; height:4px; border-radius:50%; background:var(--point)}
 .basic .contact{font-size:16px; font-weight:500; line-height:1.6}
 .basic .contact span+span::before{content:" · "}
 .basic .contact a:hover{color:var(--point)}
@@ -86,6 +90,8 @@ section .inner::after{content:""; display:block; clear:both}
   .basic .name{width:calc(100% - 100px)} .basic .name span{font-size:30px; margin-bottom:4px}
   .basic .job-title{font-size:18px; width:calc(100% - 100px)}
   .basic .contact{font-size:15px} .basic .contact span{display:block} .basic .contact span+span::before{content:""}
+  .basic .headline{font-size:16px; margin-top:18px}
+  .basic .head-points{flex-direction:column; gap:4px} .basic .head-points li{font-size:13.5px}
 }
 
 /* ── 숫자 요약 스트립 ── */
