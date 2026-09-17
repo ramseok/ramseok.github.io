@@ -63,9 +63,18 @@ input[type=file]{font-size:12px; margin:6px 0}
 .thumb img{display:block; width:100%; height:100%; object-fit:cover; object-position:50% 15%}
 .thumb.empty{display:flex; align-items:center; justify-content:center; color:var(--sub); font-size:12px}
 /* 칩(스킬) 편집기 — 공개 페이지와 같은 모양 */
+.chip-field .chip-head{display:flex; align-items:center; gap:10px; margin-bottom:6px}
+.chip-field .chip-head label{margin:0; flex:none}
+.chip-field .chip-head small{margin:0; flex:1}
 .chips{display:flex; flex-wrap:wrap; align-items:center; gap:8px 6px; padding:10px; border:1px solid var(--line); border-radius:8px; background:#fff; min-height:48px}
-.chip{display:inline-flex; align-items:center; gap:4px; border:1px solid var(--line); border-radius:100px; padding:6px 6px 6px 14px; font-size:14px; font-weight:500; line-height:1.4; background:#fff; cursor:grab; user-select:none; transition:box-shadow .12s, opacity .12s}
+.chips.editing{border-color:var(--point); background:rgba(50,125,245,.03)}
+.chip{display:inline-flex; align-items:center; gap:4px; border:1px solid var(--line); border-radius:100px; padding:6px 14px; font-size:14px; font-weight:500; line-height:1.4; background:#fff; color:inherit; font-family:inherit; cursor:pointer; user-select:none; transition:box-shadow .12s, opacity .12s, transform .12s}
+.chips.editing .chip{padding:6px 6px 6px 14px; cursor:grab}
 .chip:hover{box-shadow:0 0 0 2px rgba(50,125,245,.18)}
+.chips:not(.editing) .chip:not(.first):hover{transform:translateY(-1px)}
+.chips:not(.editing) .chip:not(.first):hover::after{content:"↑"; margin-left:6px; font-size:12px; color:var(--point)}
+.chips:not(.editing) .chip.first{cursor:default; opacity:.9}
+.chips.primary:not(.editing) .chip:not(.first):hover::after{color:#fff}
 .chip .chip-txt{cursor:text}
 .chip .chip-del{border:0; background:transparent; color:var(--sub); font-size:16px; line-height:1; width:22px; height:22px; border-radius:50%; cursor:pointer; padding:0}
 .chip .chip-del:hover{background:rgba(209,67,67,.12); color:var(--danger)}

@@ -30,7 +30,7 @@
       { k: 'name', label: '프로젝트명' }, { k: 'org', label: '조직 / 고객사' }, { k: 'role', label: '역할' },
       { k: 'start', label: '시작', hint: 'YYYY.MM' }, { k: 'end', label: '종료', hint: 'YYYY.MM' }, { k: 'current', label: '진행 중', type: 'bool' },
       { k: 'grouped', label: '묶음 카드 (여러 건을 하나로)', type: 'bool' },
-      { k: 'tags', label: '태그', type: 'chips', hint: '카드 접힌 상태에서 보입니다 — 도메인·역할 등' },
+      { k: 'tags', label: '태그', type: 'chips', hint: '카드 접힌 상태에서 보입니다 · 클릭하면 한 칸 앞으로 이동' },
       { k: 'problem', label: '문제점', type: 'textarea' }, { k: 'solution', label: '해결', type: 'textarea' },
       { k: 'results', label: '성과', type: 'lines', hint: '한 줄에 하나 — 숫자를 넣을 것. 첫 줄이 접힌 카드의 요약으로 표시됩니다' },
       { k: 'url', label: '관련 링크' },
@@ -41,9 +41,9 @@
       { k: 'links', label: '링크', type: 'array', fields: [{ k: 'name', label: '표시 이름' }, { k: 'url', label: 'URL' }] },
     ] },
     { key: 'specialty', label: '전문 분야', kind: 'object', fields: [
-      { k: 'major', label: '주요 스킬 (파란 태그)', type: 'chips', primary: true, hint: '3개 권장 · 칩을 클릭하면 수정, × 로 삭제, 드래그로 순서 변경' },
-      { k: 'general', label: '일반 스킬', type: 'chips', hint: '칩을 클릭하면 수정, × 로 삭제, 드래그로 순서 변경' },
-      { k: 'domain', label: '도메인', type: 'chips', hint: '칩을 클릭하면 수정, × 로 삭제, 드래그로 순서 변경' },
+      { k: 'major', label: '주요 스킬 (파란 태그)', type: 'chips', primary: true, hint: '3개 권장 · 칩을 클릭하면 한 칸 앞으로 이동합니다' },
+      { k: 'general', label: '일반 스킬', type: 'chips' },
+      { k: 'domain', label: '도메인', type: 'chips' },
     ] },
     { key: 'education', label: '학력', kind: 'array', itemLabel: function (o) { return o.school; }, fields: [
       { k: 'school', label: '학교' }, { k: 'dept', label: '학과 / 학위' }, { k: 'start', label: '입학', hint: 'YYYY.MM' }, { k: 'end', label: '졸업', hint: 'YYYY.MM' }, { k: 'current', label: '재학 중', type: 'bool' }, { k: 'desc', label: '설명', type: 'textarea' },
@@ -83,13 +83,22 @@
       case 'list':
         return '<div class="field wide">' + label + '<input id="' + id + '" data-path="' + path + '" data-type="list" value="' + esc((val || []).join(', ')) + '"></div>';
       case 'chips':
-        var chips = (val || []).map(function (t, i) {
-          return '<span class="chip" draggable="true" data-chip="' + path + '|' + i + '" title="클릭하여 수정 · 드래그하여 이동">' +
-            '<span class="chip-txt">' + esc(t) + '</span>' +
-            '<button type="button" class="chip-del" data-chip-del="' + path + '|' + i + '" aria-label="삭제">×</button></span>';
+        var editing = !!chipMode[path], items = val || [];
+        var chips = items.map(function (t, i) {
+          if (editing) {
+            return '<span class="chip" draggable="true" data-chip="' + path + '|' + i + '" title="클릭하여 이름 수정 · 드래그하여 이동">' +
+              '<span class="chip-txt">' + esc(t) + '</span>' +
+              '<button type="button" class="chip-del" data-chip-del="' + path + '|' + i + '" aria-label="삭제">×</button></span>';
+          }
+          return '<button type="button" class="chip' + (i === 0 ? ' first' : '') + '" data-chip-up="' + path + '|' + i + '"' +
+            (i === 0 ? ' title="맨 앞 항목입니다"' : ' title="클릭하면 한 칸 앞으로 이동"') + '>' + esc(t) + '</button>';
         }).join('');
-        return '<div class="field wide">' + label + '<div class="chips' + (f.primary ? ' primary' : '') + '" data-chips="' + path + '">' + chips +
-          '<span class="chip-add"><input data-chip-add="' + path + '" placeholder="스킬 입력 후 Enter"><button type="button" class="btn sm" data-chip-add-btn="' + path + '">+ 추가</button></span></div></div>';
+        var addBox = editing ? '<span class="chip-add"><input data-chip-add="' + path + '" placeholder="스킬 입력 후 Enter"><button type="button" class="btn sm" data-chip-add-btn="' + path + '">+ 추가</button></span>' : '';
+        var hint = editing ? '이름 수정 · 삭제 · 추가 · 드래그 이동이 가능합니다' : (f.hint || '칩을 클릭하면 순서가 한 칸 앞으로 이동합니다');
+        return '<div class="field wide chip-field">' +
+          '<div class="chip-head"><label>' + esc(f.label || f.k) + '</label><small>' + esc(hint) + '</small>' +
+          '<button type="button" class="btn sm ' + (editing ? '' : 'ghost') + '" data-chip-mode="' + path + '">' + (editing ? '완료' : '수정') + '</button></div>' +
+          '<div class="chips' + (f.primary ? ' primary' : '') + (editing ? ' editing' : '') + '" data-chips="' + path + '">' + chips + addBox + '</div></div>';
       case 'bool':
         return '<div class="field check"><label><input type="checkbox" id="' + id + '" data-path="' + path + '" data-type="bool"' + (val ? ' checked' : '') + '> ' + esc(f.label) + '</label></div>';
       case 'select':
@@ -169,7 +178,8 @@
     if (el.tagName === 'SELECT' && el.dataset.path) { setPath(state, el.dataset.path, el.value); markDirty(); }
     if (el.dataset.upload) handleUpload(el);
   });
-  // ── 칩(스킬) 편집: 클릭 수정 · × 삭제 · Enter 추가 · 드래그 순서 변경 ──
+  // ── 칩(스킬): 평소엔 클릭으로 순서 올리기, [수정] 모드에서만 이름 변경·삭제·추가 ──
+  var chipMode = {};
   function chipArr(path) { var a = getPath(state, path); if (!Array.isArray(a)) { a = []; setPath(state, path, a); } return a; }
   function chipAdd(path, input) {
     var v = (input.value || '').trim(); if (!v) return;
@@ -213,6 +223,14 @@
   });
 
   $('#form').addEventListener('click', function (e) {
+    var modeBtn = e.target.closest('[data-chip-mode]');
+    if (modeBtn) { var mp = modeBtn.dataset.chipMode; chipMode[mp] = !chipMode[mp]; renderSection(active); return; }
+    var up = e.target.closest('[data-chip-up]');
+    if (up) {
+      var u = up.dataset.chipUp.split('|'), arr = chipArr(u[0]), i = +u[1];
+      if (i > 0) { var t = arr[i - 1]; arr[i - 1] = arr[i]; arr[i] = t; markDirty(); renderSection(active); }
+      return;
+    }
     var chipDel = e.target.closest('[data-chip-del]');
     if (chipDel) { var r = chipDel.dataset.chipDel.split('|'); chipArr(r[0]).splice(+r[1], 1); markDirty(); renderSection(active); return; }
     var addBtn = e.target.closest('[data-chip-add-btn]');
