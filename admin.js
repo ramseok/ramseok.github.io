@@ -38,9 +38,9 @@
       { k: 'links', label: '링크', type: 'array', fields: [{ k: 'name', label: '표시 이름' }, { k: 'url', label: 'URL' }] },
     ] },
     { key: 'specialty', label: '전문 분야', kind: 'object', fields: [
-      { k: 'major', label: '주요 스킬 (파란 태그)', type: 'list', hint: '쉼표로 구분, 3개 권장' },
-      { k: 'general', label: '일반 스킬', type: 'list', hint: '쉼표로 구분' },
-      { k: 'domain', label: '도메인', type: 'list', hint: '쉼표로 구분' },
+      { k: 'major', label: '주요 스킬 (파란 태그)', type: 'chips', primary: true, hint: '3개 권장 · 칩을 클릭하면 수정, × 로 삭제, 드래그로 순서 변경' },
+      { k: 'general', label: '일반 스킬', type: 'chips', hint: '칩을 클릭하면 수정, × 로 삭제, 드래그로 순서 변경' },
+      { k: 'domain', label: '도메인', type: 'chips', hint: '칩을 클릭하면 수정, × 로 삭제, 드래그로 순서 변경' },
     ] },
     { key: 'education', label: '학력', kind: 'array', itemLabel: function (o) { return o.school; }, fields: [
       { k: 'school', label: '학교' }, { k: 'dept', label: '학과 / 학위' }, { k: 'start', label: '입학', hint: 'YYYY.MM' }, { k: 'end', label: '졸업', hint: 'YYYY.MM' }, { k: 'current', label: '재학 중', type: 'bool' }, { k: 'desc', label: '설명', type: 'textarea' },
@@ -79,6 +79,14 @@
         return '<div class="field wide">' + label + '<textarea id="' + id + '" data-path="' + path + '" data-type="lines" rows="5">' + esc((val || []).join('\n')) + '</textarea></div>';
       case 'list':
         return '<div class="field wide">' + label + '<input id="' + id + '" data-path="' + path + '" data-type="list" value="' + esc((val || []).join(', ')) + '"></div>';
+      case 'chips':
+        var chips = (val || []).map(function (t, i) {
+          return '<span class="chip" draggable="true" data-chip="' + path + '|' + i + '" title="클릭하여 수정 · 드래그하여 이동">' +
+            '<span class="chip-txt">' + esc(t) + '</span>' +
+            '<button type="button" class="chip-del" data-chip-del="' + path + '|' + i + '" aria-label="삭제">×</button></span>';
+        }).join('');
+        return '<div class="field wide">' + label + '<div class="chips' + (f.primary ? ' primary' : '') + '" data-chips="' + path + '">' + chips +
+          '<span class="chip-add"><input data-chip-add="' + path + '" placeholder="스킬 입력 후 Enter"><button type="button" class="btn sm" data-chip-add-btn="' + path + '">+ 추가</button></span></div></div>';
       case 'bool':
         return '<div class="field check"><label><input type="checkbox" id="' + id + '" data-path="' + path + '" data-type="bool"' + (val ? ' checked' : '') + '> ' + esc(f.label) + '</label></div>';
       case 'select':
@@ -158,7 +166,56 @@
     if (el.tagName === 'SELECT' && el.dataset.path) { setPath(state, el.dataset.path, el.value); markDirty(); }
     if (el.dataset.upload) handleUpload(el);
   });
+  // ── 칩(스킬) 편집: 클릭 수정 · × 삭제 · Enter 추가 · 드래그 순서 변경 ──
+  function chipArr(path) { var a = getPath(state, path); if (!Array.isArray(a)) { a = []; setPath(state, path, a); } return a; }
+  function chipAdd(path, input) {
+    var v = (input.value || '').trim(); if (!v) return;
+    v.split(',').map(function (s) { return s.trim(); }).filter(Boolean).forEach(function (s) { chipArr(path).push(s); });
+    markDirty(); renderSection(active);
+    var again = document.querySelector('[data-chip-add="' + path + '"]'); if (again) again.focus();
+  }
+  function chipEdit(chipEl) {
+    if (chipEl.classList.contains('editing')) return;
+    var ref = chipEl.dataset.chip.split('|'), path = ref[0], i = +ref[1];
+    var txt = chipEl.querySelector('.chip-txt'), old = txt.textContent;
+    chipEl.classList.add('editing'); chipEl.draggable = false;
+    var inp = document.createElement('input'); inp.className = 'chip-edit'; inp.value = old; inp.style.width = Math.max(60, old.length * 13) + 'px';
+    txt.replaceWith(inp); inp.focus(); inp.select();
+    var done = false;
+    function commit(save) {
+      if (done) return; done = true;
+      var v = inp.value.trim();
+      if (save && v && v !== old) { chipArr(path)[i] = v; markDirty(); }
+      else if (save && !v) { chipArr(path).splice(i, 1); markDirty(); }
+      renderSection(active);
+    }
+    inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); commit(true); } if (ev.key === 'Escape') commit(false); });
+    inp.addEventListener('blur', function () { commit(true); });
+  }
+  $('#form').addEventListener('keydown', function (e) {
+    var el = e.target;
+    if (el.dataset && el.dataset.chipAdd && e.key === 'Enter') { e.preventDefault(); chipAdd(el.dataset.chipAdd, el); }
+  });
+  var dragSrc = null;
+  $('#form').addEventListener('dragstart', function (e) { var c = e.target.closest && e.target.closest('.chip[data-chip]'); if (!c) return; dragSrc = c.dataset.chip; c.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+  $('#form').addEventListener('dragend', function (e) { var c = e.target.closest && e.target.closest('.chip'); if (c) c.classList.remove('dragging'); document.querySelectorAll('.chip.over').forEach(function (x) { x.classList.remove('over'); }); });
+  $('#form').addEventListener('dragover', function (e) { var c = e.target.closest && e.target.closest('.chip[data-chip]'); if (!c || !dragSrc || c.dataset.chip.split('|')[0] !== dragSrc.split('|')[0]) return; e.preventDefault(); c.classList.add('over'); });
+  $('#form').addEventListener('dragleave', function (e) { var c = e.target.closest && e.target.closest('.chip'); if (c) c.classList.remove('over'); });
+  $('#form').addEventListener('drop', function (e) {
+    var c = e.target.closest && e.target.closest('.chip[data-chip]'); if (!c || !dragSrc) return;
+    e.preventDefault();
+    var s = dragSrc.split('|'), t = c.dataset.chip.split('|'); if (s[0] !== t[0] || s[1] === t[1]) return;
+    var a = chipArr(s[0]), item = a.splice(+s[1], 1)[0]; a.splice(+t[1], 0, item);
+    dragSrc = null; markDirty(); renderSection(active);
+  });
+
   $('#form').addEventListener('click', function (e) {
+    var chipDel = e.target.closest('[data-chip-del]');
+    if (chipDel) { var r = chipDel.dataset.chipDel.split('|'); chipArr(r[0]).splice(+r[1], 1); markDirty(); renderSection(active); return; }
+    var addBtn = e.target.closest('[data-chip-add-btn]');
+    if (addBtn) { chipAdd(addBtn.dataset.chipAddBtn, document.querySelector('[data-chip-add="' + addBtn.dataset.chipAddBtn + '"]')); return; }
+    var chipTxt = e.target.closest('.chip-txt');
+    if (chipTxt) { chipEdit(chipTxt.closest('.chip')); return; }
     var b = e.target.closest('button'); if (!b) return;
     var p;
     if (b.dataset.add) { p = b.dataset.add; var arr = getPath(state, p) || []; arr.push(emptyItem(fieldsAt(p))); setPath(state, p, arr); markDirty(); renderSection(active); }
