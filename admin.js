@@ -355,8 +355,12 @@
     if (links.length) next.portfolio.links = links;
     // 전문 분야: 내가 고른 주요 스킬은 유지, 전체 풀은 최신 목록 + 내가 추가한 항목의 합집합
     if (state.specialty) {
-      var union = function (base, extra) { var out = (base || []).slice(); (extra || []).forEach(function (x) { if (out.indexOf(x) < 0) out.push(x); }); return out; };
-      if ((state.specialty.major || []).length) next.specialty.major = state.specialty.major.slice();
+      // 예전 기본값(사내 용어)은 버리고, 사용자가 직접 추가한 항목만 합친다
+      var LEGACY = ['기능 정의서', '페이지 맵 · 화면 설계', '화면 기획 · 디자인 시안', '화면 기획 · 스토리보드', '테스트케이스 · QA', 'AI 서비스 기획(챗봇 · STT/TTS · 아바타)', 'AI 서비스 기획(챗봇 · STT/TTS · 아바타 · 실시간 음성)', 'OpenAI · Anthropic · Gemini API 이해', 'Supabase · PostgreSQL', 'Claude Code', '검수 확인서 · 변경 동의서', '앱 심사 · 인앱 결제 · PG 심사', '요구사항 정의서', '사용자 시나리오 · 테스트 시나리오', 'API 명세 검토', '프로젝트 관리', 'WBS · 일정 관리', '이해관계자 관리', '우선순위 · 리스크 관리', '이슈 트래킹 · 회의록', '견적 · 계약 변경 관리', '커뮤니케이션', 'SQL 기초', '고객 요구사항 정의·협의', '다중 프로젝트 일정·범위 관리', '개발팀·타부서·다자 조율', '고객 요구사항 정의·협의', '다중 프로젝트 일정 관리', '개발팀·타부서 조율'];
+      var isLegacy = function (x) { return LEGACY.indexOf(x) >= 0; };
+      var union = function (base, extra) { var out = (base || []).slice(); (extra || []).forEach(function (x) { if (out.indexOf(x) < 0 && !isLegacy(x)) out.push(x); }); return out; };
+      var keptMajor = (state.specialty.major || []).filter(function (x) { return !isLegacy(x); });
+      if (keptMajor.length) next.specialty.major = keptMajor;
       next.specialty.general = union(next.specialty.general, state.specialty.general);
       next.specialty.domain = union(next.specialty.domain, state.specialty.domain);
     }
