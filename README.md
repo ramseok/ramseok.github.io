@@ -8,12 +8,12 @@
 | `admin.html` + `admin.js` | 관리자. 로그인 → 섹션별 편집 → 저장. 프로필 사진·프로젝트 이미지·파일 업로드 |
 | `data.default.js` | 기본 콘텐츠 (DB 가 비어 있을 때 표시, 관리자 첫 진입 시 초기값) |
 | `config.js` | Supabase URL / anon key |
-| `supabase-setup.sql` | 테이블 · RLS · 스토리지 버킷 생성 (SQL Editor 에서 1회 실행) |
+| — | DB 초기 설정 SQL 은 비공개 저장소(pm-work)의 `setup/supabase-setup.sql` 에 있다 |
 
 ## 처음 한 번 설정
 
 1. supabase.com → New project (Region: Northeast Asia — Seoul)
-2. SQL Editor → `supabase-setup.sql` 전체 붙여넣고 Run
+2. SQL Editor → 비공개 저장소의 `setup/supabase-setup.sql` 전체 붙여넣고 Run
    - 파일 상단 `portfolio_owner_email()` 의 이메일을 본인 관리자 이메일로 맞출 것
 3. Authentication → Users → **Add user** (2번 이메일과 동일하게, 비밀번호 지정, Auto Confirm 체크)
 4. Authentication → Providers → Email → **Allow new users to sign up** 끄기
