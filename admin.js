@@ -303,6 +303,27 @@
     });
   }
 
+  // 배포된 최신 기본 내용을 편집기로 — 이름·사진·연락처와 업로드한 이미지는 유지
+  $('#btn-load-default').addEventListener('click', function () {
+    var def = window.PORTFOLIO_DEFAULT;
+    if (!def) { setStatus('기본 내용을 찾을 수 없습니다', 'err'); return; }
+    if (!confirm('배포된 최신 내용(소개 · 경력 · 프로젝트 · 전문 분야 등)을 불러옵니다.\n이름 · 사진 · 연락처와 업로드한 프로젝트 이미지는 그대로 유지됩니다.\n\n계속할까요?')) return;
+    var next = JSON.parse(JSON.stringify(def));
+    next.basic = state.basic || next.basic;                       // 내 정보 유지
+    var imgs = {}; (state.project || []).forEach(function (p) { if (p.images && p.images.length) imgs[p.name] = p.images; });
+    (next.project || []).forEach(function (p) { if (imgs[p.name]) p.images = imgs[p.name]; });
+    var files = (state.portfolio && state.portfolio.files || []).filter(function (f) { return f && f.url; });
+    var links = (state.portfolio && state.portfolio.links || []).filter(function (f) { return f && f.url; });
+    if (files.length) next.portfolio.files = files;
+    if (links.length) next.portfolio.links = links;
+    ['education', 'activity', 'certificate', 'language'].forEach(function (k) {   // 직접 채운 항목은 보존
+      var cur = (state[k] || []).filter(function (o) { return JSON.stringify(o).indexOf('[') < 0; });
+      if (cur.length) next[k] = cur;
+    });
+    state = next; markDirty(); renderSection(active);
+    setStatus('최신 내용을 불러왔습니다 — 저장을 눌러야 반영됩니다', 'warn');
+  });
+
   $('#btn-save').addEventListener('click', save);
   $('#btn-export').addEventListener('click', function () {
     var blob = new Blob([JSON.stringify(clean(state), null, 2)], { type: 'application/json' });
