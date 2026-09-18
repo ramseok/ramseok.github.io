@@ -91,7 +91,8 @@
             '<button type="button" class="chip-demote" data-chip-demote="' + path + '|' + i + '" title="주요 스킬에서 내리기" aria-label="내리기">×</button></span>';
         }).join('') : '<span class="chips-empty">아래 전체 스킬에서 클릭하면 여기로 올라옵니다</span>';
         return '<div class="field wide chip-field">' +
-          '<div class="chip-head"><label>' + esc(f.label || f.k) + '</label><small>' + esc(f.hint || '') + '</small></div>' +
+          '<div class="chip-head"><label>' + esc(f.label || f.k) + '</label><small>' + esc(f.hint || '') + '</small>' +
+          '<button type="button" class="btn sm ghost" data-major-reset="' + path + '"' + (mItems.length ? '' : ' disabled') + ' title="선택한 주요 스킬을 모두 내려 아래 전체 스킬로 되돌립니다">초기화</button></div>' +
           '<div class="chips primary major-box" data-chips="' + path + '">' + mChips + '</div></div>';
       case 'chips':
         var editing = !!chipMode[path], items = val || [];
@@ -247,6 +248,17 @@
     if (tog) {
       var tp = tog.dataset.chipToggle.split('|'), name = chipArr(tp[0])[+tp[1]], major = chipArr(tog.dataset.major), at = major.indexOf(name);
       if (at >= 0) major.splice(at, 1); else major.push(name);
+      markDirty(); renderSection(active); return;
+    }
+    // 주요 스킬 전체 초기화 — 모두 내리고, 풀에 없던 항목은 일반 스킬로 되돌림
+    var rst = e.target.closest('[data-major-reset]');
+    if (rst) {
+      var rArr = chipArr(rst.dataset.majorReset);
+      if (!rArr.length) return;
+      if (!confirm('주요 스킬 ' + rArr.length + '개를 모두 내립니다.\n아래 전체 스킬에서 다시 선택할 수 있습니다.\n\n계속할까요?')) return;
+      var g = chipArr('specialty.general'), dm = chipArr('specialty.domain');
+      rArr.forEach(function (nm) { if (g.indexOf(nm) < 0 && dm.indexOf(nm) < 0) g.push(nm); });
+      rArr.length = 0;
       markDirty(); renderSection(active); return;
     }
     // 주요 스킬에서 내리기 — 풀에 없던 항목이면 일반 스킬로 돌려보내 잃어버리지 않게
