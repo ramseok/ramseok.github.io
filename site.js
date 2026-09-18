@@ -111,12 +111,14 @@
       var badge = p.current ? '<em class="badge live">진행 중</em>' : (has(p.end) ? '<em class="badge done">완료</em>' : '');
       var tagsHtml = list(p.tags).length ? '<ul class="item-tag tags">' + list(p.tags).map(function (t) { return '<li>' + fmt(t) + '</li>'; }).join('') + '</ul>' : '';
       var lead = res.length ? '<div class="lead">' + hl(fmt(res[0])) + '</div>' : '';
+      var scale = has(p.scale) ? '<ul class="scale">' + String(p.scale).split('·').map(function (t) { return t.trim(); }).filter(Boolean)
+        .map(function (t) { return '<li>' + hl(fmt(t)) + '</li>'; }).join('') + '</ul>' : '';
       var id = 'pc' + idx;
       return '<li class="pcard' + (p.grouped ? ' grouped' : '') + '">' +
         '<div class="pcard-head" role="button" tabindex="0" aria-expanded="false" aria-controls="' + id + '">' +
           '<div class="pcard-main">' +
             '<div class="title">' + fmt(p.name) + badge + '</div>' +
-            '<div class="subtitle">' + sub + '</div>' + lead + tagsHtml +
+            '<div class="subtitle">' + sub + '</div>' + scale + lead + tagsHtml +
           '</div>' +
           '<div class="date"><span>' + dateRange({ start: p.start, end: p.end, current: p.current, currentLabel: '진행 중' }) + '</span></div>' +
           '<span class="chev" aria-hidden="true"></span>' +

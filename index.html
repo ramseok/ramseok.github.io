@@ -105,6 +105,12 @@ section .inner::after{content:""; display:block; clear:both}
 .stats .stat span{display:block; margin-top:4px; font-size:12.5px; color:var(--sub); font-weight:500}
 @media (max-width:768px){ .stats{grid-template-columns:repeat(2,1fr); gap:8px; padding-bottom:20px} .stats .stat{padding:11px 12px} .stats .stat b{font-size:21px} }
 
+/* 카드 규모 칩 (숫자 근거 한 줄) */
+.pcards .pcard .scale{display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 0; padding:0; list-style:none}
+.pcards .pcard .scale li{font-size:12px; font-weight:600; color:var(--sub); background:rgba(24,25,27,.045); border-radius:5px; padding:3px 8px; font-variant-numeric:tabular-nums; letter-spacing:-.01em}
+.pcards .pcard .scale li .num{color:var(--point)}
+@media (max-width:768px){ .pcards .pcard .scale li{font-size:11.5px; padding:2px 7px} }
+@media print{ .pcards .pcard .scale li{background:none; border:1px solid var(--line)} }
 /* ── 프로젝트 카드 (접기/펼치기) ── */
 .pcards>li.pcard{border-top:0; margin-top:12px; padding-top:0; border:1px solid var(--line); border-left:3px solid var(--line-2,#c9cfd6); border-radius:10px; background:#fff; overflow:hidden; transition:border-color .15s, box-shadow .15s}
 .pcards>li.pcard:first-child{margin-top:0}
