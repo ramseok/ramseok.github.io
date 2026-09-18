@@ -50,7 +50,9 @@
     var i = (window.__introData) || {};
     var headline = has(i.brief) ? '<p class="headline">' + fmt(i.brief) + '</p>' : '';
     var pts = list(i.bullets);
-    var points = pts.length ? '<ul class="head-points">' + pts.map(function (t) { return '<li>' + hl(fmt(t)) + '</li>'; }).join('') + '</ul>' : '';
+    var points = pts.length ? '<ul class="head-points">' + pts.map(function (t) {
+      return '<li>' + hl(fmt(String(t).replace(/^(\*\*[^*]+\*\*)\s*[—–-]\s*/, '$1 '))) + '</li>';
+    }).join('') + '</ul>' : '';
     $('#basic').innerHTML =
       '<div class="photo">' + (has(b.photoUrl) ? '<img src="' + esc(b.photoUrl) + '" alt="">' : '<span class="todo">[사진]</span>') + '</div>' +
       '<div class="name"><span>' + fmt(b.name) + '</span>' + tags + '</div>' +

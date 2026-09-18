@@ -80,9 +80,11 @@ section .inner::after{content:""; display:block; clear:both}
 .basic .job-title{font-size:24px; font-weight:400; line-height:1.4; margin-bottom:24px; padding-bottom:24px; position:relative; width:calc(100% - 160px)}
 .basic .job-title::after{content:""; position:absolute; left:0; bottom:0; width:60px; height:1px; background:var(--text)}
 .basic .headline{font-size:20px; font-weight:500; line-height:1.7; margin:26px 0 0; letter-spacing:-.01em; max-width:60ch}
-.basic .head-points{margin-top:18px; max-width:66ch}
+.basic .head-points{margin-top:24px; padding-top:22px; border-top:1px solid var(--line); max-width:66ch}
 .basic .head-points li{font-size:14.5px; line-height:1.75; color:var(--ink-2,#3c4450)}
-.basic .head-points li+li{margin-top:12px}
+.basic .head-points li b:first-child{display:block; margin-bottom:5px; font-size:14px; font-weight:700; color:var(--text); letter-spacing:-.01em}
+.basic .head-points li b.num{display:inline; margin:0; font-size:inherit; color:var(--point)}
+.basic .head-points li+li{margin-top:16px; padding-top:16px; border-top:1px solid var(--line)}
 .basic .contact{display:flex; flex-wrap:wrap; align-items:center; gap:6px 22px; font-size:16px; font-weight:500; line-height:1.6}
 .basic .contact span{display:inline-flex; align-items:center; gap:7px}
 .basic .contact .ico{width:16px; height:16px; flex:none; color:var(--sub); opacity:.85}
@@ -95,7 +97,7 @@ section .inner::after{content:""; display:block; clear:both}
   .basic .job-title{font-size:18px; width:calc(100% - 100px)}
   .basic .contact{font-size:15px; flex-direction:column; align-items:flex-start; gap:6px}
   .basic .headline{font-size:17px; line-height:1.65; margin-top:20px}
-  .basic .head-points{margin-top:14px} .basic .head-points li{font-size:14px; line-height:1.7} .basic .head-points li+li{margin-top:10px}
+  .basic .head-points{margin-top:18px; padding-top:16px} .basic .head-points li{font-size:14px; line-height:1.7} .basic .head-points li+li{margin-top:12px; padding-top:12px}
 }
 
 /* ── 숫자 요약 스트립 ── */
@@ -234,7 +236,6 @@ section .inner::after{content:""; display:block; clear:both}
     <a href="#certificate">자격증</a>
     <a href="#language">언어</a>
   </nav>
-  <div class="foot"><a href="https://ramseok.github.io/">ramseok.github.io</a><br><a href="admin.html" style="color:var(--sub)">관리자</a></div>
 </aside>
 
 <main class="t-content">
