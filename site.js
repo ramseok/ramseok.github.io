@@ -276,10 +276,18 @@
   render(window.PORTFOLIO_DEFAULT || {});
   if (cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase) {
     var client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-    client.from('portfolio').select('data,updated_at').eq('id', cfg.ROW_ID || 'main').maybeSingle().then(function (r) {
-      if (r.error || !r.data || !r.data.data) return;
-      var d = r.data.data; d.updatedAt = d.updatedAt || r.data.updated_at || '';
-      render(d);
+    // 버전 슬러그: 폴더 페이지가 심어 준 값 > ?v= 파라미터 > 기본값
+    var slug = window.PORTFOLIO_VARIANT ||
+      (new URLSearchParams(location.search).get('v') || '').trim() || cfg.ROW_ID || 'main';
+    // get_portfolio: 기본 문서에 해당 버전이 덮어쓴 항목만 적용해 1건만 반환 (목록 열거 불가)
+    client.rpc('get_portfolio', { slug: slug }).then(function (r) {
+      if (!r.error && r.data) { render(r.data); return; }
+      // 아직 함수가 없는 환경(초기 설정 전)에서는 기존 방식으로 조회
+      client.from('portfolio').select('data,updated_at').eq('id', slug).maybeSingle().then(function (q) {
+        if (q.error || !q.data || !q.data.data) return;
+        var d = q.data.data; d.updatedAt = d.updatedAt || q.data.updated_at || "";
+        render(d);
+      });
     });
   }
 })();

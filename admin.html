@@ -108,6 +108,15 @@ input[type=file]{font-size:12px; margin:6px 0}
 .img-item img{width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:4px; display:block; margin-bottom:6px}
 .img-item input{font-size:12px; padding:5px 8px; margin-bottom:6px}
 @media (max-width:860px){ .wrap{grid-template-columns:1fr} #sec-nav{position:static; display:flex; flex-wrap:wrap; gap:2px} .grid{grid-template-columns:1fr} }
+.verbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 20px; border-bottom:1px solid var(--line,#e3e5e9); background:#f8f9fb}
+.verbar label{font-size:13px; font-weight:700; color:#48505c}
+.verbar select{height:32px; border:1px solid #d5d9e0; border-radius:6px; padding:0 8px; font-size:13px; background:#fff}
+.verbar input{flex:1; min-width:220px; height:32px; border:1px solid #d5d9e0; border-radius:6px; padding:0 10px; font-size:13px}
+.verbar .btn.danger{color:#c0392b; border-color:#e6c3bd}
+.verhint{font-size:12px; color:#6b7280}
+.inherit{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:11px 14px; border:1px solid #cfe0ff; background:#f2f7ff; border-radius:8px; font-size:13px; color:#2c4a80}
+.inherit b{font-weight:700}
+fieldset.locked{border:0; margin:0; padding:0; opacity:.62}
 </style>
 </head>
 <body>
@@ -155,6 +164,15 @@ input[type=file]{font-size:12px; margin:6px 0}
     <label class="btn ghost sm" style="margin:0">JSON 가져오기<input id="import-file" type="file" accept="application/json" hidden></label>
     <button class="btn" id="btn-save" type="button" disabled>저장</button>
     <button class="btn ghost sm" id="btn-logout" type="button">로그아웃</button>
+  </div>
+  <div class="verbar" id="ver-bar">
+    <label>버전</label>
+    <select id="ver-select"></select>
+    <input id="ver-label" type="text" placeholder="지원처명 · 메모 (예: 메가존클라우드 공공사업 PM)" maxlength="80">
+    <button class="btn ghost sm" id="ver-new" type="button">+ 새 버전</button>
+    <button class="btn ghost sm" id="ver-copy" type="button">링크 복사</button>
+    <button class="btn ghost sm danger" id="ver-del" type="button">삭제</button>
+    <span class="verhint" id="ver-hint"></span>
   </div>
   <div class="wrap">
     <nav id="sec-nav"></nav>

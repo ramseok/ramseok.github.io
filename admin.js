@@ -159,6 +159,10 @@
     active = key;
     var sec = SCHEMA.filter(function (s) { return s.key === key; })[0];
     document.querySelectorAll('#sec-nav a').forEach(function (a) { a.classList.toggle('on', a.dataset.key === key); });
+    document.querySelectorAll('#sec-nav a').forEach(function (a) {
+      var on = !isMain() && overrides[a.dataset.key];
+      a.textContent = a.textContent.replace(/ ●$/, '') + (on ? ' ●' : '');
+    });
     var html = '<h2>' + esc(sec.label) + '</h2>';
     if (sec.kind === 'object') {
       if (!state[key]) state[key] = {};
@@ -168,6 +172,16 @@
       var arr = state[key];
       html += '<div class="items">' + arr.map(function (item, i) { return itemHtml(sec.fields, key + '.' + i, item, i, arr.length, key, sec.itemLabel); }).join('') + '</div>' +
         '<button type="button" class="btn" data-add="' + key + '">+ ' + esc(sec.label) + ' 추가</button>';
+    }
+    if (!isMain()) {
+      if (overrides[key]) {
+        html = '<div class="inherit"><b>이 버전에서 다르게 씁니다.</b> 기본 문서와 별개로 저장됩니다.' +
+          '<button type="button" class="btn ghost sm" data-ov-off="' + key + '">기본 문서 내용으로 되돌리기</button></div>' + html;
+      } else {
+        html = '<div class="inherit"><b>기본 문서를 그대로 사용합니다.</b> 이 버전에서만 바꾸려면 오른쪽 버튼을 누르세요.' +
+          '<button type="button" class="btn sm" data-ov-on="' + key + '">이 버전에서 다르게 쓰기</button></div>' +
+          '<fieldset class="locked" disabled>' + html + '</fieldset>';
+      }
     }
     $('#form').innerHTML = html;
   }
@@ -335,6 +349,50 @@
     })(d);
     return d;
   }
+  // ── 지원처별 버전 ──
+  var VERSION = 'main';   // 편집 중인 버전 슬러그
+  var baseData = null;    // 기본(main) 문서 — 버전이 상속하는 원본
+  var overrides = {};     // 이 버전에서 다르게 쓰는 섹션 { key: true }
+  var vmeta = {};         // 버전 메타 { label, createdAt }
+  var versions = [];      // [{id, label, updated_at}]
+  var SLUG_RE = /^[a-z0-9][a-z0-9-]{1,38}$/;
+  var RESERVED = ['admin', 'assets', 'scripts', 'setup', 'index', 'styles', 'config', 'site', 'data'];
+  function isMain() { return VERSION === "main"; }
+  function pageUrl(slug) {
+    var base = location.origin + location.pathname.replace(/admin\.html$/, '');
+    return slug === 'main' ? base : base + slug + '/';
+  }
+  function listVersions() {
+    return client.from('portfolio').select('id,updated_at,data').then(function (r) {
+      if (r.error) { setStatus("버전 목록 조회 실패: " + r.error.message, "err"); return; }
+      versions = (r.data || []).map(function (row) {
+        var m = (row.data && row.data.__meta) || {};
+        return { id: row.id, label: m.label || '', updated_at: row.updated_at };
+      }).sort(function (a, b) { return a.id === "main" ? -1 : b.id === "main" ? 1 : a.id.localeCompare(b.id); });
+      renderVerBar();
+    });
+  }
+  function renderVerBar() {
+    var sel = $('#ver-select'); if (!sel) return;
+    sel.innerHTML = versions.map(function (v) {
+      var name = v.id === 'main' ? '기본 (main)' : v.id + (v.label ? ' — ' + v.label : '');
+      return '<option value="' + esc(v.id) + '"' + (v.id === VERSION ? ' selected' : '') + '>' + esc(name) + '</option>';
+    }).join('');
+    var cur = versions.filter(function (v) { return v.id === VERSION; })[0] || {};
+    $('#ver-label').value = isMain() ? '' : (vmeta.label || cur.label || '');
+    $('#ver-label').disabled = isMain();
+    $('#ver-del').disabled = isMain();
+    var n = Object.keys(overrides).length;
+    $('#ver-hint').textContent = isMain()
+      ? '기본 문서입니다. 모든 버전이 이 내용을 상속합니다'
+      : (n ? '이 버전에서 다르게 쓰는 항목 ' + n + '개 · 나머지는 기본 문서를 따릅니다' : '아직 다르게 쓰는 항목이 없습니다 — 기본 문서와 동일하게 보입니다');
+  }
+  function mergeBase(ov) {
+    var out = JSON.parse(JSON.stringify(baseData || {}));
+    Object.keys(ov || {}).forEach(function (k) { if (k !== "__meta") out[k] = JSON.parse(JSON.stringify(ov[k])); });
+    return out;
+  }
+
   // ── 로컬 안전장치: 덮어쓰기 전 스냅샷 + 저장 이력 10개 ──
   var LS_UNDO = 'pf.undo.v1', LS_BAK = 'pf.backups.v1';
   function snapshot(tag) {
@@ -356,20 +414,49 @@
   }
 
   function save() {
-    var data = clean(state); data.updatedAt = new Date().toISOString();
+    var full = clean(state); full.updatedAt = new Date().toISOString();
+    var payload;
+    if (isMain()) { payload = full; }
+    else {
+      payload = { __meta: { label: ($("#ver-label").value || "").trim(), updatedAt: full.updatedAt } };
+      Object.keys(overrides).forEach(function (k) { payload[k] = full[k]; });
+      payload.updatedAt = full.updatedAt;
+    }
     $('#btn-save').disabled = true; setStatus('저장 중…', '');
-    client.from('portfolio').upsert({ id: cfg.ROW_ID || 'main', data: data, updated_at: data.updatedAt }).then(function (r) {
+    client.from('portfolio').upsert({ id: VERSION, data: payload, updated_at: full.updatedAt }).then(function (r) {
       if (r.error) { $('#btn-save').disabled = false; setStatus('저장 실패: ' + r.error.message, 'err'); return; }
-      state = data; dirty = false; pushBackup(data); setStatus('저장됨 ' + data.updatedAt.slice(11, 16), 'ok');
+      if (isMain()) { baseData = full; state = full; }
+      dirty = false; pushBackup(payload);
+      setStatus('저장됨 ' + full.updatedAt.slice(11, 16) + (isMain() ? '' : ' — ' + VERSION), 'ok');
+      listVersions();
     });
   }
   function load() {
     setStatus('불러오는 중…', '');
-    return client.from('portfolio').select('data').eq('id', cfg.ROW_ID || 'main').maybeSingle().then(function (r) {
+    return client.from('portfolio').select('data').eq('id', 'main').maybeSingle().then(function (r) {
       if (r.error) { setStatus('불러오기 실패: ' + r.error.message, 'err'); }
-      state = (r.data && r.data.data) ? r.data.data : JSON.parse(JSON.stringify(window.PORTFOLIO_DEFAULT || {}));
+      baseData = (r.data && r.data.data) ? r.data.data : JSON.parse(JSON.stringify(window.PORTFOLIO_DEFAULT || {}));
       if (!r.data) setStatus('저장된 내용이 없어 기본 내용을 불러왔습니다. 수정 후 저장하세요', 'warn'); else setStatus('', '');
-      renderSection(active);
+      return listVersions();
+    }).then(function () { return openVersion(VERSION); });
+  }
+  function openVersion(slug) {
+    VERSION = slug || "main";
+    if (isMain()) {
+      overrides = {}; vmeta = {};
+      state = JSON.parse(JSON.stringify(baseData || {}));
+      renderVerBar(); renderSection(active); return Promise.resolve();
+    }
+    return client.from('portfolio').select('data').eq('id', VERSION).maybeSingle().then(function (r) {
+      var ov = (r.data && r.data.data) || {};
+      vmeta = ov.__meta || {};
+      overrides = {};
+      var KEYS = SCHEMA.map(function (s2) { return s2.key; });
+      Object.keys(ov).forEach(function (k) { if (KEYS.indexOf(k) >= 0) overrides[k] = true; });
+      state = mergeBase(ov);
+      dirty = false; $("#btn-save").disabled = true;
+      renderVerBar(); renderSection(active);
+      setStatus('버전 ' + VERSION + ' 을 편집 중입니다', '');
     });
   }
 
@@ -412,6 +499,49 @@
     if (!confirm((u.tag || '덮어쓰기') + ' 직전 상태(' + String(u.at).slice(0, 16).replace('T', ' ') + ')로 되돌립니다.\n지금 편집 중인 내용은 사라집니다. 계속할까요?')) return;
     state = u.data; markDirty(); renderSection(active);
     setStatus('되돌렸습니다 — 저장을 눌러야 반영됩니다', 'warn');
+  });
+  $('#ver-select').addEventListener('change', function (e) {
+    var slug = e.target.value;
+    if (dirty && !confirm('저장하지 않은 변경 사항이 있습니다. 버전을 바꾸면 사라집니다. 계속할까요?')) { renderVerBar(); return; }
+    openVersion(slug);
+  });
+  $('#ver-new').addEventListener('click', function () {
+    var slug = (prompt('새 버전의 주소를 정하세요.' + "\\n" + '영문 소문자·숫자·하이픈 2~39자 — 예: megazone' + "\\n\\n" + '링크는 https://ramseok.github.io/<주소>/ 가 됩니다.') || '').trim().toLowerCase();
+    if (!slug) return;
+    if (!SLUG_RE.test(slug)) { alert('영문 소문자·숫자·하이픈 2~39자로 입력하세요.'); return; }
+    if (RESERVED.indexOf(slug) >= 0) { alert('예약어라 사용할 수 없습니다: ' + slug); return; }
+    if (versions.some(function (v) { return v.id === slug; })) { alert("이미 있는 버전입니다: " + slug); return; }
+    var label = (prompt('지원처명 · 메모 (선택)') || '').trim();
+    client.from('portfolio').insert({ id: slug, data: { __meta: { label: label, createdAt: new Date().toISOString() } } }).then(function (r) {
+      if (r.error) { setStatus('버전 생성 실패: ' + r.error.message, 'err'); return; }
+      return listVersions().then(function () { return openVersion(slug); }).then(function () {
+        alert('버전을 만들었습니다: ' + slug + "\\n\\n" + '아직 링크는 열리지 않습니다. 저장소에서 아래 명령을 실행하고 커밋·푸시하세요.' + "\\n" + '  node scripts/new-version.mjs ' + slug);
+      });
+    });
+  });
+  $('#ver-copy').addEventListener('click', function () {
+    var url = pageUrl(VERSION);
+    (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () { setStatus('링크를 복사했습니다 — ' + url, 'ok'); }, function () { prompt('링크', url); });
+  });
+  $('#ver-del').addEventListener('click', function () {
+    if (isMain()) return;
+    if (!confirm('버전 ' + VERSION + ' 을 삭제합니다. 되돌릴 수 없습니다.' + "\\n" + '저장소의 ' + VERSION + ' 폴더도 따로 지워야 링크가 완전히 닫힙니다.' + "\\n\\n" + '계속할까요?')) return;
+    client.from('portfolio').delete().eq('id', VERSION).then(function (r) {
+      if (r.error) { setStatus('삭제 실패: ' + r.error.message, 'err'); return; }
+      setStatus('버전을 삭제했습니다', 'ok');
+      return listVersions().then(function () { return openVersion('main'); });
+    });
+  });
+  $('#ver-label').addEventListener('input', function () { if (!isMain()) markDirty(); });
+  $('#form').addEventListener('click', function (e) {
+    var on = e.target.closest('[data-ov-on]'), off = e.target.closest('[data-ov-off]');
+    if (on) { overrides[on.dataset.ovOn] = true; markDirty(); renderVerBar(); renderSection(active); }
+    else if (off) {
+      if (!confirm('이 섹션을 기본 문서 내용으로 되돌립니다. 이 버전에서 고친 내용은 사라집니다.')) return;
+      delete overrides[off.dataset.ovOff];
+      state[off.dataset.ovOff] = JSON.parse(JSON.stringify((baseData || {})[off.dataset.ovOff]));
+      markDirty(); renderVerBar(); renderSection(active);
+    }
   });
   $('#btn-save').addEventListener('click', save);
   $('#btn-export').addEventListener('click', function () {

@@ -20,6 +20,29 @@
 5. Project Settings → API → Project URL, anon public key 를 `config.js` 에 입력
 6. `git push` → 1분 뒤 https://ramseok.github.io/admin.html 에서 로그인
 
+## 지원처별 버전 (예: `/megazone`)
+
+같은 포트폴리오를 지원처마다 다른 버전으로 내보낼 수 있다. **달라지는 항목만 저장**되고 나머지는 기본 문서(main)를 그대로 따라가므로, 프로젝트 카드 같은 공통 내용을 고치면 모든 버전에 자동 반영된다.
+
+### 새 버전 만드는 순서
+
+1. **관리자 → 버전 → `+ 새 버전`** — 주소(슬러그)와 지원처명을 입력한다. 슬러그는 영문 소문자·숫자·하이픈 2~39자
+2. 바꾸고 싶은 섹션에서 **`이 버전에서 다르게 쓰기`** 를 누르고 수정 → **저장**
+   - 버튼을 누르지 않은 섹션은 기본 문서를 그대로 상속한다 (사이드 메뉴의 `●` 표시 = 이 버전에서 다르게 쓰는 섹션)
+3. 페이지 폴더를 만들고 커밋한다
+   ```bash
+   node scripts/new-version.mjs megazone
+   git add megazone && git commit -m "feat: megazone 버전 페이지" && git push
+   ```
+4. 링크: `https://ramseok.github.io/megazone/`
+
+### 알아둘 것
+
+- **버전 삭제는 두 군데** — 관리자에서 삭제하면 내용만 지워지고, 링크를 완전히 닫으려면 저장소의 해당 폴더도 지워야 한다
+- **지원한 회사 목록은 공개되지 않는다** — 공개 페이지는 `get_portfolio(slug)` 함수로 해당 버전 1건만 받아 간다. 목록 조회는 로그인한 본인만 가능 (`setup/supabase-versions.sql`)
+- 이미지·파일은 버전과 무관하게 공유된다
+- 슬러그로 쓸 수 없는 이름: `admin` `assets` `scripts` `setup` `index` `styles` `config` `site` `data`
+
 ## 편집 규칙
 
 - 텍스트에서 `**굵게**` 는 굵게, `[대괄호]` 는 노란 자리표시자로 표시된다. 자리표시자가 하나라도 남아 있으면 우하단에 "초안" 배지가 뜬다.
