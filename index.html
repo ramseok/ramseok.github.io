@@ -83,14 +83,17 @@ section .inner::after{content:""; display:block; clear:both}
 .basic .head-points{margin-top:18px; max-width:66ch}
 .basic .head-points li{font-size:14.5px; line-height:1.75; color:var(--ink-2,#3c4450)}
 .basic .head-points li+li{margin-top:12px}
-.basic .contact{font-size:16px; font-weight:500; line-height:1.6}
-.basic .contact span+span::before{content:" · "}
+.basic .contact{display:flex; flex-wrap:wrap; align-items:center; gap:6px 22px; font-size:16px; font-weight:500; line-height:1.6}
+.basic .contact span{display:inline-flex; align-items:center; gap:7px}
+.basic .contact .ico{width:16px; height:16px; flex:none; color:var(--sub); opacity:.85}
+.basic .contact span:hover .ico{color:var(--point); opacity:1}
+
 .basic .contact a:hover{color:var(--point)}
 @media (max-width:768px){
   .basic .photo{width:80px; height:80px}
   .basic .name{width:calc(100% - 100px)} .basic .name span{font-size:30px; margin-bottom:4px}
   .basic .job-title{font-size:18px; width:calc(100% - 100px)}
-  .basic .contact{font-size:15px} .basic .contact span{display:block} .basic .contact span+span::before{content:""}
+  .basic .contact{font-size:15px; flex-direction:column; align-items:flex-start; gap:6px}
   .basic .headline{font-size:17px; line-height:1.65; margin-top:20px}
   .basic .head-points{margin-top:14px} .basic .head-points li{font-size:14px; line-height:1.7} .basic .head-points li+li{margin-top:10px}
 }

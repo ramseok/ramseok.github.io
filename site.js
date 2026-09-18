@@ -32,13 +32,21 @@
     return '<ul' + (cls ? ' class="' + cls + '"' : '') + '>' + arr.map(function (b) { return '<li>' + fmt(b) + '</li>'; }).join('') + '</ul>';
   }
 
+  // 연락처 아이콘 — currentColor 상속
+  var SVG = function (d) { return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
+  var ICON = {
+    mail: SVG('<rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 7l9 6 9-6"/>'),
+    phone: SVG('<path d="M7.5 3.5h-3A1.5 1.5 0 0 0 3 5.2c.3 3.6 1.9 7 4.4 9.5s5.9 4.1 9.5 4.4A1.5 1.5 0 0 0 18.5 17.6v-3a1.5 1.5 0 0 0-1.2-1.5l-2.4-.5a1.5 1.5 0 0 0-1.5.6l-.8 1a12 12 0 0 1-4.6-4.6l1-.8a1.5 1.5 0 0 0 .6-1.5l-.5-2.4A1.5 1.5 0 0 0 7.5 3.5z"/>'),
+    link: SVG('<path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.8 6.5"/><path d="M13.5 10.5a4 4 0 0 0-5.7 0L5 13.3a4 4 0 0 0 5.7 5.7l1.5-1.5"/>')
+  };
+
   function renderBasic(b) {
     b = b || {};
     var tags = list(b.tags).map(function (t) { return '<em class="tag">' + fmt(t) + '</em>'; }).join('');
     var contact = [];
-    if (has(b.email)) contact.push('<span><a href="mailto:' + esc(b.email) + '">' + fmt(b.email) + '</a></span>');
-    if (has(b.phone)) contact.push('<span>' + fmt(b.phone) + '</span>');
-    (b.links || []).forEach(function (l) { if (l && has(l.url)) contact.push('<span><a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + fmt(l.label || l.url) + '</a></span>'); });
+    if (has(b.email)) contact.push('<span>' + ICON.mail + '<a href="mailto:' + esc(b.email) + '">' + fmt(b.email) + '</a></span>');
+    if (has(b.phone)) contact.push('<span>' + ICON.phone + '<a href="tel:' + esc(String(b.phone).replace(/[^0-9+]/g, '')) + '">' + fmt(b.phone) + '</a></span>');
+    (b.links || []).forEach(function (l) { if (l && has(l.url)) contact.push('<span>' + ICON.link + '<a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + fmt(l.label || l.url) + '</a></span>'); });
     var i = (window.__introData) || {};
     var headline = has(i.brief) ? '<p class="headline">' + fmt(i.brief) + '</p>' : '';
     var pts = list(i.bullets);

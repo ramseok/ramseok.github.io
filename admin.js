@@ -334,12 +334,32 @@
     })(d);
     return d;
   }
+  // ── 로컬 안전장치: 덮어쓰기 전 스냅샷 + 저장 이력 10개 ──
+  var LS_UNDO = 'pf.undo.v1', LS_BAK = 'pf.backups.v1';
+  function snapshot(tag) {
+    try { localStorage.setItem(LS_UNDO, JSON.stringify({ tag: tag, at: new Date().toISOString(), data: state })); } catch (e) {}
+    refreshUndo();
+  }
+  function pushBackup(data) {
+    try {
+      var a = JSON.parse(localStorage.getItem(LS_BAK) || '[]');
+      a.unshift({ at: new Date().toISOString(), data: data });
+      localStorage.setItem(LS_BAK, JSON.stringify(a.slice(0, 10)));
+    } catch (e) {}
+  }
+  function refreshUndo() {
+    var b = $('#btn-undo'); if (!b) return;
+    var u = null; try { u = JSON.parse(localStorage.getItem(LS_UNDO) || 'null'); } catch (e) {}
+    b.hidden = !u;
+    if (u) b.title = (u.tag || '덮어쓰기') + ' 직전 상태로 되돌립니다 (' + String(u.at).slice(11, 16) + ')';
+  }
+
   function save() {
     var data = clean(state); data.updatedAt = new Date().toISOString();
     $('#btn-save').disabled = true; setStatus('저장 중…', '');
     client.from('portfolio').upsert({ id: cfg.ROW_ID || 'main', data: data, updated_at: data.updatedAt }).then(function (r) {
       if (r.error) { $('#btn-save').disabled = false; setStatus('저장 실패: ' + r.error.message, 'err'); return; }
-      state = data; dirty = false; setStatus('저장됨 ' + data.updatedAt.slice(11, 16), 'ok');
+      state = data; dirty = false; pushBackup(data); setStatus('저장됨 ' + data.updatedAt.slice(11, 16), 'ok');
     });
   }
   function load() {
@@ -356,7 +376,8 @@
   $('#btn-load-default').addEventListener('click', function () {
     var def = window.PORTFOLIO_DEFAULT;
     if (!def) { setStatus('기본 내용을 찾을 수 없습니다', 'err'); return; }
-    if (!confirm('배포된 최신 내용(소개 · 경력 · 프로젝트 · 전문 분야 등)을 불러옵니다.\n이름 · 사진 · 연락처와 업로드한 프로젝트 이미지는 그대로 유지됩니다.\n\n계속할까요?')) return;
+    if (!confirm('배포된 최신 내용(소개 · 경력 · 프로젝트 · 전문 분야)을 불러옵니다.\n이름 · 사진 · 연락처와 학력 · 교육이수 · 자격증 · 언어, 업로드한 이미지는 그대로 유지됩니다.\n\n계속할까요?')) return;
+    snapshot('최신 내용 불러오기');
     var next = JSON.parse(JSON.stringify(def));
     next.basic = state.basic || next.basic;                       // 내 정보 유지
     var imgs = {}; (state.project || []).forEach(function (p) { if (p.images && p.images.length) imgs[p.name] = p.images; });
@@ -376,14 +397,21 @@
       next.specialty.general = union(next.specialty.general, state.specialty.general);
       next.specialty.domain = union(next.specialty.domain, state.specialty.domain);
     }
-    ['education', 'activity', 'certificate', 'language'].forEach(function (k) {   // 직접 채운 항목은 보존
-      var cur = (state[k] || []).filter(function (o) { return JSON.stringify(o).indexOf('[') < 0; });
-      if (cur.length) next[k] = cur;
+    // 직접 입력 항목(학력 · 교육이수 · 자격증 · 언어)은 기본값으로 절대 덮어쓰지 않는다
+    ['education', 'activity', 'certificate', 'language'].forEach(function (k) {
+      next[k] = Object.prototype.hasOwnProperty.call(state, k) ? state[k] : (next[k] || []);
     });
     state = next; markDirty(); renderSection(active);
     setStatus('최신 내용을 불러왔습니다 — 저장을 눌러야 반영됩니다', 'warn');
   });
 
+  $('#btn-undo').addEventListener('click', function () {
+    var u = null; try { u = JSON.parse(localStorage.getItem(LS_UNDO) || 'null'); } catch (e) {}
+    if (!u || !u.data) { setStatus('되돌릴 스냅샷이 없습니다', 'warn'); return; }
+    if (!confirm((u.tag || '덮어쓰기') + ' 직전 상태(' + String(u.at).slice(0, 16).replace('T', ' ') + ')로 되돌립니다.\n지금 편집 중인 내용은 사라집니다. 계속할까요?')) return;
+    state = u.data; markDirty(); renderSection(active);
+    setStatus('되돌렸습니다 — 저장을 눌러야 반영됩니다', 'warn');
+  });
   $('#btn-save').addEventListener('click', save);
   $('#btn-export').addEventListener('click', function () {
     var blob = new Blob([JSON.stringify(clean(state), null, 2)], { type: 'application/json' });
@@ -391,7 +419,7 @@
   });
   $('#import-file').addEventListener('change', function (e) {
     var f = e.target.files[0]; if (!f) return;
-    var rd = new FileReader(); rd.onload = function () { try { state = JSON.parse(rd.result); markDirty(); renderSection(active); } catch (err) { setStatus('JSON 파싱 실패', 'err'); } }; rd.readAsText(f);
+    var rd = new FileReader(); rd.onload = function () { try { var inc = JSON.parse(rd.result); snapshot('JSON 가져오기'); state = inc; markDirty(); renderSection(active); } catch (err) { setStatus('JSON 파싱 실패', 'err'); } }; rd.readAsText(f);
   });
   $('#btn-logout').addEventListener('click', function () { client.auth.signOut().then(function () { location.reload(); }); });
   window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -416,6 +444,7 @@
   });
   function enter(session) {
     show('editor'); $('#who').textContent = session.user.email;
+    refreshUndo(); // 진입 시 되돌리기 버튼 노출 여부 갱신
     load();
   }
   client.auth.getSession().then(function (r) { if (r.data.session) enter(r.data.session); else show('login'); });
