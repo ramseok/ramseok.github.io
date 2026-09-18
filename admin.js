@@ -41,9 +41,9 @@
       { k: 'links', label: '링크', type: 'array', fields: [{ k: 'name', label: '표시 이름' }, { k: 'url', label: 'URL' }] },
     ] },
     { key: 'specialty', label: '전문 분야', kind: 'object', fields: [
-      { k: 'major', label: '주요 스킬 (파란 태그)', type: 'chips', primary: true, hint: '3개 권장 · 칩을 클릭하면 한 칸 앞으로 이동합니다' },
-      { k: 'general', label: '일반 스킬', type: 'chips' },
-      { k: 'domain', label: '도메인', type: 'chips' },
+      { k: 'major', label: '주요 스킬 — 포트폴리오에 강조 표시', type: 'major', hint: '아래 전체 스킬에서 클릭하면 여기로 올라옵니다 · 마우스를 올리면 나타나는 × 로 내리기 · 클릭하면 한 칸 앞으로' },
+      { k: 'general', label: '일반 스킬 (전체)', type: 'chips', pool: true, majorPath: 'specialty.major', hint: '클릭하면 주요 스킬로 올라갑니다 · 이름 수정·추가·삭제는 [수정]' },
+      { k: 'domain', label: '도메인 (전체)', type: 'chips', pool: true, majorPath: 'specialty.major', hint: '클릭하면 주요 스킬로 올라갑니다 · 이름 수정·추가·삭제는 [수정]' },
     ] },
     { key: 'education', label: '학력', kind: 'array', itemLabel: function (o) { return o.school; }, fields: [
       { k: 'school', label: '학교' }, { k: 'dept', label: '학과 / 학위' }, { k: 'start', label: '입학', hint: 'YYYY.MM' }, { k: 'end', label: '졸업', hint: 'YYYY.MM' }, { k: 'current', label: '재학 중', type: 'bool' }, { k: 'desc', label: '설명', type: 'textarea' },
@@ -82,13 +82,29 @@
         return '<div class="field wide">' + label + '<textarea id="' + id + '" data-path="' + path + '" data-type="lines" rows="5">' + esc((val || []).join('\n')) + '</textarea></div>';
       case 'list':
         return '<div class="field wide">' + label + '<input id="' + id + '" data-path="' + path + '" data-type="list" value="' + esc((val || []).join(', ')) + '"></div>';
+      case 'major':
+        // 선택된 주요 스킬 — 파란 칩, hover 시 × 로 내리기, 클릭으로 한 칸 앞으로
+        var mItems = val || [];
+        var mChips = mItems.length ? mItems.map(function (t, i) {
+          return '<span class="chip major-chip' + (i === 0 ? ' first' : '') + '" data-chip-up="' + path + '|' + i + '" title="' + (i === 0 ? '맨 앞 항목입니다' : '클릭하면 한 칸 앞으로') + '">' +
+            '<span class="mtxt">' + esc(t) + '</span>' +
+            '<button type="button" class="chip-demote" data-chip-demote="' + path + '|' + i + '" title="주요 스킬에서 내리기" aria-label="내리기">×</button></span>';
+        }).join('') : '<span class="chips-empty">아래 전체 스킬에서 클릭하면 여기로 올라옵니다</span>';
+        return '<div class="field wide chip-field">' +
+          '<div class="chip-head"><label>' + esc(f.label || f.k) + '</label><small>' + esc(f.hint || '') + '</small></div>' +
+          '<div class="chips primary major-box" data-chips="' + path + '">' + mChips + '</div></div>';
       case 'chips':
         var editing = !!chipMode[path], items = val || [];
+        var majorArr = f.pool ? (getPath(state, f.majorPath) || []) : null;
         var chips = items.map(function (t, i) {
           if (editing) {
             return '<span class="chip" draggable="true" data-chip="' + path + '|' + i + '" title="클릭하여 이름 수정 · 드래그하여 이동">' +
               '<span class="chip-txt">' + esc(t) + '</span>' +
               '<button type="button" class="chip-del" data-chip-del="' + path + '|' + i + '" aria-label="삭제">×</button></span>';
+          }
+          if (f.pool) {
+            var sel = majorArr.indexOf(t) >= 0;
+            return '<button type="button" class="chip pool' + (sel ? ' selected' : '') + '" data-chip-toggle="' + path + '|' + i + '" data-major="' + f.majorPath + '" title="' + (sel ? '주요 스킬에 올라가 있습니다 — 클릭하면 내립니다' : '클릭하면 주요 스킬로 올라갑니다') + '">' + esc(t) + (sel ? '<i class="chk">✓</i>' : '') + '</button>';
           }
           return '<button type="button" class="chip' + (i === 0 ? ' first' : '') + '" data-chip-up="' + path + '|' + i + '"' +
             (i === 0 ? ' title="맨 앞 항목입니다"' : ' title="클릭하면 한 칸 앞으로 이동"') + '>' + esc(t) + '</button>';
@@ -98,7 +114,7 @@
         return '<div class="field wide chip-field">' +
           '<div class="chip-head"><label>' + esc(f.label || f.k) + '</label><small>' + esc(hint) + '</small>' +
           '<button type="button" class="btn sm ' + (editing ? '' : 'ghost') + '" data-chip-mode="' + path + '">' + (editing ? '완료' : '수정') + '</button></div>' +
-          '<div class="chips' + (f.primary ? ' primary' : '') + (editing ? ' editing' : '') + '" data-chips="' + path + '">' + chips + addBox + '</div></div>';
+          '<div class="chips' + (f.primary ? ' primary' : '') + (editing ? ' editing' : '') + (f.pool ? ' pool-box' : '') + '" data-chips="' + path + '"' + (f.pool ? ' data-major="' + f.majorPath + '"' : '') + '>' + chips + addBox + '</div></div>';
       case 'bool':
         return '<div class="field check"><label><input type="checkbox" id="' + id + '" data-path="' + path + '" data-type="bool"' + (val ? ' checked' : '') + '> ' + esc(f.label) + '</label></div>';
       case 'select':
@@ -198,8 +214,9 @@
     function commit(save) {
       if (done) return; done = true;
       var v = inp.value.trim();
-      if (save && v && v !== old) { chipArr(path)[i] = v; markDirty(); }
-      else if (save && !v) { chipArr(path).splice(i, 1); markDirty(); }
+      var box = chipEl.closest('.chips'), mj = (box && box.dataset.major) ? chipArr(box.dataset.major) : null;
+      if (save && v && v !== old) { chipArr(path)[i] = v; if (mj && mj.indexOf(old) >= 0) mj[mj.indexOf(old)] = v; markDirty(); }
+      else if (save && !v) { chipArr(path).splice(i, 1); if (mj && mj.indexOf(old) >= 0) mj.splice(mj.indexOf(old), 1); markDirty(); }
       renderSection(active);
     }
     inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); commit(true); } if (ev.key === 'Escape') commit(false); });
@@ -225,6 +242,22 @@
   $('#form').addEventListener('click', function (e) {
     var modeBtn = e.target.closest('[data-chip-mode]');
     if (modeBtn) { var mp = modeBtn.dataset.chipMode; chipMode[mp] = !chipMode[mp]; renderSection(active); return; }
+    // 전체 풀 → 주요 스킬로 올리기 / 다시 내리기 (토글)
+    var tog = e.target.closest('[data-chip-toggle]');
+    if (tog) {
+      var tp = tog.dataset.chipToggle.split('|'), name = chipArr(tp[0])[+tp[1]], major = chipArr(tog.dataset.major), at = major.indexOf(name);
+      if (at >= 0) major.splice(at, 1); else major.push(name);
+      markDirty(); renderSection(active); return;
+    }
+    // 주요 스킬에서 내리기 — 풀에 없던 항목이면 일반 스킬로 돌려보내 잃어버리지 않게
+    var dem = e.target.closest('[data-chip-demote]');
+    if (dem) {
+      var dp = dem.dataset.chipDemote.split('|'), mArr = chipArr(dp[0]), nm = mArr[+dp[1]];
+      mArr.splice(+dp[1], 1);
+      var gen = chipArr('specialty.general'), dom = chipArr('specialty.domain');
+      if (gen.indexOf(nm) < 0 && dom.indexOf(nm) < 0) gen.push(nm);
+      markDirty(); renderSection(active); return;
+    }
     var up = e.target.closest('[data-chip-up]');
     if (up) {
       var u = up.dataset.chipUp.split('|'), arr = chipArr(u[0]), i = +u[1];
@@ -232,7 +265,11 @@
       return;
     }
     var chipDel = e.target.closest('[data-chip-del]');
-    if (chipDel) { var r = chipDel.dataset.chipDel.split('|'); chipArr(r[0]).splice(+r[1], 1); markDirty(); renderSection(active); return; }
+    if (chipDel) {
+      var r = chipDel.dataset.chipDel.split('|'), delName = chipArr(r[0])[+r[1]]; chipArr(r[0]).splice(+r[1], 1);
+      var dbox = chipDel.closest('.chips'); if (dbox && dbox.dataset.major) { var mm = chipArr(dbox.dataset.major); if (mm.indexOf(delName) >= 0) mm.splice(mm.indexOf(delName), 1); }
+      markDirty(); renderSection(active); return;
+    }
     var addBtn = e.target.closest('[data-chip-add-btn]');
     if (addBtn) { chipAdd(addBtn.dataset.chipAddBtn, document.querySelector('[data-chip-add="' + addBtn.dataset.chipAddBtn + '"]')); return; }
     var chipTxt = e.target.closest('.chip-txt');

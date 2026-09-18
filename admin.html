@@ -85,6 +85,21 @@ input[type=file]{font-size:12px; margin:6px 0}
 .chips.primary .chip{background:var(--point); border-color:var(--point); color:#fff; font-weight:600; padding-left:18px}
 .chips.primary .chip .chip-del{color:rgba(255,255,255,.8)} .chips.primary .chip .chip-del:hover{background:rgba(255,255,255,.2); color:#fff}
 .chips.primary .chip input.chip-edit{color:#fff; border-bottom-color:#fff}
+/* 주요 스킬 박스: hover 시 우측 상단 × 로 내리기 */
+.chips.major-box{min-height:56px; padding:12px; overflow:visible}
+.chips.major-box .major-chip{position:relative; padding:7px 18px; cursor:pointer}
+.chips.major-box .major-chip.first{cursor:default}
+.chips.major-box .major-chip:not(.first):hover::after{content:"↑"; margin-left:6px; font-size:12px; color:#fff}
+.chip-demote{position:absolute; top:-7px; right:-7px; width:20px; height:20px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--danger); font-size:13px; line-height:1; padding:0; cursor:pointer; display:none; box-shadow:0 1px 3px rgba(0,0,0,.15); align-items:center; justify-content:center}
+.chips.major-box .major-chip:hover .chip-demote{display:inline-flex}
+.chip-demote:hover{background:var(--danger); color:#fff; border-color:var(--danger)}
+.chips-empty{font-size:13px; color:var(--sub); padding:4px 6px}
+/* 전체 풀: 이미 올라간 항목은 체크 표시 + 흐리게 */
+.chips.pool-box .chip.pool{position:relative}
+.chips.pool-box .chip.pool:not(.selected):hover::after{content:"↑ 주요 스킬"; margin-left:8px; font-size:11px; color:var(--point); font-weight:600}
+.chips.pool-box .chip.pool.selected{opacity:.5; border-style:dashed; cursor:pointer}
+.chips.pool-box .chip.pool.selected .chk{font-style:normal; margin-left:6px; color:var(--point); font-weight:700}
+.chips.pool-box .chip.pool.selected:hover{opacity:.8}
 .chip-add{display:inline-flex; align-items:center; gap:6px; margin-left:4px} .chip-add .btn{white-space:nowrap; flex:none}
 .chip-add input{width:200px; border:1px dashed var(--line); border-radius:100px; padding:6px 14px; font-size:13px}
 .chip-add input:focus{border-style:solid}

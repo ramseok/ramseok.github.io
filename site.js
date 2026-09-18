@@ -143,7 +143,10 @@
 
   function renderSpecialty(sp) {
     sp = sp || {};
-    var major = list(sp.major), general = list(sp.general), domain = list(sp.domain);
+    // 주요 스킬로 올라간 항목은 전체 목록(일반·도메인)에서 중복 표시하지 않는다
+    var major = list(sp.major);
+    var notMajor = function (t) { return major.indexOf(t) < 0; };
+    var general = list(sp.general).filter(notMajor), domain = list(sp.domain).filter(notMajor);
     var html = '';
     if (major.length || general.length) {
       html += '<div class="section-sub"><h3 class="section-subtitle">스킬</h3>';
