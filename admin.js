@@ -353,6 +353,13 @@
     var links = (state.portfolio && state.portfolio.links || []).filter(function (f) { return f && f.url; });
     if (files.length) next.portfolio.files = files;
     if (links.length) next.portfolio.links = links;
+    // 전문 분야: 내가 고른 주요 스킬은 유지, 전체 풀은 최신 목록 + 내가 추가한 항목의 합집합
+    if (state.specialty) {
+      var union = function (base, extra) { var out = (base || []).slice(); (extra || []).forEach(function (x) { if (out.indexOf(x) < 0) out.push(x); }); return out; };
+      if ((state.specialty.major || []).length) next.specialty.major = state.specialty.major.slice();
+      next.specialty.general = union(next.specialty.general, state.specialty.general);
+      next.specialty.domain = union(next.specialty.domain, state.specialty.domain);
+    }
     ['education', 'activity', 'certificate', 'language'].forEach(function (k) {   // 직접 채운 항목은 보존
       var cur = (state[k] || []).filter(function (o) { return JSON.stringify(o).indexOf('[') < 0; });
       if (cur.length) next[k] = cur;
