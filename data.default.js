@@ -40,12 +40,12 @@ window.PORTFOLIO_DEFAULT = {
         "label": "동시 개발 최대"
       },
       {
-        "value": "7건",
-        "label": "재계약 · 유지보수 전환"
+        "value": "25%",
+        "label": "재계약 · 유지보수 전환 (7건)"
       },
       {
-        "value": "1,700건",
-        "label": "일자별 진행 기록"
+        "value": "0건",
+        "label": "범위 · 정산 분쟁"
       }
     ]
   },
