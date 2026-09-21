@@ -429,6 +429,63 @@
     return out;
   }
 
+  var BR = String.fromCharCode(10);   // 확인창 줄바꿈
+  // ── 3-way 병합 ──
+  // 기준본(__base) = 지난번에 불러온 배포 내용. 기준본 대비 "배포본이 바뀐 곳"만 반영하고,
+  // 내가 관리자에서 고친 곳은 그대로 둔다.
+  var ID_KEY = { project: 'name', experience: 'org', education: 'school', activity: 'name', certificate: 'name', language: 'name', files: 'name', links: 'name', stats: 'label' };
+  function cp(v) { return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+  function eq(a, b) { return JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b); }
+  function isObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function label(path) { return path.replace(/^\./, ""); }
+
+  function merge3(cur, base, next, listKey, rep, path) {
+    if (eq(next, base)) return cur;                       // 배포본이 안 바뀜 → 내 것 유지
+    if (isObj(next) && (isObj(cur) || cur === undefined)) {   // 객체는 항상 항목 단위로 판단 (정확한 변경 보고)
+      var b = isObj(base) ? base : {};
+      var out = isObj(cur) ? cp(cur) : {}, keys = {};
+      [cur, b, next].forEach(function (o) { Object.keys(o || {}).forEach(function (k) { keys[k] = 1; }); });
+      Object.keys(keys).forEach(function (k) {
+        var c = isObj(cur) ? cur[k] : undefined, bb = b[k], n = next[k];
+        if (n === undefined && bb !== undefined) {        // 배포본에서 사라진 항목
+          if (eq(c, bb)) { delete out[k]; rep.removed.push(label(path + "." + k)); }
+          return;
+        }
+        var m = merge3(c, bb, n, k, rep, path + "." + k);
+        if (m === undefined) delete out[k]; else out[k] = m;
+      });
+      return out;
+    }
+    if (Array.isArray(next) && ID_KEY[listKey] && next.every(isObj) && (Array.isArray(cur) || cur === undefined)) {
+      return mergeList(cur || [], Array.isArray(base) ? base : [], next, ID_KEY[listKey], rep, path);
+    }
+    if (eq(cur, base)) { rep.updated.push(label(path)); return cp(next); }  // 내가 안 고침 → 최신 반영
+    rep.conflicts.push(label(path));                      // 같은 곳을 양쪽이 고침 → 최신 채택
+    return cp(next);
+  }
+
+  function mergeList(cur, base, next, idk, rep, path) {
+    var keyOf = function (x, i) {
+      var v = x && x[idk] != null ? String(x[idk]).trim() : '';
+      return v || '#' + i;
+    };
+    var map = function (arr) { var m = {}; (arr || []).forEach(function (x, i) { var k = keyOf(x, i); if (!(k in m)) m[k] = x; }); return m; };
+    var C = map(cur), B = map(base), N = map(next);
+    var out = [], used = {};
+    (next || []).forEach(function (n, i) {
+      var k = keyOf(n, i); used[k] = 1;
+      if (k in C) out.push(merge3(C[k], B[k], n, null, rep, path + " › " + k));
+      else if (k in B) { /* 내가 지운 항목 — 되살리지 않는다 */ }
+      else { out.push(cp(n)); rep.added.push(label(path) + " › " + k); }
+    });
+    (cur || []).forEach(function (c, i) {
+      var k = keyOf(c, i); if (used[k]) return; used[k] = 1;
+      if (k in B && eq(c, B[k])) { rep.removed.push(label(path) + " › " + k); return; }  // 배포본에서 빠졌고 내가 안 건드림
+      out.push(c);                                        // 내가 추가했거나 고친 항목 → 유지
+    });
+    return out;
+  }
+
   // ── 로컬 안전장치: 덮어쓰기 전 스냅샷 + 저장 이력 10개 ──
   var LS_UNDO = 'pf.undo.v1', LS_BAK = 'pf.backups.v1';
   function snapshot(tag) {
@@ -500,8 +557,39 @@
   $('#btn-load-default').addEventListener('click', function () {
     var def = window.PORTFOLIO_DEFAULT;
     if (!def) { setStatus('기본 내용을 찾을 수 없습니다', 'err'); return; }
-    if (!confirm('배포된 최신 내용(소개 · 경력 · 프로젝트 · 전문 분야)을 불러옵니다.\n이름 · 사진 · 연락처와 학력 · 교육이수 · 자격증 · 언어, 업로드한 이미지는 그대로 유지됩니다.\n\n계속할까요?')) return;
+    if (!isMain()) {
+      alert('최신 내용 불러오기는 기본 문서에서만 씁니다.' + BR + '지원서는 기본 문서를 상속하므로, 기본 문서를 갱신하면 함께 반영됩니다.');
+      return;
+    }
+    var base = state.__base;
+    if (!base) {
+      if (!confirm('이번이 첫 불러오기라 비교 기준본이 없습니다.' + BR + '이번 한 번만 기존 방식(소개 · 경력 · 프로젝트 · 전문 분야를 최신으로 교체)으로 진행하고,' + BR + '이후부터는 배포본이 바뀐 부분만 반영합니다.' + BR + BR + '계속할까요?')) return;
+      snapshot('최신 내용 불러오기');
+      legacyLoad(def);
+      state.__base = cp(def);
+      markDirty(); renderSection(active); setStatus('최신 내용을 불러왔습니다 — 저장을 눌러야 반영됩니다', 'warn');
+      return;
+    }
+    var rep = { updated: [], added: [], removed: [], conflicts: [] };
+    var curDoc = cp(state); delete curDoc.__base;
+    var merged = merge3(curDoc, base, def, null, rep, "");
+    var n = rep.updated.length + rep.added.length + rep.removed.length + rep.conflicts.length;
+    if (!n) { setStatus("배포된 내용과 이미 같습니다 — 바뀐 항목이 없습니다", "ok"); return; }
+    var lines = [];
+    if (rep.updated.length) lines.push("· 내용 갱신 " + rep.updated.length + "곳");
+    if (rep.added.length) lines.push("· 새로 추가 " + rep.added.length + "건 — " + rep.added.slice(0, 4).join(", "));
+    if (rep.removed.length) lines.push("· 삭제 " + rep.removed.length + "건");
+    if (rep.conflicts.length) lines.push("· 내가 고친 곳과 겹쳐 최신으로 덮음 " + rep.conflicts.length + "곳 — " + rep.conflicts.slice(0, 4).join(", "));
+    if (!confirm('배포본이 바뀐 부분만 반영합니다. 직접 고치신 내용은 그대로 둡니다.' + BR + BR + lines.join(BR) + BR + BR + '계속할까요?')) return;
     snapshot('최신 내용 불러오기');
+    merged.__base = cp(def);
+    state = merged;
+    markDirty(); renderSection(active);
+    setStatus('바뀐 부분만 반영했습니다 (' + n + '곳) — 저장을 눌러야 적용됩니다', 'warn');
+  });
+
+  // 기준본이 없을 때 쓰는 예전 방식 (섹션 통째 교체, 개인 정보는 보존)
+  function legacyLoad(def) {
     var next = JSON.parse(JSON.stringify(def));
     next.basic = state.basic || next.basic;                       // 내 정보 유지
     var imgs = {}; (state.project || []).forEach(function (p) { if (p.images && p.images.length) imgs[p.name] = p.images; });
@@ -525,9 +613,8 @@
     ['education', 'activity', 'certificate', 'language'].forEach(function (k) {
       next[k] = Object.prototype.hasOwnProperty.call(state, k) ? state[k] : (next[k] || []);
     });
-    state = next; markDirty(); renderSection(active);
-    setStatus('최신 내용을 불러왔습니다 — 저장을 눌러야 반영됩니다', 'warn');
-  });
+    state = next;
+  }
 
   $('#btn-undo').addEventListener('click', function () {
     var u = null; try { u = JSON.parse(localStorage.getItem(LS_UNDO) || 'null'); } catch (e) {}
@@ -544,7 +631,7 @@
     openVersion(slug);
   });
   $('#ver-new').addEventListener('click', function () {
-    var slug = (prompt('새 버전의 주소를 정하세요.' + "\\n" + '영문 소문자·숫자·하이픈 2~39자 — 예: megazone' + "\\n\\n" + '링크는 https://ramseok.github.io/<주소>/ 가 됩니다.') || '').trim().toLowerCase();
+    var slug = (prompt('새 버전의 주소를 정하세요.' + BR + '영문 소문자·숫자·하이픈 2~39자 — 예: megazone' + BR + BR + '링크는 https://ramseok.github.io/<주소>/ 가 됩니다.') || '').trim().toLowerCase();
     if (!slug) return;
     if (!SLUG_RE.test(slug)) { alert('영문 소문자·숫자·하이픈 2~39자로 입력하세요.'); return; }
     if (RESERVED.indexOf(slug) >= 0) { alert('예약어라 사용할 수 없습니다: ' + slug); return; }
@@ -553,7 +640,7 @@
     client.from('portfolio').insert({ id: slug, data: { __meta: { label: label, createdAt: new Date().toISOString() } } }).then(function (r) {
       if (r.error) { setStatus('버전 생성 실패: ' + r.error.message, 'err'); return; }
       return listVersions().then(function () { return openVersion(slug); }).then(function () {
-        alert('버전을 만들었습니다: ' + slug + "\\n\\n" + '아직 링크는 열리지 않습니다. 저장소에서 아래 명령을 실행하고 커밋·푸시하세요.' + "\\n" + '  node scripts/new-version.mjs ' + slug);
+        alert('버전을 만들었습니다: ' + slug + BR + BR + '아직 링크는 열리지 않습니다. 저장소에서 아래 명령을 실행하고 커밋·푸시하세요.' + BR + '  node scripts/new-version.mjs ' + slug);
       });
     });
   });
@@ -563,7 +650,7 @@
   });
   $('#ver-del').addEventListener('click', function () {
     if (isMain()) return;
-    if (!confirm('버전 ' + VERSION + ' 을 삭제합니다. 되돌릴 수 없습니다.' + "\\n" + '저장소의 ' + VERSION + ' 폴더도 따로 지워야 링크가 완전히 닫힙니다.' + "\\n\\n" + '계속할까요?')) return;
+    if (!confirm('버전 ' + VERSION + ' 을 삭제합니다. 되돌릴 수 없습니다.' + BR + '저장소의 ' + VERSION + ' 폴더도 따로 지워야 링크가 완전히 닫힙니다.' + BR + BR + '계속할까요?')) return;
     client.from('portfolio').delete().eq('id', VERSION).then(function (r) {
       if (r.error) { setStatus('삭제 실패: ' + r.error.message, 'err'); return; }
       setStatus('버전을 삭제했습니다', 'ok');
@@ -583,7 +670,8 @@
   });
   $('#btn-save').addEventListener('click', save);
   $('#btn-export').addEventListener('click', function () {
-    var blob = new Blob([JSON.stringify(clean(state), null, 2)], { type: 'application/json' });
+    var out = clean(state); delete out.__base;   // 병합 기준본은 내보내지 않는다
+    var blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'portfolio-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
   });
   $('#import-file').addEventListener('change', function (e) {
