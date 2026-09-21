@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>커리어 프로필</title>
+<meta name="description" content="다양한 산업군의 SI 프로젝트에서 요구사항 분석·일정·이슈·개발 조율을 담당해 온 PM의 커리어 프로필">
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="draft-note" hidden>초안 — 노란 [대괄호]는 admin.html 에서 채우면 사라짐</div>
+
+<aside class="side">
+  <div class="who">
+    <div class="nm" id="side-name"></div>
+    <div class="jt" id="side-job"></div>
+  </div>
+  <nav>
+    <a href="#intro">소개</a>
+    <a href="#experience">경력</a>
+    <a href="#project">프로젝트</a>
+    <a href="#portfolio">포트폴리오</a>
+    <a href="#specialty">전문 분야</a>
+    <a href="#education">학력</a>
+    <a href="#activity">활동</a>
+    <a href="#certificate">자격증</a>
+    <a href="#language">언어</a>
+  </nav>
+</aside>
+
+<main class="t-content">
+  <div class="main-head"><div class="basic" id="basic"></div><div class="stats" id="stats" hidden></div></div>
+  <div class="main-body"><div class="inner">
+    <section class="intro" id="intro"><div class="inner"><h2 class="section-title">소개</h2><div class="section-content"></div></div></section>
+    <section class="experience" id="experience"><div class="inner"><h2 class="section-title">경력</h2><div class="section-content"></div></div></section>
+    <section class="project" id="project"><div class="inner"><h2 class="section-title">프로젝트</h2><div class="section-content"></div></div></section>
+    <section class="portfolio" id="portfolio"><div class="inner"><h2 class="section-title">포트폴리오</h2><div class="section-content"></div></div></section>
+    <section class="specialty" id="specialty"><div class="inner"><h2 class="section-title">전문 분야</h2><div class="section-content"></div></div></section>
+    <section class="education" id="education"><div class="inner"><h2 class="section-title">학력</h2><div class="section-content"></div></div></section>
+    <section class="activity" id="activity"><div class="inner"><h2 class="section-title">활동</h2><div class="section-content"></div></div></section>
+    <section class="certificate" id="certificate"><div class="inner"><h2 class="section-title">자격증</h2><div class="section-content"></div></div></section>
+    <section class="language" id="language"><div class="inner"><h2 class="section-title">언어</h2><div class="section-content"></div></div></section>
+    <div class="end" id="updated"></div>
+  </div></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../config.js"></script>
+<script src="../data.default.js"></script>
+<script>window.PORTFOLIO_VARIANT = "dalpha";</script>
+<script src="../site.js"></script>
+</body>
+</html>
