@@ -365,27 +365,40 @@
   function listVersions() {
     return client.from('portfolio').select('id,updated_at,data').then(function (r) {
       if (r.error) { setStatus("버전 목록 조회 실패: " + r.error.message, "err"); return; }
+      var KEYS = SCHEMA.map(function (x) { return x.key; });
       versions = (r.data || []).map(function (row) {
         var m = (row.data && row.data.__meta) || {};
-        return { id: row.id, label: m.label || '', updated_at: row.updated_at };
-      }).sort(function (a, b) { return a.id === "main" ? -1 : b.id === "main" ? 1 : a.id.localeCompare(b.id); });
+        var diff = Object.keys(row.data || {}).filter(function (k) { return KEYS.indexOf(k) >= 0; }).length;
+        return { id: row.id, label: m.label || '', updated_at: row.updated_at, diff: row.id === 'main' ? 0 : diff };
+      }).sort(function (a, b) {
+        if (a.id === "main") return -1; if (b.id === "main") return 1;
+        return String(b.updated_at || "").localeCompare(String(a.updated_at || ""));
+      });
       renderVerBar();
     });
   }
   function renderVerBar() {
-    var sel = $('#ver-select'); if (!sel) return;
-    sel.innerHTML = versions.map(function (v) {
-      var name = v.id === 'main' ? '기본 (main)' : v.id + (v.label ? ' — ' + v.label : '');
-      return '<option value="' + esc(v.id) + '"' + (v.id === VERSION ? ' selected' : '') + '>' + esc(name) + '</option>';
+    var list = $('#ver-list'); if (!list) return;
+    list.innerHTML = versions.map(function (v) {
+      var main = v.id === 'main';
+      var nm = main ? '기본 문서' : (v.label || v.id);
+      var sub = main ? '모든 지원서가 상속합니다' : '/' + v.id;
+      var cnt = (!main && v.diff) ? '<span class="cnt">' + v.diff + '</span>' : '';
+      return '<li><button type="button" data-ver="' + esc(v.id) + '"' + (v.id === VERSION ? ' class="on"' : '') + '>' +
+        '<span class="nm">' + esc(nm) + cnt + '</span>' +
+        '<span class="sub">' + esc(sub) + '</span></button></li>';
     }).join('');
     var cur = versions.filter(function (v) { return v.id === VERSION; })[0] || {};
+    $('#ver-name').textContent = isMain() ? '기본 문서' : (vmeta.label || cur.label || VERSION);
+    var link = $('#ver-link'); link.href = pageUrl(VERSION); link.textContent = pageUrl(VERSION);
     $('#ver-label').value = isMain() ? '' : (vmeta.label || cur.label || '');
     $('#ver-label').disabled = isMain();
+    $('#ver-label').placeholder = isMain() ? '기본 문서에는 지원처명이 없습니다' : '지원처명 · 메모 (예: 메가존클라우드 공공사업 PM)';
     $('#ver-del').disabled = isMain();
     var n = Object.keys(overrides).length;
     $('#ver-hint').textContent = isMain()
-      ? '기본 문서입니다. 모든 버전이 이 내용을 상속합니다'
-      : (n ? '이 버전에서 다르게 쓰는 항목 ' + n + '개 · 나머지는 기본 문서를 따릅니다' : '아직 다르게 쓰는 항목이 없습니다 — 기본 문서와 동일하게 보입니다');
+      ? '모든 지원서가 이 내용을 상속합니다. 여기서 고치면 전체에 반영됩니다.'
+      : (n ? '이 지원서에서 다르게 쓰는 항목 ' + n + '개 · 나머지는 기본 문서를 따릅니다' : '아직 다르게 쓰는 항목이 없습니다 — 기본 문서와 동일하게 보입니다');
   }
   function mergeBase(ov) {
     var out = JSON.parse(JSON.stringify(baseData || {}));
@@ -500,9 +513,11 @@
     state = u.data; markDirty(); renderSection(active);
     setStatus('되돌렸습니다 — 저장을 눌러야 반영됩니다', 'warn');
   });
-  $('#ver-select').addEventListener('change', function (e) {
-    var slug = e.target.value;
-    if (dirty && !confirm('저장하지 않은 변경 사항이 있습니다. 버전을 바꾸면 사라집니다. 계속할까요?')) { renderVerBar(); return; }
+  $('#ver-list').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ver]'); if (!b) return;
+    var slug = b.dataset.ver;
+    if (slug === VERSION) return;
+    if (dirty && !confirm('저장하지 않은 변경 사항이 있습니다. 다른 지원서로 넘어가면 사라집니다. 계속할까요?')) return;
     openVersion(slug);
   });
   $('#ver-new').addEventListener('click', function () {

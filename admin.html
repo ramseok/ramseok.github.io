@@ -40,7 +40,7 @@ input[type=file]{font-size:12px; margin:6px 0}
 .top .sp{flex:1}
 .top .who{color:var(--sub); font-size:12px}
 .status{font-size:12px; color:var(--sub)} .status.ok{color:var(--ok)} .status.warn{color:var(--warn)} .status.err{color:var(--danger)}
-.wrap{display:grid; grid-template-columns:200px 1fr; gap:20px; max-width:1240px; margin:0 auto; padding:20px}
+.wrap{display:grid; grid-template-columns:214px 176px minmax(0,1fr); gap:18px; max-width:1420px; margin:0 auto; padding:20px}
 #sec-nav{position:sticky; top:66px; align-self:start; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px}
 #sec-nav a{display:block; color:var(--sub); text-decoration:none; padding:8px 12px; border-radius:6px; font-weight:500}
 #sec-nav a:hover{background:var(--bg); color:var(--text)}
@@ -107,13 +107,32 @@ input[type=file]{font-size:12px; margin:6px 0}
 .img-item{border:1px solid var(--line); border-radius:8px; padding:6px; background:#fff}
 .img-item img{width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:4px; display:block; margin-bottom:6px}
 .img-item input{font-size:12px; padding:5px 8px; margin-bottom:6px}
+@media (max-width:1180px){ .wrap{grid-template-columns:200px minmax(0,1fr)} #ver-nav{grid-column:1 / -1; position:static} #ver-list{display:flex; flex-wrap:wrap; gap:4px; max-height:none} #ver-list li{margin:0} #ver-list button{width:auto; border:1px solid var(--line)} .vn-tip{display:none} #ver-nav .vn-new{width:auto; margin-top:0} }
 @media (max-width:860px){ .wrap{grid-template-columns:1fr} #sec-nav{position:static; display:flex; flex-wrap:wrap; gap:2px} .grid{grid-template-columns:1fr} }
-.verbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 20px; border-bottom:1px solid var(--line,#e3e5e9); background:#f8f9fb}
-.verbar label{font-size:13px; font-weight:700; color:#48505c}
-.verbar select{height:32px; border:1px solid #d5d9e0; border-radius:6px; padding:0 8px; font-size:13px; background:#fff}
-.verbar input{flex:1; min-width:220px; height:32px; border:1px solid #d5d9e0; border-radius:6px; padding:0 10px; font-size:13px}
-.verbar .btn.danger{color:#c0392b; border-color:#e6c3bd}
-.verhint{font-size:12px; color:#6b7280}
+#ver-nav{position:sticky; top:66px; align-self:start; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px}
+.vn-head{font-size:12px; font-weight:700; color:var(--sub); letter-spacing:.02em; padding:2px 8px 8px}
+#ver-list{list-style:none; margin:0; padding:0; max-height:52vh; overflow:auto}
+#ver-list li{margin-bottom:2px}
+#ver-list button{display:block; width:100%; text-align:left; background:none; border:0; border-radius:7px; padding:8px 10px; cursor:pointer; font:inherit; color:var(--text)}
+#ver-list button:hover{background:var(--bg)}
+#ver-list button.on{background:rgba(50,125,245,.1)}
+#ver-list .nm{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-size:13.5px; font-weight:600; line-height:1.4; overflow:hidden; word-break:keep-all}
+#ver-list button.on .nm{color:var(--point)}
+#ver-list .sub{display:block; margin-top:2px; font-size:11.5px; color:var(--sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#ver-list .cnt{display:inline-block; margin-left:6px; padding:0 5px; border-radius:20px; background:rgba(50,125,245,.14); color:var(--point); font-size:10.5px; font-weight:700; vertical-align:1px}
+.vn-new{width:100%; margin-top:8px}
+.vn-tip{margin:10px 2px 2px; font-size:11.5px; line-height:1.55; color:var(--sub)}
+.col{display:flex; flex-direction:column; gap:12px; min-width:0}
+.verhead{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px}
+.vh-top{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.vh-name{font-size:15px; font-weight:700}
+.vh-link{font-size:12.5px; color:var(--point); text-decoration:none; word-break:break-all}
+.vh-link:hover{text-decoration:underline}
+.verhead input{width:100%; margin-top:10px; height:34px; border:1px solid var(--line); border-radius:7px; padding:0 10px; font-size:13px; font-family:inherit}
+.verhead input:disabled{background:var(--bg); color:var(--sub)}
+.verhint{margin-top:8px; font-size:12px; color:var(--sub); line-height:1.5}
+.btn.danger{color:#c0392b; border-color:#e6c3bd}
+.btn.danger:disabled{color:var(--sub); border-color:var(--line)}
 .inherit{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:11px 14px; border:1px solid #cfe0ff; background:#f2f7ff; border-radius:8px; font-size:13px; color:#2c4a80}
 .inherit b{font-weight:700}
 fieldset.locked{border:0; margin:0; padding:0; opacity:.62}
@@ -165,18 +184,28 @@ fieldset.locked{border:0; margin:0; padding:0; opacity:.62}
     <button class="btn" id="btn-save" type="button" disabled>저장</button>
     <button class="btn ghost sm" id="btn-logout" type="button">로그아웃</button>
   </div>
-  <div class="verbar" id="ver-bar">
-    <label>버전</label>
-    <select id="ver-select"></select>
-    <input id="ver-label" type="text" placeholder="지원처명 · 메모 (예: 메가존클라우드 공공사업 PM)" maxlength="80">
-    <button class="btn ghost sm" id="ver-new" type="button">+ 새 버전</button>
-    <button class="btn ghost sm" id="ver-copy" type="button">링크 복사</button>
-    <button class="btn ghost sm danger" id="ver-del" type="button">삭제</button>
-    <span class="verhint" id="ver-hint"></span>
-  </div>
   <div class="wrap">
+    <nav id="ver-nav">
+      <div class="vn-head">지원서</div>
+      <ul id="ver-list"></ul>
+      <button class="btn ghost sm vn-new" id="ver-new" type="button">+ 새 지원서</button>
+      <p class="vn-tip">기업마다 링크를 따로 만들어 보낼 수 있습니다. 바꾼 항목만 저장되고 나머지는 기본 문서를 따릅니다.</p>
+    </nav>
     <nav id="sec-nav"></nav>
-    <div id="form"></div>
+    <div class="col">
+      <div class="verhead" id="ver-head">
+        <div class="vh-top">
+          <span class="vh-name" id="ver-name"></span>
+          <a class="vh-link" id="ver-link" target="_blank" rel="noopener"></a>
+          <span class="sp"></span>
+          <button class="btn ghost sm" id="ver-copy" type="button">링크 복사</button>
+          <button class="btn ghost sm danger" id="ver-del" type="button">삭제</button>
+        </div>
+        <input id="ver-label" type="text" placeholder="지원처명 · 메모 (예: 메가존클라우드 공공사업 PM)" maxlength="80">
+        <div class="verhint" id="ver-hint"></div>
+      </div>
+      <div id="form"></div>
+    </div>
   </div>
 </div>
 
