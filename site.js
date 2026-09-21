@@ -40,6 +40,29 @@
     link: SVG('<path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.8 6.5"/><path d="M13.5 10.5a4 4 0 0 0-5.7 0L5 13.3a4 4 0 0 0 5.7 5.7l1.5-1.5"/>')
   };
 
+  // ── 지원서별 디자인 토큰 ──
+  var BG = { white: "#ffffff", warm: "#fbfaf8", cool: "#f7f8fa" };
+  var WIDTH = { narrow: 960, normal: 1100, wide: 1240 };
+  var RADIUS = { square: "2px", soft: "9px", round: "16px" };
+  var DENSITY = {
+    tight:  { item: "24px", top: "30px", bottom: "44px" },
+    normal: { item: "32px", top: "40px", bottom: "60px" },
+    airy:   { item: "40px", top: "52px", bottom: "76px" }
+  };
+  function applyTheme(t) {
+    t = t || {};
+    var r = document.documentElement.style;
+    if (/^#[0-9a-fA-F]{3,8}$/.test(t.point || "")) r.setProperty("--point", t.point);
+    if (BG[t.bg]) r.setProperty("--bg", BG[t.bg]);
+    if (WIDTH[t.width]) r.setProperty("--content-max", WIDTH[t.width] + "px");
+    if (RADIUS[t.radius]) r.setProperty("--radius", RADIUS[t.radius]);
+    var d = DENSITY[t.density];
+    if (d) {
+      r.setProperty("--padding-item", d.item);
+      r.setProperty("--padding-section-top", d.top);
+      r.setProperty("--padding-section-bottom", d.bottom);
+    }
+  }
   function renderBasic(b) {
     b = b || {};
     var tags = list(b.tags).map(function (t) { return '<em class="tag">' + fmt(t) + '</em>'; }).join('');
@@ -194,6 +217,7 @@
   function render(d) {
     // 소개(한 줄 소개 · 요약)는 프로필 헤더 영역에 표시한다
     window.__introData = d.intro || {};
+    applyTheme(d.theme);
     renderBasic(d.basic);
     renderStats((d.intro && d.intro.stats) || d.stats);
     setSection('intro', '');

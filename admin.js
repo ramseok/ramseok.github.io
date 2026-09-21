@@ -20,6 +20,13 @@
       { k: 'stats', label: '숫자 요약 (프로필 아래 타일)', type: 'array', fields: [{ k: 'value', label: '숫자' }, { k: 'label', label: '설명' }] },
       { k: 'bullets', label: '성과 요약', type: 'lines', hint: '한 줄에 하나. **굵게** 표기 가능 — 맨 앞에 "**규모** — " 처럼 쓰면 스캔하기 좋습니다' },
     ] },
+    { key: 'theme', label: '디자인', kind: 'object', fields: [
+      { k: 'point', label: '포인트 컬러', type: 'color', hint: '링크 · 강조 숫자 · 칩 테두리에 쓰입니다. 지원 회사 브랜드 색을 넣어도 좋습니다' },
+      { k: 'bg', label: '배경', type: 'select', options: [['white', '흰색'], ['warm', '따뜻한 아이보리'], ['cool', '차가운 연회색']] },
+      { k: 'width', label: '본문 폭', type: 'select', options: [['wide', '넓게 (1240px)'], ['normal', '보통 (1100px)'], ['narrow', '좁게 (960px)']] },
+      { k: 'radius', label: '모서리', type: 'select', options: [['round', '많이 둥글게'], ['soft', '살짝 둥글게'], ['square', '각지게']] },
+      { k: 'density', label: '여백', type: 'select', options: [['normal', '보통'], ['airy', '넓게'], ['tight', '좁게']] },
+    ] },
     { key: 'experience', label: '경력', kind: 'array', itemLabel: function (o) { return o.org; }, fields: [
       { k: 'org', label: '회사' }, { k: 'dept', label: '부서' }, { k: 'position', label: '직책' },
       { k: 'start', label: '시작', hint: 'YYYY.MM' }, { k: 'end', label: '종료', hint: 'YYYY.MM' }, { k: 'current', label: '재직 중', type: 'bool' },
@@ -119,6 +126,14 @@
           '<div class="chips' + (f.primary ? ' primary' : '') + (editing ? ' editing' : '') + (f.pool ? ' pool-box' : '') + '" data-chips="' + path + '"' + (f.pool ? ' data-major="' + f.majorPath + '"' : '') + '>' + chips + addBox + '</div></div>';
       case 'bool':
         return '<div class="field check"><label><input type="checkbox" id="' + id + '" data-path="' + path + '" data-type="bool"' + (val ? ' checked' : '') + '> ' + esc(f.label) + '</label></div>';
+      case 'color':
+        var cv = /^#[0-9a-fA-F]{3,8}$/.test(val || '') ? val : '#327df5';
+        return '<div class="field">' + label + '<div class="colorpick">' +
+          '<input type="color" id="' + id + '" data-path="' + path + '" value="' + esc(cv) + '">' +
+          '<input class="hex" data-path="' + path + '" value="' + esc(cv) + '" maxlength="9">' +
+          ["#327df5","#1f2d3d","#0b8457","#d14343","#7b5cd6","#e0721a"].map(function (c) {
+            return '<button type="button" class="sw' + (c.toLowerCase() === String(cv).toLowerCase() ? ' on' : '') + '" style="background:' + c + '" data-swatch="' + path + '|' + c + '" title="' + c + '"></button>';
+          }).join('') + '</div></div>';
       case 'select':
         return '<div class="field">' + label + '<select id="' + id + '" data-path="' + path + '">' + f.options.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === val ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select></div>';
       case 'image':
@@ -255,6 +270,14 @@
     dragSrc = null; markDirty(); renderSection(active);
   });
 
+  $('#form').addEventListener('click', function (e) {
+    var sw = e.target.closest('[data-swatch]');
+    if (sw) {
+      var parts = sw.dataset.swatch.split('|');
+      setPath(state, parts[0], parts[1]); markDirty(); renderSection(active);
+      return;
+    }
+  });
   $('#form').addEventListener('click', function (e) {
     var modeBtn = e.target.closest('[data-chip-mode]');
     if (modeBtn) { var mp = modeBtn.dataset.chipMode; chipMode[mp] = !chipMode[mp]; renderSection(active); return; }

@@ -545,5 +545,12 @@ window.PORTFOLIO_DEFAULT = {
   "activity": [],
   "certificate": [],
   "language": [],
-  "updatedAt": ""
+  "updatedAt": "",
+  "theme": {
+    "point": "#327df5",
+    "bg": "white",
+    "width": "wide",
+    "radius": "round",
+    "density": "normal"
+  }
 };
