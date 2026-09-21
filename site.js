@@ -118,10 +118,13 @@
   function renderProject(arr) {
     arr = (arr || []).filter(function (p) { return p && has(p.name); });
     if (!arr.length) return '';
-    var main = [], sub = [];
-    arr.forEach(function (p, i) { (p.tier === 'sub' || p.grouped ? sub : main).push({ p: p, i: i }); });
+    var main = [], self = [], sub = [];
+    arr.forEach(function (p, i) {
+      var bucket = p.tier === 'self' ? self : (p.tier === 'sub' || p.grouped ? sub : main);
+      bucket.push({ p: p, i: i });
+    });
     // 티어를 아무것도 지정하지 않았으면 예전처럼 한 덩어리로
-    if (!main.length || !sub.length) {
+    if (!self.length && (!main.length || !sub.length)) {
       return '<ul class="item-text pcards">' + arr.map(function (p, i) { return projectCard(p, i); }).join('') + '</ul>';
     }
     function group(label, note, items, cls) {
@@ -134,8 +137,9 @@
         '<ul class="item-text pcards">' + items.map(function (x) { return projectCard(x.p, x.i); }).join('') + '</ul>' +
       '</div>';
     }
-    return group('대표 프로젝트', '문제 · 해결 · 성과를 자세히 적었습니다', main, 'tier-main') +
-      group('그 외 수행 프로젝트', '요약과 묶음으로 정리했습니다', sub, 'tier-sub');
+    return group('고객사 프로젝트 — 대표', '문제 · 해결 · 성과를 자세히 적었습니다', main, 'tier-main') +
+      group('직접 만든 업무 자동화', '고객사 발주가 아니라, 반복 업무를 줄이려고 직접 기획하고 만들었습니다', self, 'tier-self') +
+      group('고객사 프로젝트 — 그 외', '요약과 묶음으로 정리했습니다', sub, 'tier-sub');
   }
 
   function projectCard(p, idx) {

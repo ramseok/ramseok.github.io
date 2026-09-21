@@ -225,3 +225,7 @@ section .inner::after{content:""; display:block; clear:both}
 .pcards .pcard.grouped .title{font-size:15px}
 .pcards .pcard.grouped .lead{display:none}
 @media (max-width:768px){ .pgroup+.pgroup{margin-top:26px} .pgroup-head .pg-note{display:none} }
+
+/* 직접 만든 업무 자동화 그룹 */
+.pgroup.tier-self .pg-label{color:var(--point)}
+.pgroup.tier-self .pgroup-head{border-bottom-color:rgba(50,125,245,.35)}
