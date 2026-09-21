@@ -541,8 +541,40 @@ window.PORTFOLIO_DEFAULT = {
       "피트니스"
     ]
   },
-  "education": [],
-  "activity": [],
+  "education": [
+    {
+      "school": "대진대학교",
+      "dept": "미디어커뮤니케이션 / 학사 (주전공)",
+      "start": "2017.03",
+      "end": "2024.08",
+      "current": false,
+      "desc": ""
+    },
+    {
+      "school": "대진대학교",
+      "dept": "컴퓨터공학 / 학사 (복수전공)",
+      "start": "2017.03",
+      "end": "2024.08",
+      "current": false,
+      "desc": ""
+    }
+  ],
+  "activity": [
+    {
+      "type": "EDUCATION",
+      "name": "AI 데이터사이언스 양성 과정",
+      "org": "패스트캠퍼스",
+      "date": "2022.12 ~ 2023.06",
+      "desc": "Python · SQL · Pandas 기반 데이터 분석과 ML/DL 알고리즘 학습. 크롤링 · EDA · 머신러닝 모델링, GPT API · Prompt Engineering을 활용한 기업 연계 프로젝트 수행"
+    },
+    {
+      "type": "ACTIVITY",
+      "name": "부스트코스 데이터사이언스 프로젝트 코칭스터디",
+      "org": "네이버커넥트재단 · 모두의연구소",
+      "date": "2024.01 ~ 2024.02",
+      "desc": "데이터 전처리 · EDA · Feature Engineering · Hyperparameter Tuning · Modeling 기반 당뇨병 예측 모델링 학습. 팀 리더로 통신사 고객 이탈 예측 프로젝트를 수행하고 코드 리뷰 · 협업으로 데이터 분석 · 모델링 역량 강화"
+    }
+  ],
   "certificate": [],
   "language": [],
   "updatedAt": "",
