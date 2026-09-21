@@ -37,6 +37,7 @@
       { k: 'name', label: '프로젝트명' }, { k: 'org', label: '조직 / 고객사' }, { k: 'role', label: '역할' },
       { k: 'start', label: '시작', hint: 'YYYY.MM' }, { k: 'end', label: '종료', hint: 'YYYY.MM' }, { k: 'current', label: '진행 중', type: 'bool' },
       { k: 'grouped', label: '묶음 카드 (여러 건을 하나로)', type: 'bool' },
+      { k: 'tier', label: '노출 위계', type: 'select', options: [['', '대표 프로젝트'], ['sub', '그 외 수행 프로젝트']], hint: '대표는 크게·자세히, 그 외는 작게 표시됩니다' },
       { k: 'scale', label: '규모', hint: "접힌 카드에 칩으로 표시 · 가운뎃점(·)으로 구분 — 예) 화면 21 · API 141 · 테이블 33" },
       { k: 'tags', label: '태그', type: 'chips', hint: '카드 접힌 상태에서 보입니다 · 클릭하면 한 칸 앞으로 이동' },
       { k: 'problem', label: '문제점', type: 'textarea' }, { k: 'solution', label: '해결', type: 'textarea' },

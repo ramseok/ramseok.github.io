@@ -114,10 +114,32 @@
       function (m) { return '<b class="num">' + m + '</b>'; });
   }
 
+  // 티어별 그룹 렌더 — 대표(main) / 그 외(sub · 묶음)
   function renderProject(arr) {
     arr = (arr || []).filter(function (p) { return p && has(p.name); });
     if (!arr.length) return '';
-    return '<ul class="item-text pcards">' + arr.map(function (p, idx) {
+    var main = [], sub = [];
+    arr.forEach(function (p, i) { (p.tier === 'sub' || p.grouped ? sub : main).push({ p: p, i: i }); });
+    // 티어를 아무것도 지정하지 않았으면 예전처럼 한 덩어리로
+    if (!main.length || !sub.length) {
+      return '<ul class="item-text pcards">' + arr.map(function (p, i) { return projectCard(p, i); }).join('') + '</ul>';
+    }
+    function group(label, note, items, cls) {
+      if (!items.length) return '';
+      return '<div class="pgroup ' + cls + '">' +
+          '<div class="pgroup-head"><span class="pg-label">' + esc(label) + '</span>' +
+          '<span class="pg-count">' + items.length + '건</span>' +
+          (note ? '<span class="pg-note">' + esc(note) + '</span>' : '') +
+        '</div>' +
+        '<ul class="item-text pcards">' + items.map(function (x) { return projectCard(x.p, x.i); }).join('') + '</ul>' +
+      '</div>';
+    }
+    return group('대표 프로젝트', '문제 · 해결 · 성과를 자세히 적었습니다', main, 'tier-main') +
+      group('그 외 수행 프로젝트', '요약과 묶음으로 정리했습니다', sub, 'tier-sub');
+  }
+
+  function projectCard(p, idx) {
+    {
       var sub = [p.org, p.role].filter(has).map(function (s) { return '<span>' + fmt(s) + '</span>'; }).join('');
       var res = list(p.results);
       var body = '';
@@ -139,7 +161,7 @@
       var scale = has(p.scale) ? '<ul class="scale">' + String(p.scale).split('·').map(function (t) { return t.trim(); }).filter(Boolean)
         .map(function (t) { return '<li>' + hl(fmt(t)) + '</li>'; }).join('') + '</ul>' : '';
       var id = 'pc' + idx;
-      return '<li class="pcard' + (p.grouped ? ' grouped' : '') + '">' +
+      return '<li class="pcard' + (p.grouped ? ' grouped' : '') + (p.tier === 'sub' ? ' sub' : '') + '">' +
         '<div class="pcard-head" role="button" tabindex="0" aria-expanded="false" aria-controls="' + id + '">' +
           '<div class="pcard-main">' +
             '<div class="title">' + fmt(p.name) + badge + '</div>' +
@@ -150,7 +172,7 @@
         '</div>' +
         (body ? '<div class="pcard-body text" id="' + id + '" hidden>' + body + '</div>' : '') +
       '</li>';
-    }).join('') + '</ul>';
+    }
   }
 
   function renderStats(arr) {
