@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AI 업무 자동화 포트폴리오 — 김석남</title>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root{
+    --ink:#161a22; --body:#39414f; --muted:#6b7480; --line:#e3e6ec; --soft:#f5f6f9;
+    --accent:#4c5bd4; --accent-soft:#eef0fd; --warn:#b4541f; --warn-soft:#fdf3ec;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{
+    font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    color:var(--body); background:#fff; font-size:10pt; line-height:1.62;
+    word-break:keep-all; overflow-wrap:break-word;
+  }
+  @page{size:A4;margin:0}
+  .page{
+    width:210mm;height:297mm;padding:17mm 16mm 14mm;position:relative;
+    overflow:hidden;page-break-after:always;background:#fff;
+  }
+  .page:last-child{page-break-after:auto}
+  .nopn .pnum{display:none}
+  .pnum{position:absolute;right:16mm;bottom:8mm;font-size:7.5pt;color:#b3b9c4;letter-spacing:.06em}
+  .runhead{position:absolute;left:16mm;bottom:8mm;font-size:7.5pt;color:#b3b9c4;letter-spacing:.04em}
+
+  /* ── 표지 ── */
+  .cover{display:flex;flex-direction:column;height:100%;padding-bottom:56mm}
+  .eyebrow{font-size:8.5pt;font-weight:700;letter-spacing:.16em;color:var(--accent);margin-bottom:9mm}
+  .cover h1{font-size:30pt;line-height:1.28;color:var(--ink);font-weight:800;letter-spacing:-.02em}
+  .rule{width:22mm;height:3px;background:var(--accent);margin:8mm 0 7mm;border-radius:2px}
+  .cover .lead{font-size:10.5pt;line-height:1.75;max-width:150mm;color:var(--body)}
+  .cover .lead b{color:var(--ink);font-weight:700}
+  .covercards{display:flex;gap:5mm;margin-top:11mm}
+  .covercard{flex:1;border:1px solid var(--line);border-radius:4mm;padding:6mm 6mm 6.5mm;background:var(--soft)}
+  .covercard .nm{font-size:12pt;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+  .covercard .ds{font-size:8.5pt;color:var(--muted);margin-top:1mm}
+  .covercard .tx{font-size:9pt;line-height:1.62;margin-top:3.5mm}
+  .coverfoot{margin-top:auto}
+  .coverband{position:absolute;left:0;right:0;bottom:0;height:46mm;background:var(--ink);
+    padding:0 16mm;display:flex;align-items:center;justify-content:space-between}
+  .coverband .nmw{color:#fff}
+  .coverband .who{color:#fff;font-size:13pt}
+  .coverband .who span{color:#9aa3b2}
+  .coverband .contact{color:#9aa3b2;margin-top:2mm;font-size:9pt}
+  .coverband .date{color:#6f7787;font-size:9pt;letter-spacing:.06em;text-align:right}
+  .coverband .date b{display:block;color:#fff;font-size:10pt;font-weight:700;margin-bottom:1mm}
+  .who{font-size:12pt;font-weight:800;color:var(--ink)}
+  .who span{font-weight:600;color:var(--muted);font-size:9.5pt;margin-left:2mm}
+  .contact{font-size:9pt;color:var(--muted);margin-top:1.5mm}
+  .notice{
+    margin-top:7mm;border-left:2.5px solid var(--accent);background:var(--accent-soft);
+    border-radius:0 2mm 2mm 0;padding:4mm 5mm;font-size:8.5pt;line-height:1.7;color:#3b4252
+  }
+  .notice b{color:var(--ink)}
+
+  /* ── 공통 ── */
+  .phead{display:flex;align-items:baseline;gap:3mm;border-bottom:1.5px solid var(--ink);padding-bottom:3mm;margin-bottom:6mm}
+  .phead .kicker{font-size:8pt;font-weight:700;letter-spacing:.12em;color:var(--accent)}
+  .phead h2{font-size:15pt;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+  .phead .sub{margin-left:auto;font-size:8.5pt;color:var(--muted)}
+
+  .stats{display:flex;gap:4mm;margin-bottom:7mm}
+  .stat{flex:1;border:1px solid var(--line);border-radius:3mm;padding:5mm 4.5mm}
+  .stat .v{font-size:15pt;font-weight:800;color:var(--accent);letter-spacing:-.02em;line-height:1.2}
+  .stat .v small{font-size:9.5pt;font-weight:700}
+  .stat .k{font-size:8pt;color:var(--muted);margin-top:2mm;line-height:1.5}
+
+  .block{margin-bottom:6mm}
+  .lab{display:inline-block;font-size:8pt;font-weight:800;letter-spacing:.08em;color:#fff;
+       background:var(--accent);border-radius:1.5mm;padding:.8mm 2.6mm;margin-bottom:2.5mm}
+  .lab.g{background:#2f8f5b}.lab.r{background:#b4443a}
+  .block p{font-size:9.5pt;line-height:1.72}
+  .block p+p{margin-top:2mm}
+  b,strong{color:var(--ink);font-weight:700}
+
+  ul.feat{list-style:none;margin-top:2mm}
+  ul.feat li{position:relative;padding-left:5.5mm;font-size:9.5pt;line-height:1.66;margin-bottom:1.8mm}
+  ul.feat li::before{content:"";position:absolute;left:1.2mm;top:2.4mm;width:1.6mm;height:1.6mm;border-radius:50%;background:var(--accent)}
+  ul.feat li b{color:var(--ink)}
+
+  .cards2{display:flex;gap:5mm}
+  .card{flex:1;border:1px solid var(--line);border-radius:3mm;padding:5mm;background:#fff}
+  .card h3{font-size:10.5pt;color:var(--ink);font-weight:800;margin-bottom:1mm}
+  .card .meta{font-size:8pt;color:var(--muted);margin-bottom:3mm}
+  .card .row{font-size:9pt;line-height:1.62;margin-bottom:2mm;padding-left:12mm;position:relative}
+  .card .row em{position:absolute;left:0;top:0;font-style:normal;font-weight:800;font-size:8pt;color:var(--muted)}
+
+  /* ── 그림 ── */
+  figure{margin-bottom:5.5mm}
+  figure img{width:100%;display:block;border:1px solid var(--line);border-radius:2.5mm}
+  figure.narrow img{width:88%;margin:0 auto}
+  figcaption{margin-top:2.2mm;font-size:8.5pt;line-height:1.6;color:var(--muted)}
+  figcaption b{color:var(--ink);font-weight:700}
+  figcaption .tag{display:inline-block;font-size:7.5pt;font-weight:700;color:var(--accent);
+    background:var(--accent-soft);border-radius:1mm;padding:.4mm 1.8mm;margin-right:1.8mm;vertical-align:1px}
+
+  .callout{border:1px solid #f0dcc9;background:var(--warn-soft);border-radius:3mm;padding:4.5mm 5mm;margin-bottom:6mm}
+  .callout .t{font-size:9pt;font-weight:800;color:var(--warn);margin-bottom:1.5mm}
+  .callout p{font-size:8.5pt;line-height:1.68;color:#5c4632}
+
+  .closing{border-top:1.5px solid var(--ink);margin-top:auto;padding-top:5mm;margin-bottom:10mm}
+  .closing p{font-size:9.5pt;line-height:1.72}
+  .flexcol{display:flex;flex-direction:column}
+
+  table.ba{width:100%;border-collapse:collapse;margin-top:3mm;font-size:8.8pt}
+  table.ba th{background:var(--soft);color:var(--ink);font-weight:700;text-align:left;
+    padding:2.6mm 3mm;border-bottom:1px solid var(--line);font-size:8.3pt;letter-spacing:.02em}
+  table.ba td{padding:2.8mm 3mm;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.55}
+  table.ba td.k{font-weight:700;color:var(--ink);width:24mm}
+  table.ba td.b{color:#8b929e;width:62mm}
+  table.ba td.a{color:var(--ink)}
+  table.ba td.a b{color:var(--accent)}
+
+  .flow{display:flex;align-items:stretch;gap:0;margin-top:2mm}
+  .flow .st{flex:1;border:1px solid var(--line);border-radius:2mm;padding:3.2mm 2mm;text-align:center;background:#fff}
+  .flow .st .n{font-size:7pt;font-weight:800;color:var(--accent);letter-spacing:.08em}
+  .flow .st .t{font-size:8.3pt;color:var(--ink);font-weight:700;margin-top:1mm;line-height:1.4}
+  .flow .ar{display:flex;align-items:center;color:#c2c7d0;font-size:9pt;padding:0 1.5mm}
+
+  .chips{display:flex;flex-wrap:wrap;gap:1.8mm;margin-top:2.5mm}
+  .chips span{font-size:8pt;color:var(--body);background:var(--soft);border:1px solid var(--line);
+    border-radius:1.5mm;padding:1.2mm 2.4mm}
+  .note{font-size:8.7pt;color:var(--muted);line-height:1.68;margin-top:3mm}
+  .note b{color:var(--ink)}
+  .quote{margin:auto 0;padding:12mm 0;text-align:center}
+  .quote p{font-size:14pt;line-height:1.66;color:var(--ink);font-weight:700;letter-spacing:-.015em}
+  .quote .sub2{font-size:9pt;color:var(--muted);font-weight:500;margin-top:4mm;letter-spacing:0}
+</style>
+</head>
+<body>
+
+<!-- ─────────── 1. 표지 ─────────── -->
+<section class="page nopn">
+  <div class="cover" style="padding-top:24mm">
+    <div class="eyebrow">AI BUSINESS TRANSFORMATION · PORTFOLIO</div>
+    <h1>반복되던 업무를<br>직접 만든 도구로 바꿨습니다</h1>
+    <div class="rule"></div>
+    <p class="lead">
+      AI 도구를 <b>도입</b>한 경험이 아니라, 필요한 도구를 <b>직접 설계하고 만들어 팀에 붙인</b> 기록입니다.
+      기획 산출물을 만드는 방식과 프로젝트를 관리하는 방식, 두 구간을 바꾸고 지금도 매일 쓰고 있습니다.
+    </p>
+    <div class="covercards">
+      <div class="covercard">
+        <div class="nm">PRD Toolkit</div>
+        <div class="ds">기획 산출물 자동 생성 파이프라인</div>
+        <div class="tx">계약서를 넣으면 기능 정의 → 페이지 맵 → 동작하는 HTML 시안 → 화면별 기획서 · 테스트케이스까지 한 번에 나옵니다.</div>
+      </div>
+      <div class="covercard">
+        <div class="nm">PM Station</div>
+        <div class="ds">프로젝트 관리 · 알림 · 보고 자동화</div>
+        <div class="tx">마감 있는 모든 일이 한 화면에 모이고, 정해진 시각에 Teams로 먼저 알림이 갑니다. 운영 보고서는 매일 자동으로 발행됩니다.</div>
+      </div>
+    </div>
+    <div class="coverfoot">
+      <div class="notice">
+        <b>본 문서의 화면은 모두 실제 운영 중인 시스템입니다.</b> 고객사명과 개인정보는 A사 · B사 형태로 치환해 촬영했습니다.
+        단, <b>PRD Toolkit의 산출물은 고객사 기획서를 첨부할 수 없어 가상의 예시 프로젝트로 생성한 결과물</b>입니다.
+      </div>
+    </div>
+  </div>
+  <div class="coverband">
+    <div class="nmw">
+      <div class="who">김석남 <span>AI 서비스 기획 · PM</span></div>
+      <div class="contact">ramseok.github.io · rlatjrska1674@gmail.com</div>
+    </div>
+    <div class="date"><b>2026.09</b>PORTFOLIO</div>
+  </div>
+  <div class="pnum">01</div>
+</section>
+
+<!-- ─────────── 2. 한 장 요약 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">OVERVIEW</div><h2>한 장 요약</h2><div class="sub">문제 · 해결 · 성과</div></div>
+
+  <div class="stats">
+    <div class="stat"><div class="v">1~2주<br><small>→ 30분~1시간</small></div><div class="k">착수 기획 산출물 초안<br>작성 시간</div></div>
+    <div class="stat"><div class="v">2<small>개</small></div><div class="k">직접 설계 · 구축해<br>운영 중인 시스템</div></div>
+    <div class="stat"><div class="v">5<small>개 영역</small></div><div class="k">업무 관리 · 알림 · 보고 ·<br>회의록 · 문서 조회 통합</div></div>
+    <div class="stat"><div class="v">0<small>건</small></div><div class="k">도입에 쓴<br>외부 솔루션 비용</div></div>
+  </div>
+
+  <div class="cards2" style="margin-bottom:7mm">
+    <div class="card">
+      <h3>PM Station</h3>
+      <div class="meta">프로젝트 관리 · 알림 · 보고 · 회의록 자동화 · 2026.08~</div>
+      <div class="row"><em>문제</em>매뉴얼을 문서로 쌓아도 아무도 열어보지 않았고, 마감과 회신 대기는 메신저 · 엑셀 · 개인 메모로 흩어져 있었습니다.</div>
+      <div class="row"><em>해결</em>PM 업무 전체를 한 서비스에서 처리하도록 다시 설계하고 Claude Code로 직접 구축했습니다.</div>
+      <div class="row"><em>성과</em>매일 아침 지표를 눌러 확인하고 구두 보고를 준비하던 과정이 사라졌습니다.</div>
+    </div>
+    <div class="card">
+      <h3>PRD Toolkit</h3>
+      <div class="meta">계약서 → 기획서 · 화면 시안 자동 생성 · 2026.06~</div>
+      <div class="row"><em>문제</em>Figma로 화면을 한 장씩 그려 초안까지 1~2주가 걸렸고, 그 구간이 전체 일정의 병목이었습니다.</div>
+      <div class="row"><em>해결</em>계약서에서 기능을 읽어 시안 · 기획서 · 테스트케이스까지 한 번에 생성하는 파이프라인을 만들었습니다.</div>
+      <div class="row"><em>성과</em>초안 작성이 30분~1시간으로 줄고, 전달은 링크 하나로 끝납니다.</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="lab">공통 기준</div>
+    <p>두 시스템 모두 같은 판단에서 출발했습니다. <b>자동화의 성패는 기술이 아니라 "사람이 도구 앞으로 가야 하느냐, 도구가 사람에게 오느냐"에서 갈립니다.</b>
+       접속해야만 쓸 수 있는 형태였다면 챗봇도 알림도 쓰이지 않았을 것입니다. 그래서 알림은 서버에서 먼저 보내고, 보고서는 사용자가 이미 보고 있는 자리에 자동으로 놓이게 했습니다.</p>
+  </div>
+
+  <div class="block" style="margin-top:7mm">
+    <div class="lab">직접 구축 · 운영</div>
+    <p style="margin-bottom:2mm">기획 직군이지만 별도 개발 리소스 없이 설계부터 배포 · 운영까지 직접 맡고 있습니다.</p>
+    <div class="chips">
+      <span>Claude Code</span><span>AI 에이전트 9종 구성</span><span>React (Vite) SPA · PWA</span>
+      <span>Supabase · PostgreSQL</span><span>pg_cron 스케줄러</span><span>Vercel 서버리스</span>
+      <span>Netlify 배포</span><span>Teams Webhook 연동</span><span>OpenAI API</span><span>STT 전사</span>
+    </div>
+  </div>
+
+  <div class="block" style="margin-top:6mm">
+    <div class="lab">문서 구성</div>
+    <table class="ba">
+      <tr><th style="width:22mm">페이지</th><th>내용</th></tr>
+      <tr><td class="k">03 – 06</td><td class="a"><b>PM Station</b> — 문제 · 해결 · 성과와 실제 화면 4종 (대시보드 · 정기 업무 · AI 챗봇 · 운영 보고서)</td></tr>
+      <tr><td class="k">07 – 11</td><td class="a"><b>PRD Toolkit</b> — 문제 · 해결 · 성과와 산출물 4종 (시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트)</td></tr>
+      <tr><td class="k">12</td><td class="a">일하는 순서</td></tr>
+    </table>
+  </div>
+
+  <div class="runhead">AI 업무 자동화 포트폴리오</div>
+  <div class="pnum">02</div>
+</section>
+
+<!-- ─────────── 3. PM Station 개요 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PROJECT 01</div><h2>PM Station</h2><div class="sub">프로젝트 관리 · 알림 · 보고 · 회의록 자동화</div></div>
+
+  <div class="block">
+    <div class="lab r">문제</div>
+    <p>스타트업 초기 멤버로 합류했을 때 사내에 업무 시스템이 없었습니다. 반복해서 발생하는 일을 매뉴얼로 만들어 문서화하고 워드에서 엑셀 시트로 옮겨 정리했지만,
+       <b>문서는 늘어나는데 정작 필요한 순간에는 아무도 열어보지 않았습니다.</b> 매뉴얼은 접근성이 없으면 없는 것과 같았습니다.</p>
+    <p>여기에 여러 프로젝트를 병렬로 맡다 보니 마감과 고객사 회신 대기가 메신저 · 엑셀 · 개인 메모로 흩어져 누락 위험이 컸고,
+       운영 중인 서비스의 지표는 <b>매일 아침 관리자 페이지를 하나씩 눌러 확인한 뒤 오전 회의에서 구두로 보고</b>했습니다. 회의록도 매번 직접 정리해야 했습니다.</p>
+  </div>
+
+  <div class="block">
+    <div class="lab">해결</div>
+    <p>처음에는 매뉴얼화한 문서를 AI 프로젝트에 학습 데이터로 올려 질문 · 답변으로 찾아 쓰는 방식을 시도했습니다.
+       문서를 뒤지는 시간은 줄었지만 업무 관리 · 알림 · 보고는 여전히 따로 돌아갔고, 결국
+       <b>PM 업무 전체를 한 서비스에서 처리하도록 다시 설계해 Claude Code로 직접 구축</b>했습니다.</p>
+    <ul class="feat">
+      <li><b>프로젝트 · 업무 관리</b> — 마감이 있는 모든 항목이 자동으로 알림 대상에 편입됩니다. 기한 초과 · 오늘 · 3일 내 · 받아야 할 것 네 갈래로 나눠 한 화면에서 봅니다.</li>
+      <li><b>알림 연동</b> — 서버 스케줄러가 정해진 시각마다 Teams 개인 채팅으로 금일 할 일과 정기 업무를 보냅니다. 앱을 꺼둬도 도착합니다.</li>
+      <li><b>정기 업무</b> — 일 · 주 · 월 주기로 반복되는 일을 따로 관리하고 연속 달성과 누락을 추적합니다.</li>
+      <li><b>보고 자동화</b> — 운영 서비스의 어드민 데이터를 읽어 매일 오전 운영 보고서를 자동 발행합니다. PDF까지 함께 만들어집니다.</li>
+      <li><b>AI 회의록 · 문서 챗봇</b> — 녹음 파일을 전사해 회의록 초안을 만들고, 매뉴얼은 질문하면 근거 문서와 함께 답합니다.</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <div class="lab g">성과</div>
+    <p>업무 관리 · 알림 · 보고 · 회의록 · 문서 조회가 <b>지금은 PM Station 한 곳에서 끝납니다.</b>
+       매일 아침 관리자 페이지를 눌러 지표를 확인하고 구두 보고를 준비하던 과정이 없어졌고, 회의록 작성은 초안 검토로 줄었습니다.
+       알림이 서버에서 자동 실행되므로 마감 누락이 사전에 차단됩니다.</p>
+  </div>
+
+  <div class="block" style="margin-top:2mm">
+    <div class="lab">이전 → 이후</div>
+    <table class="ba">
+      <tr><th>구간</th><th>이전</th><th>지금</th></tr>
+      <tr><td class="k">매뉴얼 확인</td><td class="b">문서를 찾아 열어봐야 해 사실상 방치</td><td class="a">질문하면 <b>근거 문서와 함께</b> 답변</td></tr>
+      <tr><td class="k">마감 관리</td><td class="b">메신저 · 엑셀 · 개인 메모에 분산</td><td class="a">네 갈래 자동 분류 + <b>정해진 시각 Teams 알림</b></td></tr>
+      <tr><td class="k">지표 보고</td><td class="b">매일 아침 관리자 페이지 수동 확인 후 구두 보고</td><td class="a">정해진 시각에 <b>보고서 자동 발행</b> (PDF 포함)</td></tr>
+      <tr><td class="k">회의록</td><td class="b">매번 직접 정리</td><td class="a">녹음 · 텍스트 업로드 → <b>초안 자동 생성</b></td></tr>
+    </table>
+  </div>
+
+  <div class="runhead">PM Station</div>
+  <div class="pnum">03</div>
+</section>
+
+<!-- ─────────── 4. 대시보드 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PM STATION · 화면 01</div><h2>흩어진 일을 한 화면으로</h2><div class="sub">홈 대시보드</div></div>
+
+  <figure>
+    <img src="pm-dashboard.png" alt="PM Station 홈 대시보드">
+    <figcaption><span class="tag">전체 화면</span><b>홈 대시보드</b> — 왼쪽에 진행 중인 프로젝트 8건, 가운데에 이번 주 마감과 오늘의 정기 업무, 아래에 지금 처리해야 할 항목이 놓입니다. 고객사명은 A사 · B사로 치환했습니다.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="crops/pm-dashboard-kpi.png" alt="기한 초과·오늘 마감·3일 내·받아야 할 것 카드">
+    <figcaption><span class="tag">확대</span><b>네 갈래 분류와 알림 시각</b> — 마감이 있는 항목은 <b>기한 초과 · 오늘 마감 · 3일 내 · 받아야 할 것</b>으로 자동 분류됩니다.
+      오른쪽 아래 <b>"매일 오전 9시 · 오후 2시 · 오후 3시 · 오후 4시"</b>가 Teams로 알림이 나가는 시각입니다.</figcaption>
+  </figure>
+
+  <div class="block" style="margin-top:1mm">
+    <p><b>"받아야 할 것"</b>은 제가 할 일이 아니라 <b>고객사 회신 · 자료를 기다리는 항목</b>입니다. 내가 놓친 일만큼이나 상대가 늦는 일이 일정을 밀기 때문에, 대기 중인 건을 별도 갈래로 세웠습니다.</p>
+  </div>
+
+  <div class="runhead">PM Station</div>
+  <div class="pnum">04</div>
+</section>
+
+<!-- ─────────── 5. 정기 업무 + 챗봇 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PM STATION · 화면 02–03</div><h2>반복되는 일과 흩어진 매뉴얼</h2><div class="sub">정기 업무 · AI 챗봇</div></div>
+
+  <figure>
+    <img src="pm-routine.png" alt="정기 업무 화면">
+    <figcaption><span class="tag">전체 화면</span><b>정기 업무</b> — 프로젝트와 별개로 반복되는 일을 일간 · 주간 · 월간으로 나눠 관리합니다. 완료해도 목록에서 사라지지 않고 다음 주기가 되면 다시 비어 있는 상태로 돌아옵니다.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="crops/pm-routine-daily.png" alt="정기 업무 연속 달성과 누락 추적">
+    <figcaption><span class="tag">확대</span><b>연속 달성 · 누락 추적</b> — 항목마다 <b>오늘 완료 · 연속 횟수 · 최근 누락 횟수</b>가 표시되고, 오른쪽 점으로 최근 이행 이력을 봅니다. 습관처럼 빠지는 일을 눈에 보이게 만든 장치입니다.</figcaption>
+  </figure>
+
+  <figure style="margin-bottom:0">
+    <img src="crops/pm-chatbot-sources.png" alt="AI 챗봇 근거 문서 표시">
+    <figcaption><span class="tag">확대</span><b>AI 챗봇 — 근거 문서 표시</b> — 매뉴얼화한 사내 문서를 학습 데이터로 넣어, 질문하면 답변과 함께 <b>어느 매뉴얼에서 나온 내용인지</b> 근거를 붙여 보여줍니다.
+      자료에 없는 내용은 답하지 않도록 제한했습니다. 과도기에 쓰던 문서 검색 방식을 시스템 안의 기능으로 흡수한 부분입니다.</figcaption>
+  </figure>
+
+  <div class="runhead">PM Station</div>
+  <div class="pnum">05</div>
+</section>
+
+<!-- ─────────── 6. 운영 보고서 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PM STATION · 화면 04</div><h2>매일 아침의 구두 보고를 없앤 자리</h2><div class="sub">운영 보고서 자동 발행</div></div>
+
+  <figure>
+    <img src="pm-report.png" alt="운영 보고서 자동 생성 화면">
+    <figcaption><span class="tag">전체 화면</span><b>운영 보고서</b> — 프로젝트 상세의 기록 탭에 매일 자동으로 쌓입니다. 집계 구간은 <b>직전 보고서 이후 ~ 현재</b>로 잡히고, 같은 길이의 직전 구간과 비교합니다. 생성된 보고서는 PDF로 내려받을 수 있습니다.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="crops/pm-report-metrics.png" alt="운영 보고서 지표 타일">
+    <figcaption><span class="tag">확대</span><b>지표와 증감</b> — 활동 유저 · 신규 가입 · 탈퇴 · 결제 건수 · 발화 메시지 · 크레딧 소비 등 핵심 지표를 직전 구간과 대조해 증감을 함께 보여줍니다. 수치 뒤 한 줄에는 누적값과 원인 단서를 붙였습니다.</figcaption>
+  </figure>
+
+  <div class="block" style="margin-top:1mm">
+    <p>이전에는 이 숫자들을 보려고 <b>매일 아침 관리자 페이지를 하나씩 눌러 확인한 뒤 오전 회의에서 구두로 보고</b>했습니다.
+       지금은 정해진 시각에 보고서가 먼저 만들어져 있고, 저는 확인과 판단만 합니다. 어드민 API가 일시적으로 실패해도 보고서 자체는 생성되도록 장애 내성을 넣었습니다.</p>
+  </div>
+
+  <div class="runhead">PM Station</div>
+  <div class="pnum">06</div>
+</section>
+
+<!-- ─────────── 7. PRD Toolkit 개요 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PROJECT 02</div><h2>PRD Toolkit</h2><div class="sub">계약서 → 기획서 · 화면 시안 자동 생성</div></div>
+
+  <div class="callout">
+    <div class="t">이 장의 화면에 대하여</div>
+    <p>실제 고객사 프로젝트의 기획서는 비밀유지 대상이라 첨부할 수 없습니다. 이어지는 화면은 모두
+      <b>가상의 예시 프로젝트 「무지개 일기(가칭)」를 파이프라인에 넣어 생성한 산출물</b>입니다.
+      도구의 동작과 결과물 형태를 보여주기 위한 것이며, 특정 고객사의 내용이 아닙니다.</p>
+  </div>
+
+  <div class="block">
+    <div class="lab r">문제</div>
+    <p>기획서를 Figma로 한 장씩 그렸습니다. 규모에 따라 다르지만 <b>초안까지 보통 1~2주</b>가 걸렸고, 적은 인원이 여러 프로젝트를 동시에 맡는 구조에서 이 구간이 전체 일정의 병목이었습니다.</p>
+    <p>전달도 번거로웠습니다. PDF로 변환 · 병합해 보내야 했고, 링크로 보내도 보기 불편하다는 고객사 의견이 있었습니다.
+       게다가 기획서 · 시안 · 고객 피드백 · 테스트케이스가 각각 다른 문서와 메신저에 흩어져, <b>어떤 피드백이 어느 화면의 어느 항목에 대한 것인지 매번 다시 맞춰야</b> 했습니다.</p>
+  </div>
+
+  <div class="block">
+    <div class="lab">해결</div>
+    <p>이미 확정된 문서인 <b>계약서를 출발점으로</b> 삼아, 기능 정의 → 페이지 맵 → 화면 시안 → 화면별 기획서 · 테스트케이스 → 고객 공유 문서까지 이어지는 파이프라인을 설계했습니다.</p>
+    <ul class="feat">
+      <li><b>동작하는 HTML 시안</b> — 그림이 아니라 클릭과 페이지 이동이 실제로 되는 화면으로 만들어집니다.</li>
+      <li><b>리뷰 레이어</b> — 시안에서 <b>Ctrl + /</b> 를 누르면 그 화면의 기획서 · 고객사 코멘트 · 테스트케이스가 한 패널에서 열립니다.</li>
+      <li><b>디자인 기준 통일</b> — 고객사 디자인 요구사항을 <b>design.md</b>로 추출해 전체 화면에 같은 기준으로 적용합니다.</li>
+      <li><b>품질 게이트</b> — 만든 주체가 스스로 통과 판정을 내리지 못하게 하고, 완료 판정은 파일 개수가 아니라 내용으로 검사합니다.</li>
+      <li><b>링크 전달</b> — Netlify · Vercel로 자동 배포해 링크 하나로 보내고, 고객 피드백은 Supabase에 남습니다.</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <div class="lab g">성과</div>
+    <p>초안까지 걸리던 시간이 <b>1~2주에서 30분~1시간 내외</b>로 줄었습니다(최초 산출물 기준이며 이후 협의에 따른 수정은 별도).
+       전달은 링크 하나로 끝나 변환 · 병합 작업이 사라졌고, 피드백이 화면 단위로 쌓이면서 재확인 커뮤니케이션이 없어졌습니다.</p>
+  </div>
+
+  <div class="block" style="margin-top:1mm">
+    <div class="lab">이전 → 이후</div>
+    <table class="ba">
+      <tr><th>구간</th><th>이전</th><th>지금</th></tr>
+      <tr><td class="k">초안 작성</td><td class="b">Figma로 화면을 한 장씩 작도 · 1~2주</td><td class="a"><b>30분~1시간</b> 내외로 일괄 생성</td></tr>
+      <tr><td class="k">고객 전달</td><td class="b">PDF 변환 · 병합 후 첨부</td><td class="a">자동 배포된 <b>링크 하나</b></td></tr>
+      <tr><td class="k">피드백</td><td class="b">메신저 · 메일 · 별도 문서로 분산</td><td class="a">화면에 붙어 <b>상태로 관리</b></td></tr>
+      <tr><td class="k">검수</td><td class="b">테스트케이스를 별도 문서로 관리</td><td class="a">시안 안에서 <b>Pass · Fail 기록</b></td></tr>
+    </table>
+  </div>
+
+  <div class="runhead">PRD Toolkit</div>
+  <div class="pnum">07</div>
+</section>
+
+<!-- ─────────── 8. 시안 허브 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PRD TOOLKIT · 산출물 01</div><h2>계약서 한 건에서 나온 결과물</h2><div class="sub">시안 허브</div></div>
+
+  <div class="flow">
+    <div class="st"><div class="n">01</div><div class="t">계약서 입력</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">02</div><div class="t">기능 정의</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">03</div><div class="t">페이지 맵</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">04</div><div class="t">HTML 시안</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">05</div><div class="t">기획서 · TC</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">06</div><div class="t">링크 배포</div></div>
+  </div>
+  <p class="note" style="margin-bottom:5mm">아래는 위 흐름의 <b>04~05단계 산출물</b>입니다. 가상의 예시 프로젝트 「무지개 일기(가칭)」를 넣어 생성했습니다.</p>
+
+  <figure>
+    <img src="crops/prd-hub-c.png" alt="PRD Toolkit 시안 허브">
+    <figcaption><span class="tag">산출물</span><b>시안 허브</b> — 예시 프로젝트 한 건에서 <b>사용자 화면 26 · 관리자 화면 7 · 기능 44개(F1~F44)</b>가 생성됐습니다.
+      화면 카드마다 설명과 관련 기능 번호, 실제 파일 경로가 함께 붙어 <b>기능과 화면이 1:1로 대응</b>됩니다. 상단 안내처럼 모든 화면에서 <b>Ctrl + /</b> 로 리뷰 패널이 열립니다.</figcaption>
+  </figure>
+
+  <p class="note">단계마다 역할이 다른 <b>전담 에이전트 9종</b>을 두고, 계약 해석처럼 판단이 무거운 일과 화면 양산, 기계적 검사에 각각 다른 모델을 배치해 비용과 속도를 맞췄습니다.
+    상위 산출물이 수정되면 하위 단계의 검토 상태가 자동으로 무효화돼 문서 간 어긋남을 막습니다.</p>
+
+  <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
+  <div class="pnum">08</div>
+</section>
+
+<!-- ─────────── 9. 화면별 기획서 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PRD TOOLKIT · 산출물 02</div><h2>화면을 보면서 그 화면의 기획서를</h2><div class="sub">화면별 기획서</div></div>
+
+  <figure>
+    <img src="crops/prd-spec-c.png" alt="화면별 기획서 패널">
+    <figcaption><span class="tag">산출물</span><b>화면별 기획서</b> — 왼쪽은 클릭과 페이지 이동이 실제로 동작하는 시안, 오른쪽은 <b>Ctrl + /</b> 로 열리는 패널입니다.
+      URL · 대상 · 관련 기능이 머리에 오고, 화면 구성은 <b>영역 · 내용 · 관련 기능</b> 표로 정리됩니다.</figcaption>
+  </figure>
+
+  <p class="note">기획서와 시안을 따로 보내면 고객사는 두 문서를 번갈아 맞춰 봐야 했습니다.
+    지금은 <b>보고 있는 화면이 곧 문서의 기준점</b>이라, "어느 화면의 어느 항목"을 설명하는 데 드는 대화가 사라졌습니다.</p>
+
+  <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
+  <div class="pnum">09</div>
+</section>
+
+<!-- ─────────── 10. 테스트케이스 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PRD TOOLKIT · 산출물 03</div><h2>검수를 도구 안으로</h2><div class="sub">테스트케이스</div></div>
+
+  <figure>
+    <img src="crops/prd-tc-c.png" alt="테스트케이스 탭">
+    <figcaption><span class="tag">산출물</span><b>테스트케이스</b> — 같은 패널의 세 번째 탭입니다. 사전조건 · 절차 · 기대결과가 화면 단위로 붙고,
+      <b>Pass · Fail · 미확인</b> 상태를 그 자리에서 바꿉니다. Fail 항목에는 개발사와 고객사가 각각 코멘트를 남길 수 있습니다.</figcaption>
+  </figure>
+
+  <p class="note">검수 결과를 별도 엑셀로 관리하면 <b>어느 화면의 몇 번 항목인지</b> 다시 맞추는 일이 반복됩니다.
+    테스트케이스를 화면에 붙여 두면 검수자가 보고 있는 화면이 곧 기준점이 되고, 상태 변경이 그대로 기록으로 남습니다.</p>
+
+  <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
+  <div class="pnum">10</div>
+</section>
+
+<!-- ─────────── 11. 고객사 코멘트 ─────────── -->
+<section class="page">
+  <div class="phead"><div class="kicker">PRD TOOLKIT · 산출물 04</div><h2>피드백을 흩어지지 않게</h2><div class="sub">고객사 코멘트</div></div>
+
+  <figure>
+    <img src="crops/prd-comment-c.png" alt="고객사 코멘트 탭">
+    <figcaption><span class="tag">산출물</span><b>고객사 코멘트</b> — 고객사가 화면을 보면서 바로 수정 요청을 남기고, 개발사가 답글을 답니다.
+      각 건은 <b>검토중 · 수정중 · 완료 · 논의 필요</b>로 상태가 관리되고 파일도 함께 첨부됩니다.</figcaption>
+  </figure>
+
+  <p class="note">이전에는 메신저와 메일, 별도 문서로 흩어지던 요청입니다. 지금은 <b>화면에 붙어 기록으로 남고</b> 상태로 관리되기 때문에
+    무엇이 반영됐고 무엇이 남았는지 양쪽이 같은 화면에서 확인합니다. 코멘트는 Supabase에 저장되며 프로젝트별로 분리됩니다.</p>
+
+  <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
+  <div class="pnum">11</div>
+</section>
+
+<!-- ─────────── 11. 마무리 ─────────── -->
+<section class="page flexcol">
+  <div class="phead"><div class="kicker">CLOSING</div><h2>일하는 순서</h2><div class="sub">문제 발견 → 도구 제작 → 확인과 개선</div></div>
+
+  <div class="block">
+    <p>두 시스템 모두 <b>아이디어나 보고서로 끝난 제안이 아니라 제가 매일 여는 도구</b>입니다.
+      문제를 발견하면 문서로 남기는 데서 멈추지 않고, 동작하는 형태로 만들어 업무에 붙이고, 실제로 쓰이는지 확인하며 고쳐 왔습니다.</p>
+  </div>
+
+  <div class="flow" style="margin-bottom:6mm">
+    <div class="st"><div class="n">STEP 01</div><div class="t">어디에서 시간이<br>새는지 찾기</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">STEP 02</div><div class="t">효과 · 실행 가능성으로<br>우선순위 정리</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">STEP 03</div><div class="t">동작하는 형태로<br>만들어 붙이기</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">STEP 04</div><div class="t">전후를 기록해<br>다음 과제 근거로</div></div>
+  </div>
+
+  <div class="cards2">
+    <div class="card">
+      <h3>도구가 사람에게 가야 합니다</h3>
+      <div class="meta">두 시스템을 만들며 세운 기준</div>
+      <div class="row" style="padding-left:0">접속해야만 쓸 수 있는 형태였다면 챗봇도 알림도 쓰이지 않았을 것입니다. 그래서 알림은 서버에서 먼저 보내고, 보고서는 사용자가 이미 보고 있는 자리에 자동으로 놓이게 했습니다.</div>
+    </div>
+    <div class="card">
+      <h3>문서로 끝내지 않습니다</h3>
+      <div class="meta">매뉴얼에서 시스템까지</div>
+      <div class="row" style="padding-left:0">매뉴얼을 문서로 쌓는 방식은 끝내 해결이 되지 않았습니다. 한 번 실패한 접근을 버리고 다시 설계해, 지금은 업무 관리 · 알림 · 보고 · 회의록 · 문서 조회가 한 곳에서 끝납니다.</div>
+    </div>
+  </div>
+
+  <div class="quote">
+    <p>반복되는 일은 사람이 기억하는 대신<br>시스템이 기억하게 만들었습니다.</p>
+    <div class="sub2">PM Station · PRD Toolkit — 설계부터 배포 · 운영까지 직접</div>
+  </div>
+
+  <div class="closing">
+    <p>새로운 조직에서도 같은 순서로 일하겠습니다. <b>어디에서 시간이 새는지 먼저 찾고, 가장 빨리 체감되는 것부터 만들어 붙이고, 전후를 기록해 다음 과제의 근거로 쓰는 것</b>입니다.</p>
+    <p style="margin-top:4mm;font-size:9pt;color:var(--muted)">김석남 · AI 서비스 기획 · PM &nbsp;·&nbsp; ramseok.github.io &nbsp;·&nbsp; rlatjrska1674@gmail.com</p>
+  </div>
+
+  <div class="runhead">AI 업무 자동화 포트폴리오</div>
+  <div class="pnum">12</div>
+</section>
+
+</body>
+</html>
