@@ -237,7 +237,24 @@ window.PORTFOLIO_DEFAULT = {
       ],
       "grouped": false,
       "url": "",
-      "images": [],
+      "images": [
+        {
+          "url": "https://ramseok.github.io/assets/ax/prd-hub.png",
+          "caption": "시안 허브 — 계약서 1건에서 생성된 전체 화면 시안과 기능 번호(F1~F44)"
+        },
+        {
+          "url": "https://ramseok.github.io/assets/ax/prd-spec.png",
+          "caption": "화면별 기획서 — 시안에서 Ctrl + / 로 열리는 리뷰 패널, URL · 대상 · 화면 구성 표"
+        },
+        {
+          "url": "https://ramseok.github.io/assets/ax/prd-tc.png",
+          "caption": "테스트케이스 — 사전조건 · 절차 · 기대결과를 화면 단위로 Pass / Fail 관리"
+        },
+        {
+          "url": "https://ramseok.github.io/assets/ax/prd-comment.png",
+          "caption": "고객사 코멘트 — 화면에 붙는 요청과 답변 이력, 상태별 관리"
+        }
+      ],
       "tier": "self"
     },
     {
@@ -253,7 +270,24 @@ window.PORTFOLIO_DEFAULT = {
         "Teams 연동"
       ],
       "start": "2026.08",
-      "images": [],
+      "images": [
+        {
+          "url": "https://ramseok.github.io/assets/ax/pm-dashboard.png",
+          "caption": "홈 대시보드 — 기한 초과 · 오늘 마감 · 3일 내 · 받아야 할 것"
+        },
+        {
+          "url": "https://ramseok.github.io/assets/ax/pm-report.png",
+          "caption": "운영 보고서 자동 생성 — 집계 · 비교 구간과 지표별 증감"
+        },
+        {
+          "url": "https://ramseok.github.io/assets/ax/pm-chatbot.png",
+          "caption": "AI 챗봇 — 사내 문서에 근거해서만 답하고 근거 문서를 함께 표시"
+        },
+        {
+          "url": "https://ramseok.github.io/assets/ax/pm-routine.png",
+          "caption": "정기 업무 — 일 · 주 · 월 주기 업무의 연속 달성과 누락 추적"
+        }
+      ],
       "current": true,
       "grouped": false,
       "problem": "여러 프로젝트를 병렬로 돌리면서 마감, 고객사 회신·자료 대기, 정기 업무가 메신저·엑셀·개인 메모에 흩어져 누락 위험이 컸습니다. 팀원별로 볼 수 있는 프로젝트 범위를 나눌 방법이 없었고, 운영 중인 서비스의 지표 보고는 매일 수작업이었습니다.",
@@ -459,8 +493,8 @@ window.PORTFOLIO_DEFAULT = {
   "portfolio": {
     "files": [
       {
-        "name": "[이름]_경력기술서.pdf",
-        "url": ""
+        "name": "AI 업무 자동화 포트폴리오 (PDF)",
+        "url": "https://ramseok.github.io/assets/ax/AI업무자동화_포트폴리오.pdf"
       }
     ],
     "links": [
