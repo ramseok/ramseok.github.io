@@ -187,9 +187,9 @@
     <div class="lab">문서 구성</div>
     <table class="ba">
       <tr><th style="width:22mm">페이지</th><th>내용</th></tr>
-      <tr><td class="k">03 – 10</td><td class="a"><b>PM Station</b> — 문제 · 해결 · 성과와 실제 화면 (대시보드 · WBS · 정기 업무 · 알림 · 운영 보고서 · AI 챗봇 · 변경 이력 · 모바일)</td></tr>
-      <tr><td class="k">11 – 15</td><td class="a"><b>PRD Toolkit</b> — 문제 · 해결 · 성과와 산출물 (시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트 · 관리자 시안 · 디자인 가이드)</td></tr>
-      <tr><td class="k">16</td><td class="a">일하는 순서</td></tr>
+      <tr><td class="k">03 – 11</td><td class="a"><b>PM Station</b> — 문제 · 해결 · 성과와 실제 화면 (대시보드 · WBS · 정기 업무 · 알림 · 운영 보고서 · 보고서 본문 · AI 챗봇 · 변경 이력 · 모바일)</td></tr>
+      <tr><td class="k">12 – 16</td><td class="a"><b>PRD Toolkit</b> — 문제 · 해결 · 성과와 산출물 (시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트 · 관리자 시안 · 디자인 가이드)</td></tr>
+      <tr><td class="k">17</td><td class="a">일하는 순서</td></tr>
     </table>
   </div>
   <div class="runhead">AI 업무 자동화 포트폴리오</div>
@@ -334,6 +334,32 @@
   <div class="pnum">08</div>
 </section>
 
+<!-- 08-2 운영 보고서 본문 -->
+<section class="page">
+  <div class="phead"><div class="kicker">PM STATION · 화면 05</div><h2>숫자 다음에 해석과 할 일까지</h2><div class="sub">운영 보고서 본문</div></div>
+  <figure>
+    <img src="crops/pm-report-summary.png" alt="운영 보고서 요약">
+    <figcaption><span class="tag">요약</span><b>구간 요약</b> — 지표 타일 바로 아래에서 이번 구간을 서너 문장으로 먼저 정리합니다. 전체 수치가 누구의 활동에서 나왔는지까지 짚어 줍니다.</figcaption>
+  </figure>
+  <figure>
+    <img src="crops/pm-report-insight.png" alt="조치 필요와 인사이트">
+    <figcaption><span class="tag">조치 · 인사이트</span><b>오늘 할 일과 해석</b> — 미답변 문의 · 탈퇴처럼 <b>당일 처리할 항목</b>을 먼저 띄우고, 지표가 바뀐 곳마다
+      <b>"해석 → 다음 행동"</b>을 붙입니다. 보고서를 읽고 곧바로 무엇을 할지 정할 수 있게 한 구조입니다. (인사이트 7건 중 앞 3건)</figcaption>
+  </figure>
+  <figure>
+    <img src="crops/pm-report-failsafe.png" alt="데이터 수집 실패 표시와 집계 기준">
+    <figcaption><span class="tag">장애 내성</span><b>일부 수집 실패 표시</b> — 어드민 API 한 곳이 실패해도(HTTP 500) 보고서는 멈추지 않고,
+      어느 항목이 비었는지와 무엇을 확인해야 하는지 적어 둡니다. 맨 아래에는 집계 기준과 용어 정의가 매번 함께 붙습니다.</figcaption>
+  </figure>
+  <div class="block" style="margin-top:1mm">
+    <p>보고서 한 건의 순서는 <b>지표 → 요약 → 유저 · 결제 · 대화 · 콘텐츠 · 문의 상세 → 조치 필요 → 인사이트 → 수집 실패 → 집계 기준</b>입니다.
+      사용자 이름 · 아이디는 <b>유저 A~K</b>, 서비스명은 <b>F사</b>로 치환해 촬영했고, 사용자 문의 원문이 담긴 부분은 싣지 않았습니다.</p>
+  </div>
+  <div class="runhead">PM Station</div>
+  <div class="pnum">09</div>
+</section>
+
+
 <!-- 09 AI 챗봇 -->
 <section class="page">
   <div class="phead"><div class="kicker">PM STATION · 화면 06</div><h2>매뉴얼을 찾지 않고 물어봅니다</h2><div class="sub">AI 챗봇 (사내 문서 기반)</div></div>
@@ -348,7 +374,7 @@
       화면 맨 아래 안내처럼 <b>등록된 학습 데이터에 없는 내용은 답하지 않도록</b> 제한해, 업무에 쓸 수 없는 그럴듯한 답을 막았습니다.</figcaption>
   </figure>
   <div class="runhead">PM Station</div>
-  <div class="pnum">09</div>
+  <div class="pnum">10</div>
 </section>
 
 <!-- 10 변경 이력 + 모바일 -->
@@ -374,7 +400,7 @@
     </figure>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">10</div>
+  <div class="pnum">11</div>
 </section>
 
 <!-- 11 PRD Toolkit 개요 -->
@@ -418,7 +444,7 @@
     </table>
   </div>
   <div class="runhead">PRD Toolkit</div>
-  <div class="pnum">11</div>
+  <div class="pnum">12</div>
 </section>
 
 <!-- 12 시안 허브 -->
@@ -441,7 +467,7 @@
   <p class="note">단계마다 역할이 다른 <b>전담 에이전트 9종</b>을 두고, 계약 해석처럼 판단이 무거운 일과 화면 양산, 기계적 검사에 각각 다른 모델을 배치해 비용과 속도를 맞췄습니다.
     상위 산출물이 수정되면 하위 단계의 검토 상태가 자동으로 무효화돼 문서 간 어긋남을 막습니다.</p>
   <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
-  <div class="pnum">12</div>
+  <div class="pnum">13</div>
 </section>
 
 <!-- 13 화면별 기획서 -->
@@ -455,7 +481,7 @@
   <p class="note">기획서와 시안을 따로 보내면 고객사는 두 문서를 번갈아 맞춰 봐야 했습니다.
     지금은 <b>보고 있는 화면이 곧 문서의 기준점</b>이라, "어느 화면의 어느 항목"을 설명하는 데 드는 대화가 사라졌습니다.</p>
   <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
-  <div class="pnum">13</div>
+  <div class="pnum">14</div>
 </section>
 
 <!-- 14 테스트케이스 + 코멘트 -->
@@ -470,7 +496,7 @@
     <figcaption><span class="tag">산출물</span><b>고객사 코멘트</b> — 고객사가 화면을 보면서 바로 수정 요청을 남기고 개발사가 답글을 답니다. 각 건은 <b>검토중 · 수정중 · 완료 · 논의 필요</b>로 관리되고 파일도 첨부됩니다.</figcaption>
   </figure>
   <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
-  <div class="pnum">14</div>
+  <div class="pnum">15</div>
 </section>
 
 <!-- 15 관리자 시안 + 디자인 가이드 -->
@@ -487,7 +513,7 @@
       콘셉트 · 컬러 · 타이포 · 버튼 · 접근성 · 금지 사항까지 11개 절로 고정해 <b>주관적 피드백으로 되돌아가는 재작업</b>을 줄입니다.</figcaption>
   </figure>
   <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
-  <div class="pnum">15</div>
+  <div class="pnum">16</div>
 </section>
 
 <!-- 16 마무리 -->
@@ -524,7 +550,7 @@
     <p style="margin-top:4mm;font-size:9pt;color:var(--muted)">김석남 · AI 서비스 기획 · PM &nbsp;·&nbsp; ramseok.github.io &nbsp;·&nbsp; rlatjrska1674@gmail.com</p>
   </div>
   <div class="runhead">AI 업무 자동화 포트폴리오</div>
-  <div class="pnum">16</div>
+  <div class="pnum">17</div>
 </section>
 
 </body>
