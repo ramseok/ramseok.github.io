@@ -722,5 +722,33 @@
 </section>
 
 
+<script id="autospace">
+/* 내용 페이지의 남는 아래 공간을 항목 사이 간격으로 고르게 나눈다.
+   표지(.nopn) · 도입(.dv) · 마무리(.fin)는 제외, 간격 하나당 최대 16mm, 꼬리말 위 24mm까지. */
+(function () {
+  var MM = 96 / 25.4;
+  function run() {
+    document.querySelectorAll('section.page').forEach(function (p) {
+      if (p.classList.contains('nopn') || p.classList.contains('dv') || p.classList.contains('fin')) return;
+      var pr = p.getBoundingClientRect(); if (!pr.height) return;
+      var kids = Array.prototype.filter.call(p.children, function (e) {
+        return !/(^| )(runhead|pnum|ov-idx)( |$)/.test(e.className) && getComputedStyle(e).position !== 'absolute';
+      });
+      if (kids.length < 3) return;
+      var idx = p.querySelector('.ov-idx');
+      var limit = idx ? idx.getBoundingClientRect().top - 12 * MM : pr.bottom - 24 * MM;
+      var free = limit - kids[kids.length - 1].getBoundingClientRect().bottom;
+      if (free < 8 * MM) return;
+      var add = Math.min(free / (kids.length - 1), 16 * MM);
+      kids.slice(1).forEach(function (e) {
+        var cur = parseFloat(getComputedStyle(e).paddingTop) || 0;
+        e.style.paddingTop = (cur + add) + 'px';
+      });
+    });
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { setTimeout(run, 50); });
+  else window.addEventListener('load', run);
+})();
+</script>
 </body>
 </html>
