@@ -43,6 +43,11 @@
   .notice{border-left:2.5px solid var(--accent);background:var(--accent-soft);border-radius:0 2mm 2mm 0;
     padding:4mm 5mm;font-size:8.5pt;line-height:1.7;color:#3b4252}
   .notice b{color:var(--ink)}
+  a.lk{color:var(--accent);font-weight:700;text-decoration:none;border-bottom:1px solid rgba(76,91,212,.35)}
+  .demobox{border:1px solid var(--line);border-radius:2.5mm;padding:3.5mm 4.5mm;margin:4mm 0 5mm;background:var(--soft);font-size:8.8pt;line-height:1.7;color:var(--body)}
+  .demobox .h{font-weight:800;color:var(--ink);margin-bottom:1mm}
+  .demobox .u{display:flex;gap:6mm;flex-wrap:wrap;margin:1mm 0 1.5mm}
+  .demobox .m{font-size:8pt;color:var(--muted)}
 
   .phead{display:flex;align-items:baseline;gap:3mm;border-bottom:1.5px solid var(--ink);padding-bottom:3mm;margin-bottom:6mm}
   .phead .kicker{font-size:8pt;font-weight:700;letter-spacing:.12em;color:var(--accent);white-space:nowrap}
@@ -429,7 +434,8 @@
   <div class="callout">
     <div class="t">이 장의 화면에 대하여</div>
     <p>실제 고객사 프로젝트의 기획서는 비밀유지 대상이라 첨부할 수 없습니다. 이어지는 산출물은 모두
-      <b>가상의 예시 프로젝트 「무지개 일기(가칭)」를 파이프라인에 넣어 생성한 결과물</b>입니다. 도구의 동작과 결과물 형태를 보여주기 위한 것이며, 특정 고객사의 내용이 아닙니다.</p>
+      <b>가상의 예시 프로젝트 「무지개 일기(가칭)」를 파이프라인에 넣어 생성한 결과물</b>입니다. 도구의 동작과 결과물 형태를 보여주기 위한 것이며, 특정 고객사의 내용이 아닙니다. 전체 산출물은 <a class="lk" href="https://ramseok.github.io/prd-demo/">ramseok.github.io/prd-demo</a> 에서 직접 열어볼 수 있습니다.
+      화면 확인용으로 정적 HTML만 공개한 것이라 <b>실제 서버 배포와 DB 연동은 되어 있지 않습니다.</b></p>
   </div>
   <div class="block">
     <div class="lab r">문제</div>
@@ -478,7 +484,13 @@
     <div class="st"><div class="n">05</div><div class="t">기획서 · TC</div></div><div class="ar">→</div>
     <div class="st"><div class="n">06</div><div class="t">링크 배포</div></div>
   </div>
-  <p class="note" style="margin-bottom:5mm">아래는 위 흐름의 <b>04~05단계 산출물</b>입니다. 가상의 예시 프로젝트 「무지개 일기(가칭)」를 넣어 생성했습니다.</p>
+  <div class="demobox">
+    <div class="h">전체 기획서 바로 보기 — 가상 예시 프로젝트 「무지개 일기(가칭)」</div>
+    <div class="u"><span>시안 허브 · 화면별 기획서 <a class="lk" href="https://ramseok.github.io/prd-demo/">ramseok.github.io/prd-demo</a></span>
+      <span>기획 문서 <a class="lk" href="https://ramseok.github.io/prd-demo/docs/index.html">ramseok.github.io/prd-demo/docs</a></span></div>
+    <div class="m">아래는 위 흐름의 04~05단계 산출물입니다. 가상의 프로젝트라 <b>실제 서버 배포와 DB 연동은 되어 있지 않아</b> 로그인 · 저장 같은 기능은 동작하지 않고,
+      코멘트 · 테스트케이스 결과는 보고 있는 브라우저에만 임시로 남습니다. 시안 화면에서 <b>Ctrl + /</b> 를 누르면 그 화면의 기획서가 열립니다.</div>
+  </div>
   <figure>
     <img src="crops/prd-hub-c.png" alt="PRD Toolkit 시안 허브">
     <figcaption><span class="tag">산출물</span><b>시안 허브</b> — 예시 프로젝트 한 건에서 <b>사용자 화면 26 · 관리자 화면 7 · 기능 44개(F1~F44)</b>가 생성됐습니다.
