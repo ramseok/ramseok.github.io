@@ -3,159 +3,189 @@
 <head>
 <meta charset="utf-8">
 <title>AI 업무 자동화 포트폴리오 — 김석남</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap">
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
   :root{
-    --ink:#161a22; --body:#39414f; --muted:#6b7480; --line:#e3e6ec; --soft:#f5f6f9;
-    --accent:#4c5bd4; --accent-soft:#eef0fd; --warn:#b4541f; --warn-soft:#fdf3ec;
+    --ink:#111214; --body:#3d4046; --muted:#8a8e96; --line:#e3e1dc; --soft:#f4f2ee; --paper:#f1eee8;
+    --accent:#e2461c; --accent-soft:#fbede7; --warn:#111214; --warn-soft:#f4f2ee;
+    --disp:"Inter Tight","Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-    color:var(--body);background:#fff;font-size:10pt;line-height:1.62;word-break:keep-all;overflow-wrap:break-word}
+    color:var(--body);background:#fff;font-size:9.6pt;line-height:1.7;word-break:keep-all;overflow-wrap:break-word;
+    font-feature-settings:"ss06","tnum"}
   @page{size:A4;margin:0}
-  .page{width:210mm;height:297mm;padding:17mm 16mm 14mm;position:relative;overflow:hidden;
-    page-break-after:always;background:#fff}
+  .page{width:210mm;height:297mm;padding:17mm 17mm 14mm;position:relative;overflow:hidden;page-break-after:always;background:#fff}
   .page:last-child{page-break-after:auto}
-  .nopn .pnum{display:none}
-  .pnum{position:absolute;right:16mm;bottom:8mm;font-size:7.5pt;color:#b3b9c4;letter-spacing:.06em}
-  .runhead{position:absolute;left:16mm;bottom:8mm;font-size:7.5pt;color:#b3b9c4;letter-spacing:.04em}
+  .nopn .pnum,.nopn .runhead{display:none}
+  .pnum{position:absolute;right:17mm;bottom:8mm;font:600 7.5pt/1 var(--disp);color:var(--ink);letter-spacing:.04em}
+  .runhead{position:absolute;left:17mm;bottom:8mm;font:600 6.8pt/1 var(--disp);color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+  b,strong{color:var(--ink);font-weight:700}
 
-  .cover{display:flex;flex-direction:column;height:100%;padding-top:24mm;padding-bottom:56mm}
-  .eyebrow{font-size:8.5pt;font-weight:700;letter-spacing:.16em;color:var(--accent);margin-bottom:9mm}
-  .cover h1{font-size:30pt;line-height:1.28;color:var(--ink);font-weight:800;letter-spacing:-.02em}
-  .rule{width:22mm;height:3px;background:var(--accent);margin:8mm 0 7mm;border-radius:2px}
-  .cover .lead{font-size:10.5pt;line-height:1.75;max-width:150mm}
-  .cover .lead b{color:var(--ink);font-weight:700}
-  .covercards{display:flex;gap:5mm;margin-top:11mm}
-  .covercard{flex:1;border:1px solid var(--line);border-radius:4mm;padding:6mm;background:var(--soft)}
-  .covercard .nm{font-size:12pt;font-weight:800;color:var(--ink)}
-  .covercard .ds{font-size:8.5pt;color:var(--muted);margin-top:1mm}
-  .covercard .tx{font-size:9pt;line-height:1.62;margin-top:3.5mm}
-  .coverfoot{margin-top:auto}
-  .coverband{position:absolute;left:0;right:0;bottom:0;height:46mm;background:var(--ink);
-    padding:0 16mm;display:flex;align-items:center;justify-content:space-between}
-  .coverband .who{color:#fff;font-size:13pt;font-weight:800}
-  .coverband .who span{color:#9aa3b2;font-weight:600;font-size:9.5pt;margin-left:2mm}
-  .coverband .contact{color:#9aa3b2;margin-top:2mm;font-size:9pt}
-  .coverband .date{color:#6f7787;font-size:9pt;letter-spacing:.06em;text-align:right}
-  .coverband .date b{display:block;color:#fff;font-size:10pt;margin-bottom:1mm}
-  .notice{border-left:2.5px solid var(--accent);background:var(--accent-soft);border-radius:0 2mm 2mm 0;
-    padding:4mm 5mm;font-size:8.5pt;line-height:1.7;color:#3b4252}
-  .notice b{color:var(--ink)}
-  a.lk{color:var(--accent);font-weight:700;text-decoration:none;border-bottom:1px solid rgba(76,91,212,.35)}
-  .demobox{border:1px solid var(--line);border-radius:2.5mm;padding:3.5mm 4.5mm;margin:4mm 0 5mm;background:var(--soft);font-size:8.8pt;line-height:1.7;color:var(--body)}
+  /* ── 표지 ── */
+  .cv{display:flex;flex-direction:column;height:100%}
+  .cv-top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:.6pt solid var(--ink);padding-bottom:3mm;
+    font:600 7.2pt/1.4 var(--disp);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+  .cv-top span:last-child{color:var(--muted)}
+  .cv h1{font:800 38pt/1.12 var(--disp);letter-spacing:-.045em;color:var(--ink);margin-top:34mm}
+  .cv h1 i{font-style:normal;color:var(--accent)}
+  .cv .lead{font-size:10.5pt;line-height:1.8;max-width:142mm;margin-top:10mm;color:var(--body)}
+  .cv .lead b{color:var(--ink)}
+  .cv-idx{margin-top:auto}
+  .cv-idx .row{display:grid;grid-template-columns:16mm 52mm 1fr;align-items:baseline;border-top:.6pt solid var(--ink);padding:4.2mm 0 4.6mm}
+  .cv-idx .n{font:700 9pt/1 var(--disp);color:var(--accent)}
+  .cv-idx .nm{font:800 15pt/1.1 var(--disp);letter-spacing:-.03em;color:var(--ink)}
+  .cv-idx .tx{font-size:8.8pt;line-height:1.6;color:var(--body)}
+  .cv-note{border-top:.6pt solid var(--ink);padding-top:4mm;font-size:7.8pt;line-height:1.65;color:var(--muted)}
+  .cv-note b{color:var(--ink)}
+  .cv-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:9mm}
+  .cv-foot .who{font:800 17pt/1 var(--disp);letter-spacing:-.03em;color:var(--ink)}
+  .cv-foot .who span{display:block;font:500 8pt/1 var(--disp);letter-spacing:.02em;color:var(--muted);margin-top:2.4mm}
+  .cv-foot .ct{font:500 8pt/1.7 var(--disp);color:var(--ink);text-align:right}
+
+  /* ── 프로젝트 도입(디바이더) ── */
+  .dv{padding:17mm 17mm 14mm;background:var(--paper)}
+  .dv.dark{background:#0f1012;color:#c9ccd2}
+  .dv-top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:.6pt solid var(--ink);padding-bottom:3mm;
+    font:600 7.2pt/1.4 var(--disp);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+  .dark .dv-top{border-color:#3a3c41;color:#fff}
+  .dv-top .r{color:var(--muted)}
+  .dv-head{display:grid;grid-template-columns:30mm 1fr;margin-top:11mm;align-items:start}
+  .dv-no{font:800 44pt/.9 var(--disp);letter-spacing:-.05em;color:var(--accent)}
+  .dv-title{font:800 40pt/1 var(--disp);letter-spacing:-.045em;color:var(--ink)}
+  .dark .dv-title{color:#fff}
+  .dv-tag{font-size:11pt;line-height:1.7;margin-top:4.5mm;color:var(--body);max-width:132mm}
+  .dark .dv-tag{color:#c9ccd2}
+  .dv-tag b{color:var(--ink)} .dark .dv-tag b{color:#fff}
+  .dv-mock{position:relative;margin-top:12mm}
+  .laptop{position:relative;width:96%;margin:0 auto}
+  .laptop .lid{background:#0a0b0d;border:.35mm solid #2b2d31;border-radius:3.4mm 3.4mm 0 0;padding:2.6mm 2.6mm 3.4mm}
+  .laptop .lid img{display:block;width:100%;border-radius:.5mm}
+  .laptop .base{position:relative;height:3.8mm;margin:0 -7.5%;border-radius:0 0 5mm 5mm;
+    background:linear-gradient(#eceef1 0%,#c6c8cd 55%,#9fa2a8 100%)}
+  .laptop .base::after{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:17%;height:1.3mm;
+    background:#b4b7bc;border-radius:0 0 1.6mm 1.6mm}
+  .dv-mock .shadow{position:absolute;left:6%;right:6%;bottom:-5mm;height:8mm;background:radial-gradient(closest-side,rgba(0,0,0,.28),rgba(0,0,0,0));}
+  .dark .dv-mock .shadow{background:radial-gradient(closest-side,rgba(0,0,0,.7),rgba(0,0,0,0))}
+  .dv-mock.withphone .laptop{width:84%;margin:0}
+  .dv-mock .phone{position:absolute;right:0;bottom:-12mm;width:47mm;filter:drop-shadow(0 6mm 7mm rgba(0,0,0,.28))}
+  .dv-mock .phone img{display:block;width:100%}
+  .dv-cap{margin-top:13mm;font:500 7.6pt/1.6 var(--disp);color:var(--muted);letter-spacing:.01em;max-width:120mm}
+  .dv-cap b{color:var(--ink);font-weight:700} .dark .dv-cap b{color:#fff}
+  .dv-foot{position:absolute;left:17mm;right:17mm;bottom:14mm}
+  .dv-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:7mm}
+  .dv-kpi > div{border-top:1.4pt solid var(--ink);padding-top:3.2mm}
+  .dark .dv-kpi > div{border-color:#fff}
+  .dv-kpi .v{font:800 19pt/1.1 var(--disp);letter-spacing:-.035em;color:var(--ink)}
+  .dark .dv-kpi .v{color:#fff}
+  .dv-kpi .v small{font-size:10pt;font-weight:700;color:var(--accent);letter-spacing:-.01em}
+  .dv-kpi .k{font-size:8pt;line-height:1.55;margin-top:1.6mm;color:var(--muted)}
+  .dv-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:7mm;margin-top:7mm;border-top:.6pt solid var(--line);padding-top:3.4mm}
+  .dark .dv-meta{border-color:#2b2d31}
+  .dv-meta dt{font:600 6.8pt/1 var(--disp);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .dv-meta dd{font-size:8.4pt;line-height:1.55;margin-top:1.6mm;color:var(--ink)}
+  .dark .dv-meta dd{color:#e6e8ec}
+
+  /* ── 본문 공통 ── */
+  .notice{background:var(--soft);padding:4mm 5mm;font-size:8.5pt;line-height:1.7;color:var(--body)}
+  a.lk{color:var(--accent);font-weight:700;text-decoration:none;border-bottom:.6pt solid var(--accent)}
+  .demobox{background:var(--soft);padding:4mm 5mm;margin:4mm 0 5mm;font-size:8.8pt;line-height:1.7;color:var(--body)}
   .demobox .h{font-weight:800;color:var(--ink);margin-bottom:1mm}
   .demobox .u{display:flex;gap:6mm;flex-wrap:wrap;margin:1mm 0 1.5mm}
   .demobox .m{font-size:8pt;color:var(--muted)}
 
-  .phead{display:flex;align-items:baseline;gap:3mm;border-bottom:1.5px solid var(--ink);padding-bottom:3mm;margin-bottom:6mm}
-  .phead .kicker{font-size:8pt;font-weight:700;letter-spacing:.12em;color:var(--accent);white-space:nowrap}
-  .phead h2{font-size:15pt;font-weight:800;color:var(--ink);letter-spacing:-.02em;white-space:nowrap}
-  .phead .sub{margin-left:auto;font-size:8.5pt;color:var(--muted);text-align:right}
+  .phead{display:flex;align-items:baseline;gap:4mm;border-bottom:.6pt solid var(--ink);padding-bottom:3.4mm;margin-bottom:6.5mm}
+  .phead .kicker{font:700 7pt/1 var(--disp);letter-spacing:.16em;color:var(--accent);white-space:nowrap;text-transform:uppercase}
+  .phead h2{font:800 17pt/1.15 var(--disp);color:var(--ink);letter-spacing:-.035em;white-space:nowrap}
+  .phead .sub{margin-left:auto;font-size:8pt;color:var(--muted);text-align:right}
 
-  .stats{display:flex;gap:4mm;margin-bottom:7mm}
-  .stat{flex:1;border:1px solid var(--line);border-radius:3mm;padding:5mm 4.5mm}
-  .stat .v{font-size:15pt;font-weight:800;color:var(--accent);letter-spacing:-.02em;line-height:1.2}
-  .stat .v small{font-size:9.5pt;font-weight:700}
-  .stat .k{font-size:8pt;color:var(--muted);margin-top:2mm;line-height:1.5}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5mm;margin-bottom:7mm}
+  .stat{border-top:1.4pt solid var(--ink);padding-top:3.4mm}
+  .stat .v{font:800 17pt/1.15 var(--disp);color:var(--ink);letter-spacing:-.035em}
+  .stat .v small{font-size:9.5pt;font-weight:700;color:var(--accent)}
+  .stat .k{font-size:7.8pt;color:var(--muted);margin-top:2mm;line-height:1.5}
 
   .block{margin-bottom:6mm}
-  .lab{display:inline-block;font-size:8pt;font-weight:800;letter-spacing:.08em;color:#fff;
-    background:var(--accent);border-radius:1.5mm;padding:.8mm 2.6mm;margin-bottom:2.5mm}
-  .lab.g{background:#2f8f5b}.lab.r{background:#b4443a}
-  .block p{font-size:9.5pt;line-height:1.72}
+  .lab{display:flex;align-items:center;gap:2mm;font:800 8pt/1 var(--disp);letter-spacing:.04em;color:var(--ink);margin-bottom:3mm}
+  .lab::before{content:"";width:2mm;height:2mm;background:var(--accent)}
+  .lab.g::before{background:var(--ink)} .lab.r::before{background:var(--muted)}
+  .block p{font-size:9.5pt;line-height:1.74}
   .block p+p{margin-top:2mm}
-  b,strong{color:var(--ink);font-weight:700}
 
   ul.feat{list-style:none;margin-top:2mm}
-  ul.feat li{position:relative;padding-left:5.5mm;font-size:9.5pt;line-height:1.66;margin-bottom:1.8mm}
-  ul.feat li::before{content:"";position:absolute;left:1.2mm;top:2.4mm;width:1.6mm;height:1.6mm;border-radius:50%;background:var(--accent)}
+  ul.feat li{position:relative;padding-left:5.5mm;font-size:9.5pt;line-height:1.68;margin-bottom:1.8mm}
+  ul.feat li::before{content:"";position:absolute;left:.4mm;top:3mm;width:2.6mm;height:.35mm;background:var(--accent)}
 
-  .cards2{display:flex;gap:5mm}
-  .card{flex:1;border:1px solid var(--line);border-radius:3mm;padding:5mm}
-  .card h3{font-size:10.5pt;color:var(--ink);font-weight:800;margin-bottom:1mm}
-  .card .meta{font-size:8pt;color:var(--muted);margin-bottom:3mm}
-  .card .row{font-size:9pt;line-height:1.62;margin-bottom:2mm;padding-left:12mm;position:relative}
-  .card .row em{position:absolute;left:0;top:0;font-style:normal;font-weight:800;font-size:8pt;color:var(--muted)}
+  .cards2{display:flex;gap:7mm}
+  .card{flex:1;border-top:1.4pt solid var(--ink);padding:4mm 0 0}
+  .card h3{font:800 11pt/1.3 var(--disp);color:var(--ink);letter-spacing:-.02em;margin-bottom:1mm}
+  .card .meta{font-size:7.8pt;color:var(--muted);margin-bottom:3mm}
+  .card .row{font-size:9pt;line-height:1.64;margin-bottom:2mm;padding-left:12mm;position:relative}
+  .card .row em{position:absolute;left:0;top:.3mm;font-style:normal;font:700 7.2pt/1.6 var(--disp);letter-spacing:.06em;color:var(--accent)}
 
   figure{margin-bottom:5mm}
-  figure img{width:100%;display:block;border:1px solid var(--line);border-radius:2.5mm}
+  figure img{width:100%;display:block;border:.5pt solid #d9d7d1}
   figure.w86 img{width:86%;margin:0 auto}
   figure.w76 img{width:76%;margin:0 auto}
-  figcaption{margin-top:2.2mm;font-size:8.5pt;line-height:1.6;color:var(--muted)}
+  figcaption{margin-top:2.4mm;font-size:8.3pt;line-height:1.62;color:var(--muted)}
   figcaption b{color:var(--ink);font-weight:700}
-  figcaption .tag{display:inline-block;font-size:7.5pt;font-weight:700;color:var(--accent);
-    background:var(--accent-soft);border-radius:1mm;padding:.4mm 1.8mm;margin-right:1.8mm;vertical-align:1px}
+  figcaption .tag{display:inline;font:700 7pt/1 var(--disp);letter-spacing:.12em;color:var(--accent);margin-right:2.2mm;text-transform:uppercase}
+  figcaption .tag::after{content:" —";color:var(--line)}
 
   .mobrow{display:flex;gap:5mm;align-items:flex-start}
   .mobrow figure{flex:1;margin:0}
-  .mobrow figcaption{margin-top:2mm;font-size:8pt;text-align:center}
 
-  .callout{border:1px solid #f0dcc9;background:var(--warn-soft);border-radius:3mm;padding:4.5mm 5mm;margin-bottom:6mm}
-  .callout .t{font-size:9pt;font-weight:800;color:var(--warn);margin-bottom:1.5mm}
-  .callout p{font-size:8.5pt;line-height:1.68;color:#5c4632}
+  .callout{background:var(--soft);padding:4.5mm 5mm;margin-bottom:6mm}
+  .callout .t{font:800 8pt/1 var(--disp);letter-spacing:.04em;color:var(--ink);margin-bottom:2mm;display:flex;align-items:center;gap:2mm}
+  .callout .t::before{content:"";width:2mm;height:2mm;background:var(--accent)}
+  .callout p{font-size:8.5pt;line-height:1.7;color:var(--body)}
 
   table.ba{width:100%;border-collapse:collapse;margin-top:3mm;font-size:8.8pt}
-  table.ba th{background:var(--soft);color:var(--ink);font-weight:700;text-align:left;
-    padding:2.6mm 3mm;border-bottom:1px solid var(--line);font-size:8.3pt}
-  table.ba td{padding:2.8mm 3mm;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.55}
+  table.ba th{color:var(--muted);font:700 7pt/1 var(--disp);letter-spacing:.12em;text-align:left;padding:2.6mm 3mm 2.6mm 0;border-bottom:.6pt solid var(--ink)}
+  table.ba td{padding:2.8mm 3mm 2.8mm 0;border-bottom:.5pt solid var(--line);vertical-align:top;line-height:1.55}
   table.ba td.k{font-weight:700;color:var(--ink);width:24mm}
-  table.ba td.b{color:#8b929e;width:60mm}
+  table.ba td.b{color:#9a9ea6;width:60mm}
   table.ba td.a{color:var(--ink)}
   table.ba td.a b{color:var(--accent)}
 
-  .flow{display:flex;align-items:stretch;margin-top:2mm}
-  .flow .st{flex:1;border:1px solid var(--line);border-radius:2mm;padding:3.2mm 2mm;text-align:center}
-  .flow .st .n{font-size:7pt;font-weight:800;color:var(--accent);letter-spacing:.08em}
-  .flow .st .t{font-size:8.3pt;color:var(--ink);font-weight:700;margin-top:1mm;line-height:1.4}
-  .flow .ar{display:flex;align-items:center;color:#c2c7d0;font-size:9pt;padding:0 1.5mm}
+  .flow{display:flex;gap:3mm;margin-top:2mm}
+  .flow .st{flex:1;border-top:1.4pt solid var(--ink);padding:2.8mm 0 0}
+  .flow .st .n{font:800 7.5pt/1 var(--disp);color:var(--accent);letter-spacing:.06em}
+  .flow .st .t{font-size:8.4pt;color:var(--ink);font-weight:700;margin-top:1.6mm;line-height:1.45}
+  .flow .ar{display:none}
 
   .chips{display:flex;flex-wrap:wrap;gap:1.8mm;margin-top:2.5mm}
-  .chips span{font-size:8pt;background:var(--soft);border:1px solid var(--line);border-radius:1.5mm;padding:1.2mm 2.4mm}
-  .note{font-size:8.7pt;color:var(--muted);line-height:1.68;margin-top:3mm}
+  .chips span{font-size:8pt;border:.5pt solid var(--line);padding:1.2mm 2.4mm}
+  .note{font-size:8.6pt;color:var(--muted);line-height:1.7;margin-top:3mm}
   .note b{color:var(--ink)}
-  .quote{margin:auto 0;padding:10mm 0;text-align:center}
-  .quote p{font-size:14pt;line-height:1.66;color:var(--ink);font-weight:700;letter-spacing:-.015em}
-  .quote .sub2{font-size:9pt;color:var(--muted);font-weight:500;margin-top:4mm}
-  .closing{border-top:1.5px solid var(--ink);margin-top:auto;padding-top:5mm;margin-bottom:10mm}
+  .quote{margin:auto 0;padding:10mm 0}
+  .quote p{font:800 19pt/1.4 var(--disp);color:var(--ink);letter-spacing:-.04em}
+  .quote .sub2{font:600 7.5pt/1 var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:5mm}
+  .closing{border-top:.6pt solid var(--ink);margin-top:auto;padding-top:5mm;margin-bottom:10mm}
   .flexcol{display:flex;flex-direction:column}
-
 </style>
 </head>
 <body>
 
 <!-- 01 표지 -->
 <section class="page nopn">
-  <div class="cover">
-    <div class="eyebrow">AI BUSINESS TRANSFORMATION · PORTFOLIO</div>
-    <h1>반복되던 업무를<br>직접 만든 도구로 바꿨습니다</h1>
-    <div class="rule"></div>
+  <div class="cv">
+    <div class="cv-top"><span>AI Business Transformation — Portfolio</span><span>2026 · 09</span></div>
+    <h1>반복되던 업무를<br>직접 만든 도구로<br>바꿨습니다<i>.</i></h1>
     <p class="lead">AI 도구를 <b>도입</b>한 경험이 아니라, 필요한 도구를 <b>직접 설계하고 만들어 팀에 붙인</b> 기록입니다.
       기획 산출물을 만드는 방식과 프로젝트를 관리하는 방식, 두 구간을 바꾸고 지금도 매일 쓰고 있습니다.</p>
-    <div class="covercards">
-      <div class="covercard">
-        <div class="nm">PM Station</div>
-        <div class="ds">프로젝트 관리 · 알림 · 보고 · 회의록 자동화</div>
-        <div class="tx">마감 있는 모든 일이 한 화면에 모이고, 정해진 시각에 Teams로 먼저 알림이 갑니다. 운영 보고서는 매일 자동으로 발행됩니다.</div>
-      </div>
-      <div class="covercard">
-        <div class="nm">PRD Toolkit</div>
-        <div class="ds">기획 산출물 자동 생성 파이프라인</div>
-        <div class="tx">계약서를 넣으면 기능 정의 → 페이지 맵 → 동작하는 HTML 시안 → 화면별 기획서 · 테스트케이스까지 한 번에 나옵니다.</div>
-      </div>
+    <div class="cv-idx">
+      <div class="row"><span class="n">01</span><span class="nm">PM Station</span><span class="tx">프로젝트 관리 · 알림 · 보고 · 회의록 자동화. 마감 있는 모든 일이 한 화면에 모이고, 정해진 시각에 Teams로 먼저 알림이 갑니다.</span></div>
+      <div class="row"><span class="n">02</span><span class="nm">PRD Toolkit</span><span class="tx">계약서를 넣으면 기능 정의 → 페이지 맵 → 동작하는 HTML 시안 → 화면별 기획서 · 테스트케이스까지 한 번에 나옵니다.</span></div>
     </div>
-    <div class="coverfoot">
-      <div class="notice"><b>본 문서의 PM Station 화면은 모두 실제 운영 중인 시스템입니다.</b> 고객사명과 담당자명은 A사 · B사 · 홍길동 형태로 치환했습니다.
-        단, <b>PRD Toolkit의 산출물은 고객사 기획서를 첨부할 수 없어 가상의 예시 프로젝트로 생성한 결과물</b>입니다.</div>
+    <div class="cv-note"><b>PM Station 화면은 모두 실제 운영 중인 시스템입니다.</b> 고객사명과 담당자명은 A사 · B사 · 홍길동 형태로 치환했습니다.
+      <b>PRD Toolkit 산출물은 고객사 기획서를 첨부할 수 없어 가상의 예시 프로젝트로 생성한 결과물</b>입니다.</div>
+    <div class="cv-foot">
+      <div class="who">김석남<span>AI 서비스 기획 · PM</span></div>
+      <div class="ct">ramseok.github.io<br>rlatjrska1674@gmail.com</div>
     </div>
-  </div>
-  <div class="coverband">
-    <div>
-      <div class="who">김석남 <span>AI 서비스 기획 · PM</span></div>
-      <div class="contact">ramseok.github.io · rlatjrska1674@gmail.com</div>
-    </div>
-    <div class="date"><b>2026.09</b>PORTFOLIO</div>
   </div>
 </section>
 
@@ -193,13 +223,42 @@
     <div class="lab">문서 구성</div>
     <table class="ba">
       <tr><th style="width:22mm">페이지</th><th>내용</th></tr>
-      <tr><td class="k">03 – 12</td><td class="a"><b>PM Station</b> — 문제 · 해결 · 성과와 실제 화면 (대시보드 · WBS · 정기 업무 · 알림 · 운영 보고서 · 보고서 본문 · AI 회의록 · AI 챗봇 · 변경 이력)</td></tr>
-      <tr><td class="k">13 – 17</td><td class="a"><b>PRD Toolkit</b> — 문제 · 해결 · 성과와 산출물 (시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트 · 관리자 시안 · 디자인 가이드)</td></tr>
-      <tr><td class="k">18</td><td class="a">일하는 순서</td></tr>
+      <tr><td class="k">03 – 13</td><td class="a"><b>PM Station</b> — 문제 · 해결 · 성과와 실제 화면 (대시보드 · WBS · 정기 업무 · 알림 · 운영 보고서 · 보고서 본문 · AI 회의록 · AI 챗봇 · 변경 이력)</td></tr>
+      <tr><td class="k">14 – 19</td><td class="a"><b>PRD Toolkit</b> — 문제 · 해결 · 성과와 산출물 (시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트 · 관리자 시안 · 디자인 가이드)</td></tr>
+      <tr><td class="k">20</td><td class="a">일하는 순서</td></tr>
     </table>
   </div>
   <div class="runhead">AI 업무 자동화 포트폴리오</div>
   <div class="pnum">02</div>
+</section>
+
+<!-- PM Station 도입 -->
+<section class="page nopn dv dark">
+  <div class="dv-top"><span>Project 01</span><span class="r">04 — 13</span></div>
+  <div class="dv-head">
+    <div class="dv-no">01</div>
+    <div>
+      <div class="dv-title">PM Station</div>
+      <p class="dv-tag">흩어져 있던 마감 · 회신 대기 · 정기 업무를 한 화면에 모으고, <b>사람이 챙기기 전에 도구가 먼저 알려 주는</b> 사내 업무 시스템입니다.</p>
+    </div>
+  </div>
+  <div class="dv-mock">
+    <div class="laptop"><div class="lid"><img src="pm-dashboard.png" alt="PM Station 홈 대시보드"></div><div class="base"></div></div>
+    <div class="shadow"></div>
+  </div>
+  <p class="dv-cap"><b>홈 대시보드</b> — 실제 운영 중인 화면입니다. 기한 초과 · 오늘 마감 · 3일 내 · 받아야 할 것으로 자동 분류되고, 고객사명은 A사 · B사로 치환했습니다.</p>
+  <div class="dv-foot">
+    <div class="dv-kpi">
+      <div><div class="v">4곳 <small>→ 1곳</small></div><div class="k">업무 확인 경로<br>메신저 · 엑셀 · 메모 · 문서</div></div>
+      <div><div class="v">매일 <small>08:10</small></div><div class="k">운영 보고서 자동 발행<br>지표 12개 · 조치 필요 · PDF</div></div>
+      <div><div class="v">60분 <small>→ 15분</small></div><div class="k">회의록 1건 작성<br>초안 검토로 전환</div></div>
+    </div>
+    <dl class="dv-meta">
+      <div><dt>Role</dt><dd>기획 · 설계 · 검증 · 운영<br>(구현은 AI 개발 도구 활용)</dd></div>
+      <div><dt>Period</dt><dd>2026.08 — 운영 중</dd></div>
+      <div><dt>Stack</dt><dd>React · Supabase · Vercel<br>OpenAI · Microsoft Teams</dd></div>
+    </dl>
+  </div>
 </section>
 
 <!-- 03 PM Station 개요 -->
@@ -237,7 +296,7 @@
     </ul>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">03</div>
+  <div class="pnum">04</div>
 </section>
 
 <!-- 04 홈 대시보드 -->
@@ -256,7 +315,7 @@
     <p><b>"받아야 할 것"</b>은 제가 할 일이 아니라 <b>고객사 회신 · 자료를 기다리는 항목</b>입니다. 내가 놓친 일만큼이나 상대가 늦는 일이 일정을 밀기 때문에, 대기 중인 건을 별도 갈래로 세웠습니다.</p>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">04</div>
+  <div class="pnum">05</div>
 </section>
 
 <!-- 05 WBS + 프로젝트 상세 -->
@@ -275,7 +334,7 @@
   <p class="note">WBS는 <b>엑셀로 내보내</b> 고객사 보고에 그대로 쓰고, 여기서 관리하는 할 일과 이슈는 마감일이 있으면 자동으로 알림 대상에 편입됩니다.
     일정표와 알림이 다른 문서에 있으면 둘 중 하나는 반드시 낡기 때문에, 같은 데이터를 두 화면으로 보여주는 구조로 잡았습니다.</p>
   <div class="runhead">PM Station</div>
-  <div class="pnum">05</div>
+  <div class="pnum">06</div>
 </section>
 
 <!-- 06 정기 업무 -->
@@ -293,7 +352,7 @@
     <p>부팀장 업무 보고, 팀장 회의, 담당 서비스의 사용자 로그 확인처럼 <b>매일 반복되지만 어디에도 기록되지 않던 일</b>을 여기에 올렸습니다. 이 항목들도 마감 있는 일과 똑같이 알림 대상에 편입됩니다.</p>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">06</div>
+  <div class="pnum">07</div>
 </section>
 
 <!-- 07 알림 -->
@@ -313,7 +372,7 @@
       출근 직후 · 오후 업무 전환 시점 · 퇴근 전으로 시각을 잡아, 하루 안에서 일이 밀리는 지점마다 목록이 다시 눈앞에 오도록 맞췄습니다.</p>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">07</div>
+  <div class="pnum">08</div>
 </section>
 
 <!-- 08 운영 보고서 -->
@@ -332,7 +391,7 @@
       지금은 정해진 시각에 보고서가 먼저 만들어져 있고, 저는 확인과 판단만 합니다. 어드민 API가 일시적으로 실패해도 보고서 자체는 생성되도록 장애 내성을 넣었습니다.</p>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">08</div>
+  <div class="pnum">09</div>
 </section>
 
 <!-- 08-2 운영 보고서 본문 -->
@@ -357,7 +416,7 @@
       사용자 이름 · 아이디는 <b>유저 A~K</b>, 서비스명은 <b>F사</b>로 치환해 촬영했고, 사용자 문의 원문이 담긴 부분은 싣지 않았습니다.</p>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">09</div>
+  <div class="pnum">10</div>
 </section>
 
 
@@ -384,7 +443,7 @@
       회의록 작성은 <b>초안을 검토하고 고치는 일</b>로 바뀌었습니다. (예시는 가상의 회의 내용으로 생성)</p>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">10</div>
+  <div class="pnum">11</div>
 </section>
 
 <!-- 09 AI 챗봇 -->
@@ -401,7 +460,7 @@
       화면 맨 아래 안내처럼 <b>등록된 학습 데이터에 없는 내용은 답하지 않도록</b> 제한해, 업무에 쓸 수 없는 그럴듯한 답을 막았습니다.</figcaption>
   </figure>
   <div class="runhead">PM Station</div>
-  <div class="pnum">11</div>
+  <div class="pnum">12</div>
 </section>
 
 <!-- 12 변경 이력 -->
@@ -425,7 +484,37 @@
     </ul>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">12</div>
+  <div class="pnum">13</div>
+</section>
+
+<!-- PRD Toolkit 도입 -->
+<section class="page nopn dv">
+  <div class="dv-top"><span>Project 02</span><span class="r">15 — 19</span></div>
+  <div class="dv-head">
+    <div class="dv-no">02</div>
+    <div>
+      <div class="dv-title">PRD Toolkit</div>
+      <p class="dv-tag">계약서 PDF 한 건을 넣으면 기능 정의부터 <b>클릭이 되는 HTML 시안 · 화면별 기획서 · 테스트케이스</b>까지 한 번에 만들어 링크로 전달합니다.</p>
+    </div>
+  </div>
+  <div class="dv-mock withphone">
+    <div class="laptop"><div class="lid"><img src="crops/prd-hub-laptop.png" alt="PRD Toolkit 시안 허브"></div><div class="base"></div></div>
+    <div class="phone"><img src="crops/prd-phone-home.png" alt="무지개 일기 사용자 화면"></div>
+    <div class="shadow" style="right:30%"></div>
+  </div>
+  <p class="dv-cap"><b>시안 허브 · 사용자 화면</b> — 가상 예시 프로젝트 「무지개 일기」로 생성한 결과물입니다. 전체 화면과 화면별 기획서는 <a class="lk" href="https://ramseok.github.io/prd-demo/">ramseok.github.io/prd-demo</a> 에서 볼 수 있습니다.</p>
+  <div class="dv-foot">
+    <div class="dv-kpi">
+      <div><div class="v">1~2주 <small>→ 1시간</small></div><div class="k">착수 기획 산출물 초안<br>30분~1시간 내외</div></div>
+      <div><div class="v">33 <small>화면</small></div><div class="k">사용자 26 · 관리자 7<br>예시 프로젝트 1건 기준</div></div>
+      <div><div class="v">44 <small>기능</small></div><div class="k">계약서에서 추출한 기능 정의<br>화면과 1:1 추적 (F1~F44)</div></div>
+    </div>
+    <dl class="dv-meta">
+      <div><dt>Role</dt><dd>설계 · 구축 · 운영</dd></div>
+      <div><dt>Period</dt><dd>2026.06 — 운영 중</dd></div>
+      <div><dt>Stack</dt><dd>Claude Code · 에이전트 9종<br>Supabase · Netlify · Vercel</dd></div>
+    </dl>
+  </div>
 </section>
 
 <!-- 11 PRD Toolkit 개요 -->
@@ -470,7 +559,7 @@
     </table>
   </div>
   <div class="runhead">PRD Toolkit</div>
-  <div class="pnum">13</div>
+  <div class="pnum">15</div>
 </section>
 
 <!-- 12 시안 허브 -->
@@ -498,7 +587,7 @@
   <p class="note">단계마다 역할이 다른 <b>전담 에이전트 9종</b>을 두고, 계약 해석처럼 판단이 무거운 일과 화면 양산, 기계적 검사에 각각 다른 모델을 배치해 비용과 속도를 맞췄습니다.
     상위 산출물이 수정되면 하위 단계의 검토 상태가 자동으로 무효화돼 문서 간 어긋남을 막습니다.</p>
   <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
-  <div class="pnum">14</div>
+  <div class="pnum">16</div>
 </section>
 
 <!-- 13 화면별 기획서 -->
@@ -512,7 +601,7 @@
   <p class="note">기획서와 시안을 따로 보내면 고객사는 두 문서를 번갈아 맞춰 봐야 했습니다.
     지금은 <b>보고 있는 화면이 곧 문서의 기준점</b>이라, "어느 화면의 어느 항목"을 설명하는 데 드는 대화가 사라졌습니다.</p>
   <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
-  <div class="pnum">15</div>
+  <div class="pnum">17</div>
 </section>
 
 <!-- 14 테스트케이스 + 코멘트 -->
@@ -527,7 +616,7 @@
     <figcaption><span class="tag">산출물</span><b>고객사 코멘트</b> — 고객사가 화면을 보면서 바로 수정 요청을 남기고 개발사가 답글을 답니다. 각 건은 <b>검토중 · 수정중 · 완료 · 논의 필요</b>로 관리되고 파일도 첨부됩니다.</figcaption>
   </figure>
   <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
-  <div class="pnum">16</div>
+  <div class="pnum">18</div>
 </section>
 
 <!-- 15 관리자 시안 + 디자인 가이드 -->
@@ -544,7 +633,7 @@
       콘셉트 · 컬러 · 타이포 · 버튼 · 접근성 · 금지 사항까지 11개 절로 고정해 <b>주관적 피드백으로 되돌아가는 재작업</b>을 줄입니다.</figcaption>
   </figure>
   <div class="runhead">PRD Toolkit · 가상 예시 프로젝트</div>
-  <div class="pnum">17</div>
+  <div class="pnum">19</div>
 </section>
 
 <!-- 16 마무리 -->
@@ -585,7 +674,7 @@
     <p style="margin-top:4mm;font-size:9pt;color:var(--muted)">김석남 · AI 서비스 기획 · PM &nbsp;·&nbsp; ramseok.github.io &nbsp;·&nbsp; rlatjrska1674@gmail.com</p>
   </div>
   <div class="runhead">AI 업무 자동화 포트폴리오</div>
-  <div class="pnum">18</div>
+  <div class="pnum">20</div>
 </section>
 
 
