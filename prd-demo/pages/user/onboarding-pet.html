@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P3 온보딩: 반려견 등록 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P3 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .onboard-intro { padding-top: var(--space-2); }
+    .onboard-eyebrow { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; color: var(--color-primary-strong); font-weight: 600; }
+    .onboard-intro h1 { margin-top: var(--space-2); }
+    .onboard-intro p { margin-top: var(--space-2); }
+
+    /* 대표 사진 — 원형 업로드 + 우하단 카메라 배지 */
+    .photo-field { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin: var(--space-6) 0 var(--space-5); }
+    .photo-upload-wrap { position: relative; width: 104px; height: 104px; }
+    .photo-upload {
+      width: 104px; height: 104px; border-radius: var(--radius-full);
+      border: 1.5px dashed var(--color-text-disabled); background: var(--color-surface-soft);
+      color: var(--color-text-sub); display: inline-flex; align-items: center; justify-content: center;
+      transition: background-color var(--duration-fast) var(--ease-soft), border-color var(--duration-fast) var(--ease-soft);
+    }
+    .photo-upload:active { transform: scale(0.97); }
+    .photo-upload [data-lucide], .photo-upload svg { width: 30px; height: 30px; stroke-width: 1.75; }
+    .photo-upload.has-photo { border-style: solid; border-color: var(--theme-accent); background: var(--theme-accent-soft); color: var(--color-text); }
+    .photo-badge {
+      position: absolute; right: 0; bottom: 2px; pointer-events: none;
+      width: 32px; height: 32px; border-radius: var(--radius-full);
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--theme-accent); color: var(--color-text); border: 2px solid var(--color-bg);
+    }
+    .photo-badge [data-lucide], .photo-badge svg { width: 16px; height: 16px; }
+    .photo-upload.has-photo + .photo-badge { display: none; }
+    #photoHint { white-space: nowrap; }
+
+    /* 필수 → 선택 항목 사이 헤어라인 */
+    .field-group-line { height: 1px; background: var(--color-border); margin: var(--space-1) 0 var(--space-5); }
+
+    .segment.segment-block { width: 100%; }
+    .segment.segment-block .seg-btn { flex: 1; min-height: 44px; }
+
+    .field-label-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--lh-body-s); }
+    .field-label-row .field-label { min-width: 0; }
+    .field-label .req { margin-left: 0; }
+    .link-btn {
+      flex-shrink: 0; white-space: nowrap;
+      border: 0; background: transparent; height: 32px; padding: 0 var(--space-1); margin: -6px calc(var(--space-1) * -1) -6px 0;
+      font-size: var(--fs-caption); font-weight: 600; color: var(--color-primary-strong);
+    }
+    .onboard-disclaimer { margin-top: var(--space-1); padding-bottom: var(--space-4); }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 최초 온보딩이라 뒤로가기 없이 제목만 -->
+        <header class="m-header no-line">
+          <span class="m-title is-center">반려견 등록</span>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+          <div class="m-pad">
+
+            <div class="onboard-intro">
+              <span class="t-caption onboard-eyebrow"><i data-lucide="paw-print" class="ico-16"></i> 마지막 준비예요</span>
+              <h1>우리 아이를<br>소개해주세요</h1>
+              <p class="t-body-s t-sub t-balance">이름과 생일만 알려주셔도 오늘부터 기록을 <span class="nowrap">시작할 수 있어요.</span> 나머지는 나중에 채워도 괜찮아요.</p>
+            </div>
+
+            <div class="photo-field">
+              <div class="photo-upload-wrap">
+                <button type="button" class="photo-upload" id="photoBtn" aria-label="대표 사진 등록">
+                <i data-lucide="camera"></i>
+              </button>
+                <span class="photo-badge" aria-hidden="true"><i data-lucide="plus"></i></span>
+              </div>
+              <span class="t-caption t-sub" id="photoHint">대표 사진 (선택)</span>
+            </div>
+
+            <div>
+              <!-- 이름 (필수) -->
+              <div class="field" id="nameField">
+                <label class="field-label" for="petName">이름<span class="req">*</span></label>
+                <input class="input" type="text" id="petName" placeholder="예: 보리" maxlength="12">
+                <p class="field-error">이름을 알려주세요</p>
+              </div>
+
+              <!-- 생년월일 (필수) 또는 추정 나이 -->
+              <div class="field" id="birthField">
+                <div class="field-label-row">
+                  <label class="field-label" for="petBirth" id="birthLabel">생년월일<span class="req">*</span></label>
+                  <button type="button" class="link-btn" id="birthToggle">생일을 모르겠어요</button>
+                </div>
+                <input class="input" type="date" id="petBirth" max="2026-09-29">
+                <input class="input" type="number" id="petAge" placeholder="예: 13 (나이만 알려주세요)" inputmode="numeric" min="0" max="30" hidden>
+                <p class="field-help" id="birthHelp">생일을 입력하면 함께한 날을 자동으로 세어드려요.</p>
+                <p class="field-error">생년월일 또는 추정 나이 중 하나는 꼭 알려주세요</p>
+              </div>
+
+              <div class="notice notice-theme mb-4" id="daysPreview" hidden>
+                <i data-lucide="calendar-heart"></i>
+                <div class="grow"><span id="daysPreviewText"></span></div>
+              </div>
+
+              <div class="field-group-line" aria-hidden="true"></div>
+
+              <!-- 견종 (선택) -->
+              <div class="field">
+                <label class="field-label" for="petBreed">견종<span class="opt">선택</span></label>
+                <input class="input" type="text" id="petBreed" placeholder="예: 말티즈">
+              </div>
+
+              <!-- 성별 (선택) -->
+              <div class="field">
+                <span class="field-label">성별<span class="opt">선택</span></span>
+                <div class="segment segment-block" role="group" aria-label="성별">
+                  <button type="button" class="seg-btn" data-gender="남아"><i data-lucide="dog"></i> 남아</button>
+                  <button type="button" class="seg-btn" data-gender="여아"><i data-lucide="dog"></i> 여아</button>
+                </div>
+              </div>
+
+              <!-- 입양일 (선택) -->
+              <div class="field">
+                <label class="field-label" for="petAdopt">입양일<span class="opt">선택</span></label>
+                <input class="input" type="date" id="petAdopt" max="2026-09-29">
+              </div>
+
+              <!-- 동물등록번호 (선택, 마스킹 안내) -->
+              <div class="field">
+                <label class="field-label" for="petRegNo">동물등록번호<span class="opt">선택</span></label>
+                <input class="input" type="text" id="petRegNo" placeholder="숫자 15자리" inputmode="numeric" maxlength="15">
+                <p class="field-help">화면에는 <b id="regMaskPreview">등록 후 일부만</b> 표시돼요. 다른 가족에게 보여도 안심하세요.</p>
+              </div>
+
+              <p class="disclaimer onboard-disclaimer"><i data-lucide="info"></i> 등록하면 '함께하는 중' 상태로 시작해요. 이후 상태와 정보는 마이페이지에서 언제든 바꿀 수 있어요.</p>
+            </div>
+
+          </div>
+        </main>
+
+        <!-- 탭바 없는 플로우 페이지 — 하단 고정 CTA -->
+        <div class="m-bottom-cta">
+          <button class="btn btn-primary btn-lg btn-block" id="submitBtn"><i data-lucide="paw-print"></i> 등록하고 시작하기</button>
+        </div>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var body = document.body;
+    var toastTimer;
+
+    // 토스트 — 3초 (DESIGN.md 6.7)
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      var rainbow = body.dataset.petState === 'rainbow';
+      var old = t.querySelector('svg, i');
+      var ico = document.createElement('i');
+      ico.setAttribute('data-lucide', rainbow ? 'check' : 'paw-print');
+      old.replaceWith(ico);
+      lucide.createIcons();
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 대표 사진 등록 (실제 업로드 대신 선택 상태 토글로 시각 피드백)
+    var photoBtn = document.getElementById('photoBtn');
+    photoBtn.addEventListener('click', function () {
+      var hasPhoto = photoBtn.classList.toggle('has-photo');
+      photoBtn.innerHTML = '<i data-lucide="' + (hasPhoto ? 'check' : 'camera') + '"></i>';
+      lucide.createIcons();
+      document.getElementById('photoHint').textContent = hasPhoto ? '대표 사진을 담았어요' : '대표 사진 (선택)';
+      if (hasPhoto) showToast('사진을 담았어요');
+    });
+
+    // 성별 세그먼트 — 단일 선택, 다시 누르면 해제
+    document.querySelectorAll('[data-gender]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var already = btn.classList.contains('active');
+        document.querySelectorAll('[data-gender]').forEach(function (b) { b.classList.remove('active'); });
+        if (!already) btn.classList.add('active');
+      });
+    });
+
+    // 생년월일 "모름" 토글 — F2: 모르면 추정 나이 입력으로 전환
+    var unknownBirth = false;
+    var birthInput = document.getElementById('petBirth');
+    var ageInput = document.getElementById('petAge');
+    var birthToggle = document.getElementById('birthToggle');
+    var birthLabel = document.getElementById('birthLabel');
+    var birthHelp = document.getElementById('birthHelp');
+    var daysPreview = document.getElementById('daysPreview');
+    var daysPreviewText = document.getElementById('daysPreviewText');
+
+    function setBirthMode(unknown) {
+      unknownBirth = unknown;
+      birthInput.hidden = unknown;
+      ageInput.hidden = !unknown;
+      birthToggle.textContent = unknown ? '생년월일을 알아요' : '생일을 모르겠어요';
+      birthLabel.innerHTML = unknown ? '추정 나이<span class="req">*</span>' : '생년월일<span class="req">*</span>';
+      birthHelp.textContent = unknown
+        ? '정확한 날짜를 몰라도 괜찮아요. 대략적인 나이만 알려주세요.'
+        : '생일을 입력하면 함께한 날을 자동으로 세어드려요.';
+      daysPreview.hidden = true;
+      if (unknown) { birthInput.value = ''; } else { ageInput.value = ''; }
+    }
+    birthToggle.addEventListener('click', function () { setBirthMode(!unknownBirth); });
+
+    // 함께한 지 ○일 — 오늘(2026-09-29) 기준 계산
+    var TODAY = new Date(2026, 8, 29);
+    birthInput.addEventListener('change', function () {
+      if (!birthInput.value) { daysPreview.hidden = true; return; }
+      var d = new Date(birthInput.value + 'T00:00:00');
+      var diff = Math.floor((TODAY - d) / 86400000);
+      if (isNaN(diff) || diff < 0) { daysPreview.hidden = true; return; }
+      daysPreviewText.textContent = '함께한 지 ' + diff.toLocaleString('ko-KR') + '일이에요';
+      daysPreview.hidden = false;
+    });
+
+    // 동물등록번호 마스킹 미리보기 (F2)
+    var regInput = document.getElementById('petRegNo');
+    var regMaskPreview = document.getElementById('regMaskPreview');
+    regInput.addEventListener('input', function () {
+      var digits = regInput.value.replace(/\D/g, '').slice(0, 15);
+      if (digits.length < 9) { regMaskPreview.textContent = '등록 후 일부만'; return; }
+      var masked = digits.slice(0, 4) + '*'.repeat(digits.length - 8) + digits.slice(-4);
+      regMaskPreview.textContent = masked;
+    });
+
+    // 필수값 검증 후 등록 — F2 저장 → 상태별 홈(P4)으로 이동
+    var nameField = document.getElementById('nameField');
+    var petName = document.getElementById('petName');
+
+    function clearErrors() {
+      nameField.classList.remove('is-error');
+      birthField.classList.remove('is-error');
+    }
+    var birthField = document.getElementById('birthField');
+
+    function validate() {
+      clearErrors();
+      var valid = true;
+      if (!petName.value.trim()) { nameField.classList.add('is-error'); valid = false; }
+      if (unknownBirth) {
+        if (!ageInput.value || Number(ageInput.value) <= 0) { birthField.classList.add('is-error'); valid = false; }
+      } else if (!birthInput.value) {
+        birthField.classList.add('is-error'); valid = false;
+      }
+      return valid;
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', function () {
+      if (!validate()) {
+        var firstError = document.querySelector('.field.is-error');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast('필수 항목을 다시 확인해주세요');
+        return;
+      }
+      var name = petName.value.trim();
+      showToast(name + '의 프로필이 준비됐어요');
+      setTimeout(function () { location.href = 'home.html'; }, 700);
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/onboarding-pet.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공통 UI 컴포넌트 카탈로그 · 무지개 일기(가칭)</title>
+<link rel="stylesheet" href="assets/css/common.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  /* uc- : 이 페이지(ui-components.html) 전용 레이아웃 스타일. common.css 클래스와 겹치지 않는다 */
+  .uc-wrap { max-width: 1180px; margin: 0 auto; padding: 32px 32px 96px; }
+  .uc-back { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-body-s); font-weight: 600; color: var(--color-text-sub); }
+  .uc-back svg { width: 16px; height: 16px; }
+  .uc-head { margin-top: 16px; padding-bottom: 24px; border-bottom: 1px solid var(--color-border); }
+  .uc-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-caption); font-weight: 700; color: var(--color-primary-strong); margin-bottom: 8px; }
+  .uc-title { font-size: 30px; line-height: 40px; }
+  .uc-desc { margin-top: 8px; color: var(--color-text-sub); max-width: 720px; }
+
+  .uc-layout { display: grid; grid-template-columns: 200px 1fr; gap: 40px; margin-top: 32px; align-items: start; }
+  .uc-nav { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 2px; }
+  .uc-nav a { display: block; padding: 8px 12px; border-radius: var(--radius-md); font-size: var(--fs-body-s); font-weight: 600; color: var(--color-text-sub); }
+  .uc-nav a:hover { background: var(--color-surface-soft); color: var(--color-text); text-decoration: none; }
+
+  .uc-section { scroll-margin-top: 32px; padding-bottom: 56px; border-bottom: 1px solid var(--color-border); margin-bottom: 56px; }
+  .uc-section:last-child { border-bottom: 0; margin-bottom: 0; }
+  .uc-section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+  .uc-section-num { font-size: var(--fs-caption); font-weight: 700; color: var(--color-primary-strong); }
+  .uc-section-desc { color: var(--color-text-sub); margin-bottom: 24px; }
+
+  .uc-block { margin-bottom: 32px; }
+  .uc-block-title { font-size: var(--fs-body-s); font-weight: 700; color: var(--color-text-sub); margin-bottom: 12px; }
+  .uc-demo { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 20px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+  .uc-block > .uc-demo + .uc-demo { margin-top: 10px; }
+  .uc-demo.col { flex-direction: column; align-items: stretch; }
+  /* 그리드 데모 — 한 행의 카드 높이를 맞춘다(가운데 정렬로 들쭉날쭉해 보이지 않게) */
+  .uc-demo.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+  .uc-demo.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .uc-demo.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  /* 미리보기 면 — 좁은 목업을 가운데 두고 배경을 soft 로 채워 빈 흰 면이 남지 않게 */
+  .uc-demo.stage { justify-content: center; background: var(--color-surface-soft); border-color: transparent; }
+  .uc-codes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .uc-code { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 6px; background: var(--color-surface-soft); border: 1px solid var(--color-border); color: var(--color-text); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12px; white-space: nowrap; }
+  .uc-note { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); margin-top: 8px; }
+  .uc-block-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .uc-tag-new { margin-left: 6px; }
+
+  /* 두 블록 나란히 (좁은 목업 두 개가 각각 풀폭 흰 상자를 차지하지 않게) */
+  .uc-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: stretch; margin-bottom: 32px; }
+  .uc-pair > .uc-block { margin-bottom: 0; display: flex; flex-direction: column; }
+  .uc-pair > .uc-block > .uc-demo { flex: 1; }
+
+  /* 모바일 폭(360) 미리보기 면 — .h-scroll · .sec-head 처럼 화면 폭 기준 컴포넌트용. m-section 과 같은 좌우 16px 패딩 */
+  .uc-m-col { width: 360px; max-width: 100%; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; padding: var(--space-4) var(--space-4) var(--space-2); }
+  .uc-demo .uc-sheet-stage { background: var(--color-bg); }
+  /* 카드 변형 데모 — 행마다 높이를 맞추고 내용은 세로 가운데 */
+  .uc-cards > .card:not(.card-diary) { display: flex; flex-direction: column; justify-content: center; }
+  .uc-cards > .card.card-bucket { flex-direction: row; justify-content: flex-start; }
+  /* 카드 풋 데모 — 풋을 카드 바닥에 붙인다 */
+  .uc-foot-demo > .card { display: flex; flex-direction: column; }
+  .uc-foot-demo > .card > .row { margin-bottom: var(--space-4); }
+  .uc-foot-demo > .card > .card-foot { margin-top: auto; }
+  .uc-demo.grid4.is-ratio { align-items: end; }
+  .uc-photo-cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .uc-photo-cell .uc-code { align-self: flex-start; }
+
+  /* m-header / m-tabbar 를 보여주기 위한 구성요소 프레임 — .mobile-stage/.mobile-frame 은 쓰지 않는다 */
+  .uc-phone-mock { display: flex; flex-direction: column; width: 320px; height: 420px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; background: var(--color-bg); box-shadow: var(--shadow-sm); flex-shrink: 0; }
+  .uc-phone-mock .m-content-demo { flex: 1; min-height: 0; padding: var(--space-4); overflow-y: auto; color: var(--color-text-sub); font-size: var(--fs-body-s); }
+
+  .uc-side-mock { position: relative; width: 260px; height: 380px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; flex-shrink: 0; }
+
+  .uc-sheet-stage { height: 460px; }
+  .uc-modal-preview { position: static; box-shadow: var(--shadow-md); max-width: 360px; }
+  .uc-sheet-stage, .uc-toast-stage { position: relative; width: 100%; max-width: 380px; min-height: 260px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface-soft); display: flex; align-items: center; justify-content: center; }
+
+  .uc-tab-panel { padding: 16px; background: var(--color-surface-soft); border-radius: 0 0 var(--radius-md) var(--radius-md); font-size: var(--fs-body-s); color: var(--color-text-sub); }
+</style>
+</head>
+<body>
+<div class="uc-wrap">
+
+  <a class="uc-back" href="index.html"><i data-lucide="arrow-left"></i> 시안 허브</a>
+
+  <header class="uc-head">
+    <div class="uc-eyebrow"><i data-lucide="component" class="ico-16"></i> 참조 문서 · PC 폭</div>
+    <h1 class="uc-title">공통 UI 컴포넌트 카탈로그</h1>
+    <p class="uc-desc">assets/css/common.css 에 실제로 정의된 클래스만 모았어요. 각 예시는 실물 렌더 + 바로 아래 클래스명 배지로 구성되고, 대부분 직접 눌러보면 동작해요. 시안이 아니라 참조 문서라 모바일 프레임은 쓰지 않아요.</p>
+  </header>
+
+  <div class="uc-layout">
+    <nav class="uc-nav">
+      <a href="#sec-btn">1. 버튼</a>
+      <a href="#sec-input">2. 입력 필드</a>
+      <a href="#sec-choice">3. 선택 컨트롤</a>
+      <a href="#sec-feedback">4. 피드백</a>
+      <a href="#sec-data">5. 데이터 표시</a>
+      <a href="#sec-nav">6. 내비게이션</a>
+      <a href="#sec-overlay">7. 오버레이</a>
+    </nav>
+
+    <main>
+
+      <!-- 1. 버튼 -->
+      <section class="uc-section" id="sec-btn">
+        <div class="uc-section-head"><span class="uc-section-num">1</span><h2>버튼</h2></div>
+        <p class="uc-section-desc">알약형(radius-full), 누름 시 0.97배. primary 는 화면당 1개의 핵심 행동에만 써요.</p>
+
+        <div class="uc-block">
+          <div class="uc-block-title">5종 + danger</div>
+          <div class="uc-demo">
+            <button class="btn btn-primary"><i data-lucide="check"></i> 저장할게요</button>
+            <button class="btn btn-secondary">취소</button>
+            <button class="btn btn-outline"><i data-lucide="pencil"></i> 수정</button>
+            <button class="btn btn-utility"><i data-lucide="filter"></i> 필터</button>
+            <button class="btn btn-ghost">로그아웃</button>
+            <button class="btn btn-danger"><i data-lucide="trash-2"></i> 삭제</button>
+          </div>
+          <div class="uc-codes">
+            <span class="uc-code">.btn.btn-primary</span><span class="uc-code">.btn.btn-secondary</span>
+            <span class="uc-code">.btn.btn-outline</span><span class="uc-code">.btn.btn-utility</span>
+            <span class="uc-code">.btn.btn-ghost</span><span class="uc-code">.btn.btn-danger</span>
+          </div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">사이즈 (Large 52 / Medium 44 / Small 36) · disabled</div>
+          <div class="uc-demo">
+            <button class="btn btn-primary btn-lg">Large</button>
+            <button class="btn btn-primary btn-md">Medium</button>
+            <button class="btn btn-primary btn-sm">Small</button>
+            <button class="btn btn-primary" disabled>비활성</button>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.btn-lg</span><span class="uc-code">.btn-md</span><span class="uc-code">.btn-sm</span><span class="uc-code">disabled</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">아이콘 전용 (터치 영역 44×44) · 블록 · 그룹</div>
+          <div class="uc-demo">
+            <button class="icon-btn"><i data-lucide="heart"></i></button>
+            <button class="icon-btn is-on"><i data-lucide="heart"></i></button>
+            <button class="icon-btn"><i data-lucide="share-2"></i></button>
+            <div class="btn-row" style="width:220px;">
+              <button class="btn btn-secondary">뒤로</button>
+              <button class="btn btn-primary">다음</button>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.icon-btn</span><span class="uc-code">.icon-btn.is-on</span><span class="uc-code">.btn-row</span><span class="uc-code">.btn-block</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">라벨 안에 이름 치환이 낄 때 — 라벨 전체를 한 덩어리로</div>
+          <div class="uc-demo">
+            <button class="btn btn-primary"><i data-lucide="pencil"></i><span class="btn-label">오늘의 <span>몽실이</span> 남기기</span></button>
+            <button class="btn btn-outline btn-sm"><i data-lucide="mail"></i><span class="btn-label"><span>몽실이</span>에게 편지 쓰기</span></button>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.btn-label</span><span class="uc-code">&lt;i data-lucide&gt;&lt;/i&gt;&lt;span class="btn-label"&gt;오늘의 &lt;span data-pet-name&gt;…&lt;/span&gt; 남기기&lt;/span&gt;</span></div>
+          <p class="uc-note">아이콘과 텍스트 사이의 gap 이 어절마다 벌어지지 않고, 버튼이 좁아지면 라벨 끝이 말줄임돼요.</p>
+        </div>
+      </section>
+
+      <!-- 2. 입력 필드 -->
+      <section class="uc-section" id="sec-input">
+        <div class="uc-section-head"><span class="uc-section-num">2</span><h2>입력 필드</h2></div>
+        <p class="uc-section-desc">높이 52px · surface-soft 배경 · 라벨은 항상 필드 위. 포커스 시 테두리가 theme-accent 로 바뀌어요(직접 클릭해보세요).</p>
+
+        <div class="uc-block">
+          <div class="uc-demo grid2">
+            <div class="field">
+              <label class="field-label">반려견 이름</label>
+              <input class="input" type="text" placeholder="예: 몽실이">
+              <span class="field-help">추모관과 기록에 함께 쓰여요.</span>
+            </div>
+            <div class="field is-error">
+              <label class="field-label">무지개다리를 건넌 날 <span class="req">*</span></label>
+              <input class="input" type="date">
+              <span class="field-error">날짜를 선택해 주세요.</span>
+            </div>
+            <div class="field">
+              <label class="field-label">반려견 상태</label>
+              <select class="select">
+                <option>함께하는 중</option>
+                <option>이별 준비</option>
+                <option>무지개다리</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">비활성 · 읽기전용</label>
+              <input class="input" type="text" value="수정할 수 없어요" disabled>
+            </div>
+          </div>
+          <div class="uc-demo col">
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label">오늘의 기록</label>
+              <textarea class="textarea" placeholder="오늘 ○○이는 어떤 하루였나요?"></textarea>
+            </div>
+          </div>
+          <div class="uc-demo grid2">
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label">검색</label>
+              <div class="input-wrap">
+                <i data-lucide="search"></i>
+                <input class="input" type="text" placeholder="아티클 검색">
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label">초대할 가족 이메일 <span class="opt">선택</span></label>
+              <div class="field-row">
+                <input class="input" type="email" placeholder="family@example.com">
+                <button class="btn btn-secondary">초대</button>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label">한 줄 소개 <span class="field-count num">12 / 40</span></label>
+              <input class="input" type="text" value="햇살 좋아하는 몽실이">
+              <span class="field-help">라벨 우측 글자 수는 <b class="t-strong">.field-count</b>, 선택 항목 표시는 <b class="t-strong">.opt</b>를 써요.</span>
+            </div>
+          </div>
+          <div class="uc-codes">
+            <span class="uc-code">.field</span><span class="uc-code">.field-label</span><span class="uc-code">.field .req</span>
+            <span class="uc-code">.field-label .field-count</span><span class="uc-code">.field-label .opt</span><span class="uc-code">.field-row</span>
+            <span class="uc-code">.input</span><span class="uc-code">.select</span><span class="uc-code">.textarea</span>
+            <span class="uc-code">.field-help</span><span class="uc-code">.field.is-error</span><span class="uc-code">.field-error</span>
+            <span class="uc-code">.input-wrap</span><span class="uc-code">disabled</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 선택 컨트롤 -->
+      <section class="uc-section" id="sec-choice">
+        <div class="uc-section-head"><span class="uc-section-num">3</span><h2>선택 컨트롤</h2></div>
+        <p class="uc-section-desc">체크·스위치·칩·세그먼트·탭·상태 뱃지. 색만으로 정보를 전달하지 않도록 텍스트·아이콘을 함께 써요.</p>
+
+        <div class="uc-block">
+          <div class="uc-block-title">체크박스 · 스위치 (라벨이 실제로 바뀌어요)</div>
+          <div class="uc-demo col">
+            <label class="check">
+              <input type="checkbox" checked>
+              <span class="box"><i data-lucide="check"></i></span>
+              이용약관에 동의해요
+            </label>
+            <label class="check">
+              <input type="checkbox">
+              <span class="box"><i data-lucide="check"></i></span>
+              기념일 알림을 받을게요
+            </label>
+            <div class="row" style="gap:12px;">
+              <label class="switch">
+                <input type="checkbox" id="ucSwitch1" onchange="document.getElementById('ucSwitchLabel1').textContent = this.checked ? '야간 알림 켜짐' : '야간 알림 꺼짐';">
+                <span class="track"></span>
+              </label>
+              <span id="ucSwitchLabel1" class="t-body-s">야간 알림 꺼짐</span>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.check</span><span class="uc-code">.check .box</span><span class="uc-code">.switch</span><span class="uc-code">.switch .track</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">칩 (기분 태그 — 눌러서 선택)</div>
+          <div class="uc-demo">
+            <div class="chip-row" id="ucChipRow">
+              <button class="chip active" onclick="ucToggleChip(this)"><i data-lucide="check" class="chip-check"></i> 평온</button>
+              <button class="chip" onclick="ucToggleChip(this)"><i data-lucide="check" class="chip-check"></i> 행복</button>
+              <button class="chip" onclick="ucToggleChip(this)"><i data-lucide="check" class="chip-check"></i> 아픔</button>
+              <button class="chip" onclick="ucToggleChip(this)"><i data-lucide="check" class="chip-check"></i> 특별한 날</button>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.chip-row</span><span class="uc-code">.chip</span><span class="uc-code">.chip.active</span><span class="uc-code">.chip-check</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">태그 (읽기 전용 라벨)</div>
+          <div class="uc-demo">
+            <span class="tag tag-theme">이별 준비</span>
+            <span class="tag tag-primary">F9</span>
+            <span class="tag tag-mint">건강 기록</span>
+            <span class="tag tag-butter">완료</span>
+            <span class="tag tag-sky">편지</span>
+            <span class="tag tag-line">임시저장</span>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.tag.tag-theme</span><span class="uc-code">.tag.tag-primary</span><span class="uc-code">.tag.tag-mint</span><span class="uc-code">.tag.tag-butter</span><span class="uc-code">.tag.tag-sky</span><span class="uc-code">.tag.tag-line</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">세그먼트 (반려견 상태 전환)</div>
+          <div class="uc-demo">
+            <div class="segment" id="ucSegment">
+              <button class="seg-btn active" onclick="ucSelectSeg(this)"><i data-lucide="sun"></i> 함께하는 중</button>
+              <button class="seg-btn" onclick="ucSelectSeg(this)"><i data-lucide="moon-star"></i> 이별 준비</button>
+              <button class="seg-btn" onclick="ucSelectSeg(this)"><i data-lucide="cloud"></i> 무지개다리</button>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.segment</span><span class="uc-code">.seg-btn</span><span class="uc-code">.seg-btn.active</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">탭 (밑줄) — 눌러서 아래 패널이 바뀌어요</div>
+          <div class="uc-demo col" style="padding:0;">
+            <div class="tabs" id="ucTabs">
+              <button class="tab active" onclick="ucSelectTab(this, 0)">체크리스트</button>
+              <button class="tab" onclick="ucSelectTab(this, 1)">마지막 날 플래너</button>
+              <button class="tab" onclick="ucSelectTab(this, 2)">장례 정보</button>
+            </div>
+            <div class="uc-tab-panel" id="ucTabPanel">체크리스트 탭 내용이 여기에 보여요.</div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.tabs</span><span class="uc-code">.tab</span><span class="uc-code">.tab.active</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">상태 뱃지 (반려견 상태 — 색 + 아이콘 + 텍스트)</div>
+          <div class="uc-demo">
+            <span class="state-badge state-together"><i data-lucide="sun"></i> 함께하는 중</span>
+            <span class="state-badge state-preparing"><i data-lucide="moon-star"></i> 이별 준비</span>
+            <span class="state-badge state-rainbow"><i data-lucide="cloud"></i> 무지개다리</span>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.state-badge.state-together</span><span class="uc-code">.state-badge.state-preparing</span><span class="uc-code">.state-badge.state-rainbow</span></div>
+        </div>
+      </section>
+
+      <!-- 4. 피드백 -->
+      <section class="uc-section" id="sec-feedback">
+        <div class="uc-section-head"><span class="uc-section-num">4</span><h2>피드백</h2></div>
+        <p class="uc-section-desc">안내·유의사항·토스트·빈 화면. 배지(빨간 점)는 쓰지 않아요.</p>
+
+        <div class="uc-block">
+          <div class="uc-block-title">안내 배너 (notice) · 유의사항 (disclaimer)</div>
+          <div class="uc-demo col">
+            <div class="notice notice-theme"><i data-lucide="cloud-sun"></i><div class="grow">오늘 ○○이는 어떤 하루였나요?</div></div>
+            <div class="notice notice-info"><i data-lucide="info"></i><div class="grow">공유 링크는 마이페이지에서 언제든 다시 발급할 수 있어요.</div></div>
+            <div class="notice notice-warn"><i data-lucide="triangle-alert"></i><div class="grow">버킷리스트 활동은 ○○이 체력에 맞춰 천천히 진행해요.</div></div>
+            <div class="disclaimer"><i data-lucide="info"></i>수치는 참고용이며 진단을 대신하지 않아요.</div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.notice.notice-theme</span><span class="uc-code">.notice.notice-info</span><span class="uc-code">.notice.notice-warn</span><span class="uc-code">.disclaimer</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">토스트 (버튼을 누르면 2.5초 후 사라져요)</div>
+          <div class="uc-demo col">
+            <div class="uc-toast-stage">
+              <span class="t-sub t-body-s">미리보기 영역</span>
+              <div class="toast" id="ucToast"><i data-lucide="footprints"></i><span>오늘의 ○○이를 잘 담아뒀어요</span></div>
+            </div>
+            <button class="btn btn-primary btn-sm" style="align-self:flex-start;" onclick="ucShowToast()"><i data-lucide="bell"></i> 토스트 띄우기</button>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.toast</span><span class="uc-code">.toast.show</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">빈 화면 (Empty State)</div>
+          <div class="uc-demo">
+            <div class="empty" style="width:100%;">
+              <div class="empty-art"><i data-lucide="dog"></i></div>
+              <p class="t-strong">오늘의 ○○이를 남겨볼까요?</p>
+              <button class="btn btn-primary btn-sm"><i data-lucide="plus"></i> 첫 기록 남기기</button>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.empty</span><span class="uc-code">.empty-art</span></div>
+        </div>
+      </section>
+
+      <!-- 5. 데이터 표시 -->
+      <section class="uc-section" id="sec-data">
+        <div class="uc-section-head"><span class="uc-section-num">5</span><h2>데이터 표시</h2></div>
+        <p class="uc-section-desc">카드 변형, 리스트·표준 셀, 한 줄 메타, 카드 풋, 사진 자리, 캐러셀, 통계, 진행 막대, 표, KPI, 처리 상태.</p>
+
+        <div class="uc-block">
+          <div class="uc-block-title">카드 변형 — 다이어리 · 건강 · 버킷리스트 · 편지 · 추모관</div>
+          <div class="uc-demo grid3 uc-cards">
+            <div class="card card-diary">
+              <div class="photo"><i data-lucide="image"></i></div>
+              <div class="body">
+                <div class="row-between"><span class="t-caption t-sub">2026.09.28</span><span class="chip active" style="pointer-events:none;">평온</span></div>
+                <p class="t-body-s clamp-2">오늘은 볕이 좋아서 담요 위에서 한참을 졸았다. 산책은 짧게 다녀왔지만 꼬리를 살랑였다.</p>
+              </div>
+            </div>
+            <div class="card card-memorial">
+              <span class="avatar avatar-xl" style="margin:0 auto 12px;"><i data-lucide="dog"></i></span>
+              <div class="t-display t-title-font">몽실이</div>
+              <div class="card-meta mt-2">2013.03.02 - 2026.08.11</div>
+            </div>
+            <div class="card card-health">
+              <div class="row" style="margin-bottom:12px;"><span class="ico-wrap"><i data-lucide="heart-pulse"></i></span><span class="card-title">건강 요약</span></div>
+              <div class="stat-value">4.2<small style="font-size:14px;">kg</small></div>
+              <div class="stat-diff">지난주 대비 -0.1kg</div>
+            </div>
+            <div class="card card-bucket is-done">
+              <span class="stamp"><i data-lucide="check"></i></span>
+              <div class="grow">
+                <div class="card-title" style="font-size:16px;">바닷가 산책하기</div>
+                <div class="card-meta">2026.09.20 완료</div>
+              </div>
+            </div>
+            <div class="card card-bucket">
+              <span class="stamp"><i data-lucide="footprints"></i></span>
+              <div class="grow">
+                <div class="card-title" style="font-size:16px;">좋아하는 간식 만들어주기</div>
+                <div class="card-meta">아직 완료 전이에요</div>
+              </div>
+            </div>
+            <div class="card card-letter">
+              <div class="card-meta">2026.09.15</div>
+              <p class="t-body-s clamp-2" style="margin-top:8px;">○○이에게, 오늘도 네 생각이 많이 났어. 곁에 있어줘서 정말 고마웠어.</p>
+            </div>
+          </div>
+          <div class="uc-codes">
+            <span class="uc-code">.card</span><span class="uc-code">.card-diary</span><span class="uc-code">.card-health</span>
+            <span class="uc-code">.card-bucket.is-done</span><span class="uc-code">.card-bucket .stamp</span>
+            <span class="uc-code">.card-letter</span><span class="uc-code">.card-memorial</span>
+            <span class="uc-code">.ico-wrap</span><span class="uc-code">.avatar.avatar-xl</span>
+          </div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">카드 배경 변형 · 리스트</div>
+          <div class="uc-demo grid3">
+            <div class="card card-sm card-flat">card-flat</div>
+            <div class="card card-sm card-soft">card-soft</div>
+            <div class="card card-sm card-theme">card-theme</div>
+          </div>
+          <ul class="list mt-3">
+            <li class="list-item"><span class="ico-wrap sm mint"><i data-lucide="stethoscope"></i></span><div class="grow"><div class="cell-title">병원 진료</div><div class="cell-sub">2026.09.10</div></div><i data-lucide="chevron-right" class="chev"></i></li>
+            <li class="list-item"><span class="ico-wrap sm butter"><i data-lucide="pill"></i></span><div class="grow"><div class="cell-title">투약 기록</div><div class="cell-sub">2026.09.09</div></div><i data-lucide="chevron-right" class="chev"></i></li>
+            <li class="list-item"><span class="ico-wrap sm sky"><i data-lucide="mail"></i></span><div class="grow"><div class="cell-title">하늘로 보낸 편지</div><div class="cell-sub">2026.09.02</div></div><i data-lucide="chevron-right" class="chev"></i></li>
+          </ul>
+          <div class="uc-codes"><span class="uc-code">.card-flat</span><span class="uc-code">.card-soft</span><span class="uc-code">.card-theme</span><span class="uc-code">.list</span><span class="uc-code">.list-item</span><span class="uc-code">.ico-wrap.sm</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">표준 셀 — 좌 아이콘/썸네일 · 가운데 2줄(제목/메타) · 우 값/화살표 <span class="tag tag-primary uc-tag-new">NEW</span></div>
+          <ul class="list">
+            <li class="list-item">
+              <span class="ico-wrap mint"><i data-lucide="scale"></i></span>
+              <div class="grow"><div class="cell-title">체중</div><div class="cell-sub">2026.09.28 오전 9:10 · 아침 먹기 전 측정</div></div>
+              <span class="cell-value">4.2kg</span><i data-lucide="chevron-right" class="chev"></i>
+            </li>
+            <li class="list-item">
+              <div class="photo cell-thumb tone-butter"><i data-lucide="image"></i></div>
+              <div class="grow"><div class="cell-title">바닷가에서 보낸 오후, 모래 위에 남긴 발자국</div><div class="cell-sub">다이어리 · 사진 4장</div></div>
+              <span class="cell-value">9월 20일</span><i data-lucide="chevron-right" class="chev"></i>
+            </li>
+            <li class="list-item">
+              <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+              <div class="grow"><div class="cell-title">하늘로 보낸 편지</div><div class="cell-sub wrap">여러 줄이 필요한 설명은 .cell-sub.wrap 으로 풀어줘요. 이 경우에만 두 줄 이상으로 자연스럽게 이어져요.</div></div>
+              <span class="tag tag-line">비공개</span>
+            </li>
+          </ul>
+          <div class="uc-codes"><span class="uc-code">.cell-title</span><span class="uc-code">.cell-sub</span><span class="uc-code">.cell-sub.wrap</span><span class="uc-code">.cell-value</span><span class="uc-code">.cell-thumb</span><span class="uc-code">.chev</span></div>
+          <p class="uc-note">제목·메타는 한 줄 말줄임이 기본이에요. 우측 값(.cell-value)은 줄어들지 않고 오른쪽 끝에 붙어요.</p>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">한 줄 메타 · 이름 + 뱃지 행 <span class="tag tag-primary uc-tag-new">NEW</span></div>
+          <div class="uc-demo grid2">
+            <div class="card card-sm card-flat">
+              <div class="row">
+                <span class="avatar"><i data-lucide="dog"></i></span>
+                <div class="grow">
+                  <div class="row"><span class="t-strong clamp-1">몽실이</span><span class="state-badge state-together"><i data-lucide="sun"></i> 함께하는 중</span></div>
+                  <span class="meta">말티즈<span class="meta-sep">·</span>여아<span class="meta-sep">·</span>만 14살</span>
+                </div>
+              </div>
+            </div>
+            <div class="card card-sm card-flat">
+              <div class="row">
+                <span class="avatar"><i data-lucide="dog"></i></span>
+                <div class="grow">
+                  <div class="row"><span class="t-strong clamp-1">이름이 아주 긴 반려견 보리보리쌀</span><span class="state-badge state-preparing"><i data-lucide="moon-star"></i> 이별 준비</span></div>
+                  <span class="meta">포메라니안<span class="meta-sep">·</span>남아<span class="meta-sep">·</span>만 16살<span class="meta-sep">·</span>2026.09.29 등록</span>
+                </div>
+              </div>
+            </div>
+            <div class="row wrap" style="grid-column: 1 / -1;">
+              <span class="tag tag-theme">산책</span><span class="tag tag-mint">건강</span><span class="tag tag-butter">간식</span><span class="tag tag-sky">편지</span><span class="t-caption t-sub nowrap">총 4개 · 2026.09.29</span>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.meta</span><span class="uc-code">.meta-sep</span><span class="uc-code">.row</span><span class="uc-code">.row.wrap</span><span class="uc-code">.clamp-1</span><span class="uc-code">.nowrap</span></div>
+          <p class="uc-note">이름이 길면 이름만 말줄임되고 뱃지는 그대로 한 줄을 지켜요. 메타가 넘치면 끝이 말줄임돼요.</p>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">카드 하단 풋 — 좁은 카드의 우측 버튼을 헤어라인 아래로 <span class="tag tag-primary uc-tag-new">NEW</span></div>
+          <div class="uc-demo grid3 uc-foot-demo">
+            <div class="card">
+              <div class="row"><span class="ico-wrap butter"><i data-lucide="footprints"></i></span><div class="grow"><div class="cell-title">바닷가 산책하기</div><div class="cell-sub">체력 부담 낮음 · 30분</div></div></div>
+              <div class="card-foot"><span class="t-caption t-sub nowrap">추천 항목</span><button class="btn btn-outline btn-sm"><i data-lucide="plus"></i> 담기</button></div>
+            </div>
+            <div class="card">
+              <div class="row"><span class="ico-wrap sky"><i data-lucide="mail"></i></span><div class="grow"><div class="cell-title">미리 쓰는 편지</div><div class="cell-sub">임시저장 · 9월 27일</div></div></div>
+              <div class="card-foot"><span class="tag tag-line">비공개</span><button class="btn btn-secondary btn-sm">이어 쓰기</button></div>
+            </div>
+            <div class="card card-sm">
+              <div class="row"><span class="ico-wrap sm mint"><i data-lucide="heart-pulse"></i></span><div class="grow"><div class="cell-title">건강 기록</div><div class="cell-sub">오늘 3건</div></div></div>
+              <div class="card-foot"><span class="t-caption t-sub nowrap">card-sm 안에서</span><a class="sec-more" href="#sec-data">전체 <i data-lucide="chevron-right" class="ico-16"></i></a></div>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.card-foot</span><span class="uc-code">.card-sm .card-foot</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">사진 자리 — 비율 고정 · 웜톤 면 · 흐린 라인 아이콘 (외부 이미지 금지) <span class="tag tag-primary uc-tag-new">NEW</span></div>
+          <div class="uc-demo grid4 is-ratio">
+            <div class="uc-photo-cell"><div class="photo r-1 rounded"><i data-lucide="image"></i></div><span class="uc-code">.photo.r-1</span></div>
+            <div class="uc-photo-cell"><div class="photo r-43 rounded"><i data-lucide="image"></i></div><span class="uc-code">.photo.r-43</span></div>
+            <div class="uc-photo-cell"><div class="photo r-34 rounded"><i data-lucide="image"></i></div><span class="uc-code">.photo.r-34</span></div>
+            <div class="uc-photo-cell"><div class="photo r-169 rounded"><i data-lucide="video"></i></div><span class="uc-code">.photo.r-169</span></div>
+          </div>
+          <div class="uc-demo grid4">
+            <div class="uc-photo-cell"><div class="photo r-43 rounded"><i data-lucide="image"></i></div><span class="uc-code">기본 (테마 물듦)</span></div>
+            <div class="uc-photo-cell"><div class="photo r-43 rounded tone-butter"><i data-lucide="image"></i></div><span class="uc-code">.tone-butter</span></div>
+            <div class="uc-photo-cell"><div class="photo r-43 rounded tone-mint"><i data-lucide="image"></i></div><span class="uc-code">.tone-mint</span></div>
+            <div class="uc-photo-cell"><div class="photo r-43 rounded tone-sky"><span class="tag photo-tag">평온</span><i data-lucide="image"></i></div><span class="uc-code">.tone-sky + .photo-tag</span></div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.photo</span><span class="uc-code">.r-1 / .r-43 / .r-34 / .r-169</span><span class="uc-code">.rounded</span><span class="uc-code">.tone-butter / .tone-mint / .tone-sky</span><span class="uc-code">.tag.photo-tag</span></div>
+          <p class="uc-note">기본 면은 상태 테마(accent-soft)에 살짝 물들어요. 여러 장이 나란히 있을 때만 .tone-* 로 톤을 변주해요.</p>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">섹션 헤더 · 가로 캐러셀 (모바일 폭 360 미리보기) <span class="tag tag-primary uc-tag-new">NEW</span></div>
+          <div class="uc-demo stage">
+            <div class="uc-m-col">
+              <div class="sec-head"><div class="row"><h3 class="sec-title">최근 다이어리</h3><span class="sec-sub">이번 주 5개</span></div><a class="sec-more" href="#sec-data">전체 <i data-lucide="chevron-right" class="ico-16"></i></a></div>
+              <div class="h-scroll">
+                <div class="card card-diary"><div class="photo"><span class="tag photo-tag">평온</span><i data-lucide="image"></i></div><div class="body"><span class="meta">9월 28일 (일)</span><p class="t-body-s clamp-2">볕이 좋아서 담요 위에서 한참을 졸았어요.</p></div></div>
+                <div class="card card-diary"><div class="photo tone-butter"><span class="tag photo-tag">행복</span><i data-lucide="image"></i></div><div class="body"><span class="meta">9월 27일 (토)</span><p class="t-body-s clamp-2">좋아하는 간식을 만들어 줬어요.</p></div></div>
+                <div class="card card-diary"><div class="photo tone-mint"><span class="tag photo-tag">특별한 날</span><i data-lucide="image"></i></div><div class="body"><span class="meta">9월 25일 (목)</span><p class="t-body-s clamp-2">바닷가 산책을 짧게 다녀왔어요.</p></div></div>
+              </div>
+              <div class="sec-head mt-4"><h3 class="sec-title">추억 한 장씩</h3><a class="sec-more" href="#sec-data">전체 <i data-lucide="chevron-right" class="ico-16"></i></a></div>
+              <div class="h-scroll is-wide">
+                <div class="photo r-169 rounded"><i data-lucide="image"></i></div>
+                <div class="photo r-169 rounded tone-sky"><i data-lucide="image"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.sec-head</span><span class="uc-code">.sec-title</span><span class="uc-code">.sec-sub</span><span class="uc-code">.sec-more</span><span class="uc-code">.h-scroll</span><span class="uc-code">.h-scroll.is-wide</span></div>
+          <p class="uc-note">.h-scroll 은 2장 + 다음 카드 32px 노출(스냅), .is-wide 는 한 장씩. .m-section 안에서 좌우 끝까지 bleed 되도록 음수 여백이 들어 있어요. 헤더 간격은 공통이 맞추니 mt/mb 유틸을 더하지 않아요(위 예시의 mt-4 는 미리보기 구분용).</p>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">스탯 · 진행 막대</div>
+          <div class="uc-demo col">
+            <div class="stat-row">
+              <div class="stat"><div class="stat-label">기록 일수</div><div class="stat-value num">128</div><div class="stat-diff">이번 달 +9</div></div>
+              <div class="stat"><div class="stat-label">버킷리스트</div><div class="stat-value num">6/10</div><div class="stat-diff">완료</div></div>
+              <div class="stat"><div class="stat-label">편지</div><div class="stat-value num">14</div><div class="stat-diff">보관 중</div></div>
+            </div>
+            <div class="stack-2 mt-3">
+              <div class="row-between t-caption t-sub"><span>버킷리스트 진행률</span><span>60%</span></div>
+              <div class="progress"><span style="width:60%;"></span></div>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.stat-row</span><span class="uc-code">.stat</span><span class="uc-code">.stat-label</span><span class="uc-code">.stat-value</span><span class="uc-code">.stat-diff</span><span class="uc-code">.progress</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">KPI</div>
+          <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+            <div class="kpi"><div class="kpi-label"><i data-lucide="users" class="ico-18"></i> 가입자</div><div class="kpi-value num">1,204<small>명</small></div><div class="kpi-diff"><span class="up">+3.2%</span> 전월 대비</div></div>
+            <div class="kpi"><div class="kpi-label"><i data-lucide="dog" class="ico-18"></i> 등록 반려견</div><div class="kpi-value num">1,340<small>마리</small></div><div class="kpi-diff"><span class="up">+2.1%</span> 전월 대비</div></div>
+            <div class="kpi"><div class="kpi-label"><i data-lucide="book-open" class="ico-18"></i> 이번 달 기록</div><div class="kpi-value num">8,921<small>건</small></div><div class="kpi-diff"><span class="down">-1.4%</span> 전월 대비</div></div>
+            <div class="kpi"><div class="kpi-label"><i data-lucide="credit-card" class="ico-18"></i> 구독자</div><div class="kpi-value num">312<small>명</small></div><div class="kpi-diff"><span class="up">+5.8%</span> 전월 대비</div></div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.kpi-grid</span><span class="uc-code">.kpi</span><span class="uc-code">.kpi-label</span><span class="uc-code">.kpi-value</span><span class="uc-code">.kpi-diff .up / .down</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">헤어라인 표 (열 제목을 눌러보세요 — 정렬) · 처리 상태</div>
+          <div class="table-wrap">
+            <table class="table" id="ucTable">
+              <thead>
+                <tr>
+                  <th style="cursor:pointer;" onclick="ucSortTable('name')">이름 <i data-lucide="chevrons-up-down" class="ico-16"></i></th>
+                  <th style="cursor:pointer;" onclick="ucSortTable('date')">최근 기록일 <i data-lucide="chevrons-up-down" class="ico-16"></i></th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody id="ucTableBody"></tbody>
+            </table>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.table-wrap</span><span class="uc-code">.table</span><span class="uc-code">.status.ok</span><span class="uc-code">.status.wait</span><span class="uc-code">.status.err</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">관리자 표 — 숫자 우측 · 날짜 한 줄 · 행 끝 액션 · 합계 행 · 비중 막대 <span class="tag tag-primary uc-tag-new">NEW</span></div>
+          <div class="panel">
+            <div class="panel-head">
+              <div><div class="panel-title">월별 결제 현황</div><div class="panel-sub">2026년 7월 ~ 9월 · 부가세 포함</div></div>
+              <button class="btn btn-utility btn-sm"><i data-lucide="download"></i> 내려받기</button>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr><th>기간</th><th>집계일</th><th class="t-right">결제 건수</th><th class="t-right">금액</th><th class="t-right">비중</th><th class="t-center">상태</th><th class="t-right">관리</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>2026년 7월</td><td class="td-date">2026.08.01</td><td class="td-num">1,024</td><td class="td-num">5,110,000원</td><td><div class="meter"><span class="meter-track"><span style="width:30%"></span></span><span class="meter-val">30%</span></div></td><td class="t-center"><span class="status ok">마감</span></td><td class="td-actions"><button class="btn btn-secondary btn-sm">상세</button></td></tr>
+                  <tr><td>2026년 8월</td><td class="td-date">2026.09.01</td><td class="td-num">1,180</td><td class="td-num">5,890,000원</td><td><div class="meter"><span class="meter-track"><span style="width:34%"></span></span><span class="meter-val">34%</span></div></td><td class="t-center"><span class="status ok">마감</span></td><td class="td-actions"><button class="btn btn-secondary btn-sm">상세</button></td></tr>
+                  <tr><td>2026년 9월</td><td class="td-date">2026.09.29</td><td class="td-num">1,236</td><td class="td-num">6,170,000원</td><td><div class="meter"><span class="meter-track"><span style="width:36%"></span></span><span class="meter-val">36%</span></div></td><td class="t-center"><span class="status wait">집계 중</span></td><td class="td-actions"><button class="btn btn-secondary btn-sm">상세</button></td></tr>
+                  <tr class="is-total"><td>합계</td><td class="td-date">—</td><td class="td-num">3,440</td><td class="td-num">17,170,000원</td><td><div class="meter"><span class="meter-track"><span style="width:100%"></span></span><span class="meter-val">100%</span></div></td><td class="t-center">—</td><td class="td-actions"></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="panel-foot"><span class="t-caption t-sub nowrap" style="margin-right:auto;">최종 갱신 2026.09.29 09:00</span><button class="btn btn-ghost btn-sm">전체 보기</button></div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.panel-sub</span><span class="uc-code">.panel-foot</span><span class="uc-code">th.t-right</span><span class="uc-code">td.td-num</span><span class="uc-code">td.td-date</span><span class="uc-code">td.td-actions</span><span class="uc-code">.t-center</span><span class="uc-code">tr.is-total</span><span class="uc-code">.meter</span><span class="uc-code">.meter-track</span><span class="uc-code">.meter-val</span></div>
+          <p class="uc-note">숫자·금액은 우측 정렬 + 고정폭 숫자, 텍스트는 좌측. 첫·끝 열은 20px 여백, 행 높이 52px 은 공통이 맞춰요.</p>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">페이지네이션 (실제로 페이지가 넘어가요)</div>
+          <div class="panel">
+            <div class="panel-body t-center t-sub" id="ucPageContent">1페이지 내용이에요</div>
+            <div class="pagination" id="ucPagination"></div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.pagination</span><span class="uc-code">.page-btn</span><span class="uc-code">.page-btn.active</span></div>
+        </div>
+      </section>
+
+      <!-- 6. 내비게이션 -->
+      <section class="uc-section" id="sec-nav">
+        <div class="uc-section-head"><span class="uc-section-num">6</span><h2>내비게이션</h2></div>
+        <p class="uc-section-desc">모바일 헤더·탭바 구성요소와 관리자 사이드바를 좁은 미리보기 상자에 담았어요 (풀 프레임은 각 시안 페이지에서 확인).</p>
+
+        <div class="uc-pair">
+        <div class="uc-block">
+          <div class="uc-block-title">m-header · m-tabbar (구성요소 미리보기)</div>
+          <div class="uc-demo stage">
+            <div class="uc-phone-mock">
+              <div class="m-header">
+                <button class="icon-btn"><i data-lucide="chevron-left"></i></button>
+                <span class="m-title is-center">일상 다이어리</span>
+                <div class="m-header-actions"><button class="icon-btn"><i data-lucide="plus"></i></button></div>
+              </div>
+              <div class="m-content-demo">화면 콘텐츠 영역이 여기 들어가요. 실제 페이지는 pages/user/ 각 화면을 확인하세요.</div>
+              <div class="m-tabbar">
+                <a class="m-tab active"><span class="m-tab-ico"><i data-lucide="house"></i></span>홈</a>
+                <a class="m-tab"><span class="m-tab-ico"><i data-lucide="book-open"></i></span>기록</a>
+                <a class="m-tab"><span class="m-tab-ico"><i data-lucide="cloud-sun"></i></span>함께하기</a>
+                <a class="m-tab"><span class="m-tab-ico"><i data-lucide="hand-heart"></i></span>마음 돌봄</a>
+                <a class="m-tab"><span class="m-tab-ico"><i data-lucide="user"></i></span>마이</a>
+              </div>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.m-header</span><span class="uc-code">.m-title</span><span class="uc-code">.m-header-actions</span><span class="uc-code">.m-tabbar</span><span class="uc-code">.m-tab.active</span><span class="uc-code">.m-tab-ico</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">admin-side (관리자 사이드바, 높이만 축소)</div>
+          <div class="uc-demo stage">
+            <div class="uc-side-mock">
+              <div class="admin-side" style="position:static; height:100%;">
+                <div class="admin-brand">
+                  <span class="ico-wrap"><i data-lucide="dog"></i></span>
+                  <div><div class="admin-brand-name">무지개 일기</div><div class="admin-brand-sub">관리자</div></div>
+                </div>
+                <div class="admin-nav-label">모니터링</div>
+                <nav class="admin-nav">
+                  <a class="active"><i data-lucide="layout-dashboard"></i> 대시보드</a>
+                  <a><i data-lucide="users"></i> 회원·반려견</a>
+                  <a><i data-lucide="inbox"></i> 1:1 문의</a>
+                  <a><i data-lucide="flag"></i> 신고 관리</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.admin-side</span><span class="uc-code">.admin-brand</span><span class="uc-code">.admin-nav</span><span class="uc-code">.admin-nav a.active</span></div>
+        </div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">앱바 3가지 — 가운데 타이틀 대칭 · 좌측 타이틀 · 헤어라인 없음 <span class="tag tag-primary uc-tag-new">NEW</span></div>
+          <div class="uc-demo grid3" style="align-items:start;">
+            <div class="uc-phone-mock" style="height:auto; width:auto;">
+              <div class="m-header">
+                <button class="icon-btn"><i data-lucide="chevron-left"></i></button>
+                <span class="m-title is-center">반려견 관리</span>
+                <span class="m-header-spacer"></span>
+              </div>
+            </div>
+            <div class="uc-phone-mock" style="height:auto; width:auto;">
+              <div class="m-header">
+                <span class="m-title">추억 타임라인</span>
+                <div class="m-header-actions"><button class="icon-btn"><i data-lucide="search"></i></button><button class="icon-btn"><i data-lucide="sliders-horizontal"></i></button></div>
+              </div>
+            </div>
+            <div class="uc-phone-mock" style="height:auto; width:auto;">
+              <div class="m-header no-line">
+                <button class="icon-btn"><i data-lucide="chevron-left"></i></button>
+                <span class="m-title is-center">몽실이의 공간</span>
+                <div class="m-header-actions"><button class="icon-btn"><i data-lucide="share-2"></i></button></div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.m-title.is-center</span><span class="uc-code">.m-header-spacer</span><span class="uc-code">.m-header-actions</span><span class="uc-code">.m-header.no-line</span></div>
+          <p class="uc-note">우측 액션이 없으면 .m-header-spacer(44px)로 뒤로가기와 폭을 맞춰 타이틀이 정확히 가운데에 와요. .no-line 헤더는 본문을 스크롤하면 하단 헤어라인이 나타나요.</p>
+        </div>
+      </section>
+
+      <!-- 7. 오버레이 -->
+      <section class="uc-section" id="sec-overlay">
+        <div class="uc-section-head"><span class="uc-section-num">7</span><h2>오버레이</h2></div>
+        <p class="uc-section-desc">바텀시트와 모달. 딤 클릭 · Esc 로 닫혀요.</p>
+
+        <div class="uc-pair">
+        <div class="uc-block">
+          <div class="uc-block-title">바텀시트 (sheet) — 선택 목록 · 하단 버튼 쌍 (처음엔 열린 상태)</div>
+          <div class="uc-demo stage">
+            <div class="uc-sheet-stage" id="ucSheetStage">
+              <button class="btn btn-secondary btn-sm" onclick="ucOpenSheet()"><i data-lucide="arrow-up"></i> 시트 열기</button>
+              <div class="sheet-dim open" id="ucSheetDim" onclick="ucCloseSheet()"></div>
+              <div class="sheet open" id="ucSheet">
+                <div class="sheet-grip"></div>
+                <div class="sheet-title">기분 태그 선택</div>
+                <p class="sheet-desc">오늘 몽실이의 하루와 가장 가까운 걸 골라주세요.</p>
+                <div class="sheet-list">
+                  <button class="list-item"><span class="ico-wrap sm"><i data-lucide="sun"></i></span><span class="grow cell-title">평온</span><i data-lucide="check" class="ico-18" style="color:var(--color-primary-strong)"></i></button>
+                  <button class="list-item"><span class="ico-wrap sm butter"><i data-lucide="smile"></i></span><span class="grow cell-title">행복</span></button>
+                  <button class="list-item"><span class="ico-wrap sm sky"><i data-lucide="cloud-drizzle"></i></span><span class="grow cell-title">아픔</span></button>
+                </div>
+                <div class="sheet-actions">
+                  <button class="btn btn-secondary" onclick="ucCloseSheet()">취소</button>
+                  <button class="btn btn-primary" onclick="ucCloseSheet()">적용</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.sheet-dim</span><span class="uc-code">.sheet</span><span class="uc-code">.sheet.open</span><span class="uc-code">.sheet-grip</span><span class="uc-code">.sheet-title</span><span class="uc-code">.sheet-desc</span><span class="uc-code">.sheet-list &gt; button.list-item</span><span class="uc-code">.sheet-actions</span></div>
+        </div>
+
+        <div class="uc-block">
+          <div class="uc-block-title">모달 (modal) — 기본 · 가운데 정렬</div>
+          <div class="uc-demo stage col" style="align-items:center;">
+            <div class="modal uc-modal-preview">
+              <div class="modal-title">공유 링크를 다시 만들까요?</div>
+              <p class="modal-desc">이전 링크로는 더 이상 들어올 수 없어요.</p>
+              <div class="modal-actions"><button class="btn btn-secondary">취소</button><button class="btn btn-primary">다시 만들기</button></div>
+            </div>
+            <div class="modal is-center uc-modal-preview">
+              <div class="empty-art modal-art" style="width:64px;height:64px;"><i data-lucide="cloud"></i></div>
+              <div class="modal-title">편지가 잘 보관됐어요</div>
+              <p class="modal-desc">하늘로 보내는 편지함에서 언제든 다시 볼 수 있어요.</p>
+              <div class="modal-actions"><button class="btn btn-primary">확인</button></div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="ucOpenModal()"><i data-lucide="cloud"></i> 무지개다리 전환 모달 열기</button>
+          </div>
+          <div class="uc-codes"><span class="uc-code">.modal-dim</span><span class="uc-code">.modal</span><span class="uc-code">.modal.is-center</span><span class="uc-code">.modal-art</span><span class="uc-code">.modal-title</span><span class="uc-code">.modal-desc</span><span class="uc-code">.modal-actions</span></div>
+        </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div class="modal-dim" id="ucModalDim" onclick="if(event.target===this) ucCloseModal();">
+  <div class="modal">
+    <div class="modal-title">무지개다리를 건넌 날을 기록할까요?</div>
+    <p class="modal-desc">천천히, 마음이 준비됐을 때 기록해도 괜찮아요.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="ucCloseModal()">잠시 후에 할게요</button>
+      <button class="btn btn-primary" onclick="ucCloseModal()">네, 기록할게요</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+
+  // 칩 토글
+  function ucToggleChip(el) { el.classList.toggle('active'); }
+
+  // 세그먼트
+  function ucSelectSeg(el) {
+    document.querySelectorAll('#ucSegment .seg-btn').forEach(function (b) { b.classList.toggle('active', b === el); });
+  }
+
+  // 탭 + 패널
+  var ucTabTexts = ['체크리스트 탭 내용이 여기에 보여요.', '마지막 날 플래너 탭 내용이 여기에 보여요.', '장례 정보 탭 내용이 여기에 보여요.'];
+  function ucSelectTab(el, i) {
+    document.querySelectorAll('#ucTabs .tab').forEach(function (b) { b.classList.toggle('active', b === el); });
+    document.getElementById('ucTabPanel').textContent = ucTabTexts[i];
+  }
+
+  // 토스트
+  var ucToastTimer;
+  function ucShowToast() {
+    var t = document.getElementById('ucToast');
+    t.classList.add('show');
+    clearTimeout(ucToastTimer);
+    ucToastTimer = setTimeout(function () { t.classList.remove('show'); }, 2500);
+  }
+
+  // 표 정렬
+  var ucRows = [
+    { name: '몽실이', date: '2026-09-28', status: 'ok', label: '정상' },
+    { name: '두부', date: '2026-09-20', status: 'wait', label: '확인 필요' },
+    { name: '초코', date: '2026-08-30', status: 'err', label: '오류' },
+    { name: '보리', date: '2026-09-25', status: 'ok', label: '정상' },
+    { name: '나비', date: '2026-09-10', status: 'wait', label: '확인 필요' }
+  ];
+  var ucSortState = { key: null, asc: true };
+  function ucRenderTable() {
+    var body = document.getElementById('ucTableBody');
+    body.innerHTML = ucRows.map(function (r) {
+      return '<tr><td>' + r.name + '</td><td class="td-date">' + r.date + '</td><td><span class="status ' + r.status + '">' + r.label + '</span></td></tr>';
+    }).join('');
+  }
+  function ucSortTable(key) {
+    ucSortState.asc = (ucSortState.key === key) ? !ucSortState.asc : true;
+    ucSortState.key = key;
+    ucRows.sort(function (a, b) {
+      if (a[key] < b[key]) return ucSortState.asc ? -1 : 1;
+      if (a[key] > b[key]) return ucSortState.asc ? 1 : -1;
+      return 0;
+    });
+    ucRenderTable();
+  }
+  ucRenderTable();
+
+  // 페이지네이션
+  var ucPage = 1, ucTotalPages = 5;
+  function ucRenderPagination() {
+    var wrap = document.getElementById('ucPagination');
+    var html = '<button class="page-btn" onclick="ucGoPage(' + (ucPage - 1) + ')" ' + (ucPage === 1 ? 'disabled' : '') + '><i data-lucide="chevron-left" class="ico-16"></i></button>';
+    for (var i = 1; i <= ucTotalPages; i++) {
+      html += '<button class="page-btn' + (i === ucPage ? ' active' : '') + '" onclick="ucGoPage(' + i + ')">' + i + '</button>';
+    }
+    html += '<button class="page-btn" onclick="ucGoPage(' + (ucPage + 1) + ')" ' + (ucPage === ucTotalPages ? 'disabled' : '') + '><i data-lucide="chevron-right" class="ico-16"></i></button>';
+    wrap.innerHTML = html;
+    document.getElementById('ucPageContent').textContent = ucPage + '페이지 내용이에요';
+    lucide.createIcons();
+  }
+  function ucGoPage(p) { if (p < 1 || p > ucTotalPages) return; ucPage = p; ucRenderPagination(); }
+  ucRenderPagination();
+
+  // 바텀시트
+  function ucOpenSheet() { document.getElementById('ucSheetDim').classList.add('open'); document.getElementById('ucSheet').classList.add('open'); }
+  function ucCloseSheet() { document.getElementById('ucSheetDim').classList.remove('open'); document.getElementById('ucSheet').classList.remove('open'); }
+
+  // 모달
+  function ucOpenModal() { document.getElementById('ucModalDim').classList.add('open'); }
+  function ucCloseModal() { document.getElementById('ucModalDim').classList.remove('open'); }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { ucCloseModal(); ucCloseSheet(); }
+  });
+</script>
+<button type="button" class="to-top" id="toTop" aria-label="맨 위로 이동"><i data-lucide="arrow-up"></i>맨 위로</button>
+<script>
+  (function () {
+    var btn = document.getElementById("toTop");
+    function sync() { btn.classList.toggle("show", window.scrollY > 400); }
+    window.addEventListener("scroll", sync, { passive: true });
+    btn.addEventListener("click", function () {
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+      if (history.replaceState) history.replaceState(null, "", location.pathname + location.search);
+    });
+    sync();
+    if (window.lucide) lucide.createIcons();
+  })();
+</script>
+</body>
+</html>

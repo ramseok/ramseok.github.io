@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P8 알림·표시 설정 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P8 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .list-item.is-locked .cell-title { color: var(--color-text-sub); }
+    .list-item.is-locked .ico-wrap { background: var(--color-surface-soft); color: var(--color-text-disabled); }
+    .list-item .switch { margin-left: auto; }
+    .notify-list .list-item { min-height: 64px; }
+    .notify-list .cell-sub.wrap { text-wrap: balance; }
+    /* 삶의 질 체크 주기 — 해당 알림 행 바로 아래 들여쓴 하위 설정 */
+    .qol-freq { margin: 0; padding: var(--space-3) var(--space-4) var(--space-4) calc(var(--space-4) + 40px + var(--space-3)); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+    .notify-list .list-item[data-notify="qol"] { border-bottom: 0; }
+    .notify-list .list-item[data-notify="qol"] + .qol-freq { padding-top: 0; }
+    .qol-freq .select { height: 44px; font-size: var(--fs-body-s); }
+    .qol-freq .field-help { margin-top: 0; text-wrap: balance; }
+    .time-row { min-height: 64px; }
+    .time-row label.cell-title { white-space: normal; }
+    /* 알림 받을 시간 — 리스트 행 + 우측 컴팩트 선택 */
+    label.cell-title { display: block; cursor: pointer; }
+    .select-compact { width: auto; flex-shrink: 0; height: 40px; padding: 0 36px 0 var(--space-3); font-size: var(--fs-body-s); font-weight: 600; background-position: right 10px center; border-radius: var(--radius-full); }
+    /* 글자 크기 */
+    .font-card .segment { display: flex; width: 100%; }
+    .font-card .seg-btn { flex: 1; min-height: 40px; }
+    .font-sample { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+    .font-sample h3 { margin-bottom: var(--space-1); }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen" id="mScreen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기 + 제목(가운데) -->
+        <header class="m-header">
+          <a class="icon-btn" href="mypage.html" aria-label="마이페이지로 돌아가기"><i data-lucide="arrow-left"></i></a>
+          <div class="m-title is-center">알림·표시 설정</div>
+          <span class="m-header-spacer" aria-hidden="true"></span>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 무지개다리 상태 안내 (F34) -->
+          <section class="m-section" id="rainbowNotice" hidden>
+            <div class="notice notice-theme">
+              <i data-lucide="cloud"></i>
+              <p class="grow"><span data-pet-name>보리</span>가 무지개다리를 건넌 뒤로 기록·투약·병원·삶의 질 알림은 자동으로 꺼졌어요. 예약된 알림도 함께 정리했어요.</p>
+            </div>
+          </section>
+
+          <!-- ===== 알림 종류 (F8, F34) ===== -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">알림 종류</h2></div>
+            <div class="list notify-list">
+              <div class="list-item is-lockable" data-notify="diary" data-label="기록 리마인드">
+                <span class="ico-wrap"><i data-lucide="notebook-pen"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">기록 리마인드</div>
+                  <div class="cell-sub wrap" data-caption>하루를 남기기 좋은 시간에 살짝 알려드려요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="track"></span>
+                </label>
+              </div>
+              <div class="list-item is-lockable" data-notify="med" data-label="투약·병원 일정">
+                <span class="ico-wrap"><i data-lucide="pill"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">투약·병원 일정</div>
+                  <div class="cell-sub wrap" data-caption>복약 시간과 병원 재방문일을 챙겨드려요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="track"></span>
+                </label>
+              </div>
+              <div class="list-item is-lockable" data-notify="qol" data-label="삶의 질 체크 주기">
+                <span class="ico-wrap"><i data-lucide="heart-pulse"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">삶의 질 체크 주기</div>
+                  <div class="cell-sub wrap" data-caption>설정한 주기에 맞춰 컨디션을 살펴볼 수 있게 알려드려요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="track"></span>
+                </label>
+              </div>
+              <div class="field qol-freq" id="qolFreqField">
+                <label class="sr-only" for="qolFreq">삶의 질 체크 주기</label>
+                <select class="select" id="qolFreq">
+                  <option value="3d">3일마다</option>
+                  <option value="1w" selected>1주마다</option>
+                  <option value="2w">2주마다</option>
+                </select>
+                <span class="field-help">주기를 바꾸면 다음 체크부터 새 주기로 알려드려요</span>
+              </div>
+              <div class="list-item" data-notify="guestbook" data-label="방명록 새 글">
+                <span class="ico-wrap sky"><i data-lucide="messages-square"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">방명록 새 글</div>
+                  <div class="cell-sub wrap" data-caption>추모관에 새 방명록이 달리면 알려드려요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="track"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 기념일 알림 (F28, 기본 OFF) ===== -->
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">기념일 알림</h2>
+              <span class="sec-sub">기본은 꺼져 있어요</span>
+            </div>
+            <div class="notice notice-theme mb-3">
+              <i data-lucide="info"></i>
+              <p class="grow">이별 후에도 <span data-pet-name>보리</span>의 기념일을 기억하고 싶다면 직접 켜주세요. 켠 항목만 보내드려요.</p>
+            </div>
+            <div class="list notify-list">
+              <div class="list-item" data-notify="anniv-birth" data-label="생일 알림">
+                <span class="ico-wrap butter"><i data-lucide="cake"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">생일</div>
+                  <div class="cell-sub wrap" data-caption>태어난 날을 함께 기억해요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox">
+                  <span class="track"></span>
+                </label>
+              </div>
+              <div class="list-item" data-notify="anniv-dday" data-label="기일 알림">
+                <span class="ico-wrap soft"><i data-lucide="flower-2"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">기일 (1주기 등)</div>
+                  <div class="cell-sub wrap" data-caption>보내드린 날을 조용히 알려드려요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox">
+                  <span class="track"></span>
+                </label>
+              </div>
+              <div class="list-item" data-notify="anniv-adopt" data-label="입양 기념일 알림">
+                <span class="ico-wrap mint"><i data-lucide="gift"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">입양 기념일</div>
+                  <div class="cell-sub wrap" data-caption>처음 만난 날을 기억해요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox">
+                  <span class="track"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 알림 받을 시간 (F8) ===== -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">알림 받을 시간</h2></div>
+            <div class="list notify-list">
+              <div class="list-item time-row">
+                <div class="grow"><label class="cell-title" for="notifyTime">매일 알려드릴 시간</label></div>
+                <select class="select select-compact" id="notifyTime">
+                <option value="09:00" selected>오전 9:00</option>
+                <option value="12:00">오후 12:00</option>
+                <option value="18:00">오후 6:00</option>
+                <option value="21:00">오후 9:00</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 알림 채널 (F8) ===== -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">알림 채널</h2></div>
+            <div class="list notify-list">
+              <div class="list-item">
+                <span class="ico-wrap"><i data-lucide="smartphone"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">앱 푸시</div>
+                  <div class="cell-sub wrap">기본 채널이에요 · 항상 켜져 있어요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked disabled>
+                  <span class="track"></span>
+                </label>
+              </div>
+              <div class="list-item" data-notify="email" data-label="이메일 알림">
+                <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+                <div class="grow notify-row">
+                  <div class="cell-title">이메일로도 받기</div>
+                  <div class="cell-sub wrap" data-caption>가입 시 등록한 이메일로 함께 보내드려요</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="emailToggle">
+                  <span class="track"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 글자 크기 (F8, 접근성) ===== -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">글자 크기</h2></div>
+            <div class="card card-sm font-card">
+              <div class="segment" role="tablist" aria-label="글자 크기 선택">
+                <button class="seg-btn active" data-font-scale="" data-scale-label="보통">보통</button>
+                <button class="seg-btn" data-font-scale="lg" data-scale-label="크게">크게</button>
+                <button class="seg-btn" data-font-scale="xl" data-scale-label="아주 크게">아주 크게</button>
+              </div>
+              <div class="font-sample">
+                <h3>오늘 <span data-pet-name>보리</span>는 어떤 하루였나요?</h3>
+                <p class="t-body-s t-sub mt-1">화면 전체 글자 크기에 바로 반영돼요.</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check" data-toast-ico></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    var body = document.body;
+    var STATE_KEY = 'rd-pet-state';
+    var toastTimer;
+
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 한글 받침 유무에 따라 을/를 조사를 고른다
+    function withEulReul(word, suffix) {
+      var last = word.charAt(word.length - 1);
+      var code = last.charCodeAt(0) - 0xAC00;
+      var hasBatchim = code >= 0 && code <= 11171 && (code % 28) !== 0;
+      return word + (hasBatchim ? '을' : '를') + suffix;
+    }
+
+    // 현재 반려견 상태 읽기 (P4·P5·P6 에서 저장한 값을 그대로 따른다 — 이 페이지에 별도 스위처를 두지 않는다)
+    (function () {
+      var state = 'together';
+      try { state = localStorage.getItem(STATE_KEY) || 'together'; } catch (e) {}
+      body.dataset.petState = state;
+      if (state === 'rainbow') {
+        document.getElementById('rainbowNotice').hidden = false;
+        document.querySelectorAll('.list-item.is-lockable').forEach(function (row) {
+          row.classList.add('is-locked');
+          var input = row.querySelector('input[type="checkbox"]');
+          input.checked = false;
+          input.disabled = true;
+          row.querySelector('[data-caption]').textContent = '무지개다리 상태에서는 사용할 수 없어요';
+        });
+        var freq = document.getElementById('qolFreqField');
+        freq.querySelector('select').disabled = true;
+        freq.querySelector('.field-help').textContent = '무지개다리 상태에서는 사용할 수 없어요';
+      }
+    })();
+
+    // 알림 종류·채널 토글 — 시각 피드백 + 토스트
+    document.querySelectorAll('.list-item[data-notify] input[type="checkbox"]').forEach(function (input) {
+      var row = input.closest('.list-item');
+      input.addEventListener('change', function () {
+        if (input.disabled) return;
+        var label = row.dataset.label || '알림';
+        showToast(withEulReul(label, input.checked ? ' 켰어요' : ' 껐어요'));
+      });
+    });
+
+    // 삶의 질 체크 주기
+    document.getElementById('qolFreq').addEventListener('change', function () {
+      if (this.disabled) return;
+      showToast('삶의 질 체크 주기를 ' + this.options[this.selectedIndex].text + '로 바꿨어요');
+    });
+
+    // 알림 받을 시간
+    document.getElementById('notifyTime').addEventListener('change', function () {
+      showToast('알림 받을 시간을 ' + this.options[this.selectedIndex].text + '로 바꿨어요');
+    });
+
+    // 글자 크기 — [data-font-scale] 를 .m-screen 에 적용해 화면 전체에 실제로 반영한다
+    // 선택값은 localStorage('rd-font-scale')에 저장(lg|xl, 보통이면 제거)해 다른 화면과 공유한다
+    var mScreen = document.getElementById('mScreen');
+    var FONT_KEY = 'rd-font-scale';
+    function applyFontScale(scale) {
+      if (scale) { mScreen.setAttribute('data-font-scale', scale); }
+      else { mScreen.removeAttribute('data-font-scale'); }
+      document.querySelectorAll('[data-scale-label]').forEach(function (b) { b.classList.toggle('active', b.dataset.fontScale === scale); });
+    }
+    var savedScale = '';
+    try { savedScale = localStorage.getItem(FONT_KEY) || ''; } catch (e) {}
+    if (savedScale !== 'lg' && savedScale !== 'xl') savedScale = '';
+    applyFontScale(savedScale);
+    document.querySelectorAll('[data-scale-label]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var scale = btn.dataset.fontScale;
+        applyFontScale(scale);
+        try {
+          if (scale) { localStorage.setItem(FONT_KEY, scale); }
+          else { localStorage.removeItem(FONT_KEY); }
+        } catch (e) {}
+        showToast('글자 크기를 ' + btn.dataset.scaleLabel + '로 바꿨어요');
+      });
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/notification-settings.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P30 1:1 문의 관리 · 무지개 일기 관리자</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P30 전용 — 공통 레이아웃(.admin-*)은 common.css 그대로 쓴다 */
+    .nav-count { margin-left: auto; font-size: var(--fs-caption); color: var(--color-text-sub); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    /* 툴바 — 상태 세그먼트 · 검색 · 총 건수 한 줄 */
+    .inq-toolbar { flex-wrap: nowrap; }
+    .inq-toolbar .search { width: 280px; flex-shrink: 1; min-width: 200px; }
+    .inq-toolbar .input { height: 44px; }
+    .seg-btn .cnt { font-variant-numeric: tabular-nums; color: var(--color-text-sub); font-weight: 600; }
+    .seg-btn.active .cnt { color: var(--color-primary-strong); }
+    /* 목록 + 상세 (마스터-디테일) */
+    .inq-row { display: grid; grid-template-columns: minmax(0, 1fr) clamp(320px, 26vw, 400px); gap: var(--space-4); align-items: start; }
+    .inq-table { table-layout: fixed; }
+    .inq-table th, .inq-table td { padding-left: var(--space-3); padding-right: var(--space-3); }
+    .inq-table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .inq-table .col-no { width: 60px; }
+    .inq-table .col-type { width: 128px; }
+    .inq-table .col-author { width: 76px; }
+    .inq-table .col-date { width: 112px; }
+    .inq-table .col-status { width: 108px; }
+    .inq-list-body tr { cursor: pointer; }
+    .inq-list-body tr.is-selected { background: var(--color-primary-soft); }
+    .inq-list-body tr.is-selected .tag-line { background: var(--color-surface); }
+    .inq-list-body tr.is-selected .td-title { font-weight: 600; }
+    .td-no { color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
+    .td-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+    /* 상세 패널 */
+    .inq-detail { position: sticky; top: 88px; }
+    .inq-detail-head { padding: var(--space-4) var(--space-5) var(--space-4); border-bottom: 1px solid var(--color-border); }
+    .inq-detail-head .row { gap: var(--space-2); }
+    .inq-detail-head .inq-no { margin-left: auto; font-size: var(--fs-caption); color: var(--color-text-sub); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .inq-detail-title { font-size: var(--fs-h3); line-height: var(--lh-h3); font-weight: 600; letter-spacing: -0.015em; margin-top: var(--space-2); }
+    .inq-detail-meta { display: flex; align-items: center; gap: 6px; margin-top: var(--space-1); font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .inq-detail-meta .meta-sep { margin: 0 2px; }
+    .inq-detail-body { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+    .inq-sec-label { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); font-weight: 600; margin-bottom: var(--space-2); }
+    .inq-content { background: var(--color-bg); border-radius: var(--radius-md); padding: var(--space-4); font-size: var(--fs-body-s); line-height: var(--lh-body-s); white-space: pre-line; }
+    .inq-attach { margin-top: var(--space-2); }
+    .inq-answered-box { background: #EEF5FC; border-radius: var(--radius-md); padding: var(--space-4); font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+    .inq-answered-box .inq-sec-label { display: flex; align-items: center; gap: 6px; }
+    .inq-reply .textarea { min-height: 140px; font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+    @media (max-width: 1366px) { .inq-table .col-no { width: 48px; } .inq-table .col-type { width: 120px; } .inq-table .col-author { width: 68px; } }
+    @media (max-width: 1100px) { .inq-row { grid-template-columns: 1fr; } .inq-detail { position: static; } .inq-toolbar { flex-wrap: wrap; } }
+  </style>
+</head>
+<body>
+  <div class="admin">
+
+    <!-- 사이드바 — dashboard.html 블록 그대로, active만 이동 -->
+    <aside class="admin-side">
+      <div class="admin-brand">
+        <span class="ico-wrap"><i data-lucide="rainbow" class="ico-18"></i></span>
+        <div>
+          <div class="admin-brand-name">무지개 일기</div>
+          <div class="admin-brand-sub">운영 관리자</div>
+        </div>
+      </div>
+
+      <div class="admin-nav-label">통계</div>
+      <nav class="admin-nav">
+        <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> 대시보드</a>
+      </nav>
+
+      <div class="admin-nav-label">운영</div>
+      <nav class="admin-nav">
+        <a href="members.html"><i data-lucide="users"></i> 회원·반려견</a>
+        <a href="inquiries.html" class="active"><i data-lucide="message-circle-question"></i> 1:1 문의 <span class="nav-count">대기 7</span></a>
+        <a href="content-cms.html"><i data-lucide="file-pen-line"></i> 콘텐츠(CMS)</a>
+        <a href="reports.html"><i data-lucide="flag"></i> 신고·모더레이션 <span class="nav-count">5</span></a>
+        <a href="partners.html"><i data-lucide="handshake"></i> 제휴 업체</a>
+      </nav>
+
+      <div class="admin-side-foot">
+        <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+        <div class="grow">
+          <div class="t-body-s t-strong">김하늘</div>
+          <div class="t-caption t-sub">운영 매니저</div>
+        </div>
+        <a class="icon-btn" href="login.html" aria-label="로그아웃" title="로그아웃"><i data-lucide="log-out" class="ico-18"></i></a>
+      </div>
+    </aside>
+
+    <!-- 메인 -->
+    <div class="admin-main">
+      <header class="admin-top">
+        <div class="admin-top-title">1:1 문의 관리</div>
+        <span class="crumb">운영 · 답변 대기 <span id="waitCount">0</span>건</span>
+        <div class="admin-top-actions">
+          <button class="icon-btn" id="refreshBtn" aria-label="새로고침" title="새로고침"><i data-lucide="refresh-cw" class="ico-18"></i></button>
+        </div>
+      </header>
+
+      <main class="admin-body">
+
+        <!-- F40: 문의 목록·상태(대기/답변완료) 필터, 상세·답변 작성 -->
+        <div class="toolbar inq-toolbar">
+          <div class="segment" role="tablist" aria-label="상태 필터">
+            <button class="seg-btn active" data-filter="all">전체 <span class="cnt" id="cntAll"></span></button>
+            <button class="seg-btn" data-filter="wait">대기 <span class="cnt" id="cntWait"></span></button>
+            <button class="seg-btn" data-filter="done">답변완료 <span class="cnt" id="cntDone"></span></button>
+          </div>
+          <span class="spacer"></span>
+          <div class="input-wrap search">
+            <i data-lucide="search" class="ico-18"></i>
+            <input class="input" id="searchInput" placeholder="제목·작성자 검색">
+          </div>
+          <span class="t-body-s t-sub" id="totalLabel">총 12건</span>
+        </div>
+
+        <section class="inq-row">
+
+          <!-- 목록 -->
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">문의 목록</div>
+                <div class="panel-sub">행을 누르면 오른쪽에서 상세를 볼 수 있어요</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table inq-table">
+                <colgroup><col class="col-no"><col class="col-type"><col><col class="col-author"><col class="col-date"><col class="col-status"></colgroup>
+                <thead>
+                  <tr><th>번호</th><th>유형</th><th>제목</th><th>작성자</th><th>등록일</th><th>상태</th></tr>
+                </thead>
+                <tbody class="inq-list-body" id="inqBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 상세 · 답변 작성 -->
+          <div class="panel inq-detail" id="detailPanel"></div>
+
+        </section>
+
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check"></i><span id="toastMsg"></span></div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 더미 데이터 (F33 사용자 1:1 문의 · F40 관리자 응대)
+    var inquiries = [
+      { id: 12, type: '구독·결제', title: '구독 결제 후 프리미엄 테마가 안 보여요', author: '이*나', date: '09.29 09:12', status: 'wait',
+        content: '어제 프리미엄 연간 결제를 했는데 추모관 편집에서 배경 테마가 기본 테마만 나와요. 결제는 정상 완료됐다고 문자로 받았어요. 확인 부탁드려요.', attach: '결제 영수증.jpg', answer: '' },
+      { id: 11, type: '상태 전환', title: '무지개다리 전환을 실수로 눌렀어요', author: '박*수', date: '09.28 21:40', status: 'done',
+        content: '반려견 상태를 이별 준비로 바꾸려다가 실수로 무지개다리 전환까지 눌러버렸어요. 되돌릴 수 있나요?', attach: '', answer: '안녕하세요, 무지개다리 전환은 반려견 관리 화면의 [되돌리기] 버튼(이별일로부터 7일 이내)으로 직접 되돌리실 수 있어요. 오늘 기준 6일 남아 있으니 편하실 때 진행해 주세요.' },
+      { id: 10, type: '추모관', title: '추모관 공유 링크가 만료됐다고 나와요', author: '최*영', date: '09.28 18:05', status: 'wait',
+        content: '가족들에게 보낸 추모관 링크를 눌렀더니 "무효화된 링크"라는 안내가 떠요. 링크를 새로 만든 적은 없는데 왜 그런지 궁금해요.', attach: '', answer: '' },
+      { id: 9, type: '보안·개인정보', title: '동물등록번호가 마스킹 안 되고 그대로 보여요', author: '정*훈', date: '09.28 15:22', status: 'wait',
+        content: '반려견 관리 화면에서 등록번호가 마스킹 없이 전체 숫자로 노출되는 것 같아요. 캡처 첨부합니다.', attach: '캡처_등록번호.png', answer: '' },
+      { id: 8, type: '데이터 내보내기', title: '데이터 내보내기 ZIP 다운로드가 안 돼요', author: '한*미', date: '09.27 20:11', status: 'done',
+        content: '마이페이지에서 전체 기록 내보내기를 눌렀는데 다운로드가 시작되지 않아요. 용량이 커서 그런 걸까요?', attach: '', answer: '안녕하세요, 확인해 보니 사진 원본 용량이 커서 압축 생성에 시간이 걸린 케이스였어요. 지금은 정상적으로 다운로드되는 것을 확인했습니다. 다시 시도해 주시고, 그래도 안 되면 다시 문의해 주세요.' },
+      { id: 7, type: '반려견 프로필', title: '반려견을 6번째로 등록하려는데 막혀요', author: '오*진', date: '09.27 14:03', status: 'wait',
+        content: '무료 회원은 반려견 5마리까지만 등록된다고 안내가 뜨는데, 프리미엄으로 바꾸면 몇 마리까지 가능한가요?', attach: '', answer: '' },
+      { id: 6, type: '구독·결제', title: '영수증(결제 내역)을 이메일로 받을 수 있나요', author: '김*연', date: '09.27 10:47', status: 'done',
+        content: '매달 결제되는 프리미엄 구독 영수증을 회사 정산용으로 이메일로 받고 싶어요.', attach: '', answer: '안녕하세요, 마이페이지 > 구독·결제 > 결제 내역에서 각 건별로 영수증 보기를 누르면 이메일 발송 버튼이 있어요. 참고 부탁드립니다.' },
+      { id: 5, type: '가족 공유', title: '가족 공유 초대 링크를 다시 보내고 싶어요', author: '신*아', date: '09.26 22:30', status: 'wait',
+        content: '언니에게 보낸 초대 링크가 만료된 것 같은데, 재발급하는 방법을 모르겠어요.', attach: '', answer: '' },
+      { id: 4, type: '커뮤니티', title: '커뮤니티 글이 삭제됐는데 사유를 알고 싶어요', author: '윤*호', date: '09.26 19:15', status: 'wait',
+        content: '어제 올린 글이 갑자기 사라졌어요. 신고를 당한 건지 확인 부탁드려요.', attach: '', answer: '' },
+      { id: 3, type: '알림', title: '앱 푸시 알림이 갑자기 안 와요', author: '서*경', date: '09.26 11:02', status: 'done',
+        content: '기록 리마인드 알림을 켜놨는데 3일째 안 오고 있어요.', attach: '', answer: '안녕하세요, 확인 결과 기기 알림 권한이 최근 업데이트 과정에서 꺼져 있었어요. 휴대폰 설정 > 알림에서 앱 권한을 다시 켜주시면 정상적으로 수신됩니다.' },
+      { id: 2, type: '계정', title: '탈퇴하면 추모관도 같이 사라지나요', author: '임*빈', date: '09.25 16:48', status: 'wait',
+        content: '탈퇴를 고민 중인데 지금까지 만든 추모관과 기록이 전부 삭제되는지 궁금해요.', attach: '', answer: '' },
+      { id: 1, type: '접근성', title: '글자 크기를 키웠는데 일부 화면에 적용이 안 돼요', author: '조*환', date: '09.24 09:30', status: 'done',
+        content: '알림·표시 설정에서 글자 크기를 크게로 바꿨는데 커뮤니티 게시글 화면은 그대로예요.', attach: '', answer: '안녕하세요, 말씀 주신 화면은 저희가 파악한 버그가 맞아요. 다음 업데이트에 반영 예정이며, 완료되면 다시 안내드리겠습니다. 불편을 드려 죄송해요.' }
+    ];
+
+    var currentFilter = 'all';
+    var currentQuery = '';
+    var selectedId = inquiries[0].id;
+
+    function statusBadge(st) {
+      return st === 'done'
+        ? '<span class="status ok">답변완료</span>'
+        : '<span class="status wait">대기</span>';
+    }
+
+    function updateCounts() {
+      var wait = inquiries.filter(function (q) { return q.status === 'wait'; }).length;
+      var done = inquiries.length - wait;
+      document.getElementById('waitCount').textContent = wait;
+      document.getElementById('cntAll').textContent = inquiries.length;
+      document.getElementById('cntWait').textContent = wait;
+      document.getElementById('cntDone').textContent = done;
+      document.getElementById('totalLabel').textContent = '총 ' + inquiries.length + '건';
+    }
+
+    function renderList() {
+      var q = currentQuery.trim();
+      var rows = inquiries.filter(function (it) {
+        var matchFilter = currentFilter === 'all' || it.status === currentFilter;
+        var matchQuery = !q || it.title.indexOf(q) > -1 || it.author.indexOf(q) > -1;
+        return matchFilter && matchQuery;
+      });
+      var body = document.getElementById('inqBody');
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="6" class="t-center t-sub" style="padding:32px 0;">조건에 맞는 문의가 없어요</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(function (it) {
+        return '<tr data-id="' + it.id + '" class="' + (it.id === selectedId ? 'is-selected' : '') + '">' +
+          '<td class="td-no">' + it.id + '</td>' +
+          '<td><span class="tag tag-line">' + it.type + '</span></td>' +
+          '<td class="td-title" title="' + it.title + '">' + it.title + '</td>' +
+          '<td>' + it.author + '</td>' +
+          '<td class="td-date">' + it.date + '</td>' +
+          '<td>' + statusBadge(it.status) + '</td>' +
+        '</tr>';
+      }).join('');
+      Array.prototype.forEach.call(body.querySelectorAll('tr[data-id]'), function (tr) {
+        tr.addEventListener('click', function () {
+          selectedId = Number(tr.dataset.id);
+          renderList();
+          renderDetail();
+        });
+      });
+    }
+
+    function renderDetail() {
+      var it = inquiries.find(function (q) { return q.id === selectedId; });
+      var panel = document.getElementById('detailPanel');
+      if (!it) {
+        panel.innerHTML = '<div class="empty"><span class="empty-art"><i data-lucide="message-circle-question"></i></span><p class="t-body-s t-sub">왼쪽 목록에서 문의를 선택해 주세요</p></div>';
+        lucide.createIcons();
+        return;
+      }
+      panel.innerHTML =
+        '<div class="inq-detail-head">' +
+          '<div class="row"><span class="tag tag-line">' + it.type + '</span>' + statusBadge(it.status) + '<span class="inq-no">#' + it.id + '</span></div>' +
+          '<div class="inq-detail-title">' + it.title + '</div>' +
+          '<div class="inq-detail-meta"><i data-lucide="user-round" class="ico-16"></i>' + it.author + '<span class="meta-sep">·</span><i data-lucide="calendar" class="ico-16"></i>' + it.date + '</div>' +
+        '</div>' +
+        '<div class="inq-detail-body">' +
+          '<div>' +
+            '<div class="inq-sec-label">문의 내용</div>' +
+            '<div class="inq-content">' + it.content + '</div>' +
+            (it.attach ? '<div class="tag tag-line inq-attach"><i data-lucide="paperclip"></i>' + it.attach + '</div>' : '') +
+          '</div>' +
+          (it.status === 'done'
+            ? '<div class="inq-answered-box"><div class="inq-sec-label"><i data-lucide="message-square-reply" class="ico-16"></i>등록된 답변</div>' + it.answer.replace(/\n/g, '<br>') + '</div>'
+            : '') +
+          '<div class="field inq-reply" style="margin-bottom:0;">' +
+            '<label class="field-label" for="replyInput">' + (it.status === 'done' ? '답변 수정' : '답변 작성') + '</label>' +
+            '<textarea class="textarea" id="replyInput" placeholder="문의하신 내용에 대한 답변을 입력해 주세요">' + (it.answer || '') + '</textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div class="panel-foot">' +
+          '<button class="btn btn-primary" id="replyBtn">' + (it.status === 'done' ? '답변 수정 저장' : '답변 등록') + '</button>' +
+        '</div>';
+      lucide.createIcons();
+
+      document.getElementById('replyBtn').addEventListener('click', function () {
+        var val = document.getElementById('replyInput').value.trim();
+        if (!val) { showToast('답변 내용을 입력해 주세요'); return; }
+        var wasWaiting = it.status !== 'done';
+        it.answer = val;
+        it.status = 'done';
+        updateCounts();
+        renderList();
+        renderDetail();
+        showToast(wasWaiting ? '답변을 등록했어요' : '답변을 수정했어요');
+      });
+    }
+
+    // 상태 필터 세그먼트
+    document.querySelectorAll('[data-filter]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        currentFilter = btn.dataset.filter;
+        document.querySelectorAll('[data-filter]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        renderList();
+      });
+    });
+
+    // 검색
+    document.getElementById('searchInput').addEventListener('input', function (e) {
+      currentQuery = e.target.value;
+      renderList();
+    });
+
+    // 새로고침
+    document.getElementById('refreshBtn').addEventListener('click', function () {
+      showToast('문의 목록을 새로고침했어요');
+    });
+
+    updateCounts();
+    renderList();
+    renderDetail();
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/admin/inquiries.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

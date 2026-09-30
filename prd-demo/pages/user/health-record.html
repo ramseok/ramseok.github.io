@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P11 건강·삶의 질 기록 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P11 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .pet-context { display: flex; align-items: center; gap: var(--space-3); }
+
+    /* 내부 탭 — 두 탭 균등 폭, 스크롤해도 상단 고정 */
+    .hr-tabs { position: sticky; top: 0; z-index: 2; margin-top: var(--space-4); padding: 0 var(--space-2); background: var(--color-bg); }
+    .hr-tabs .tab { flex: 1; }
+
+    /* 요약 스탯 — 6칸을 3열 한 그리드로 */
+    .stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .stat-grid .stat { min-width: 0; padding: 10px; }
+    .stat-grid .stat-diff { font-size: 12px; letter-spacing: -0.01em; }
+    .card-note { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+
+    /* 라인 차트 — 상단 현재값 / 플롯(우측 y축 라벨) / x축 라벨 */
+    .chart-card { padding: var(--space-4) var(--space-4) var(--space-3); }
+    .chart-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
+    .chart-now { font-size: var(--fs-h2); line-height: var(--lh-h2); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .chart-now small { font-size: var(--fs-caption); font-weight: 600; color: var(--color-text-sub); margin-left: 3px; letter-spacing: 0; }
+    .chart-plot { position: relative; padding-right: 40px; }
+    .chart-svg { width: 100%; aspect-ratio: 280 / 100; height: auto; display: block; overflow: visible; }
+    .chart-svg .grid line { stroke: var(--color-border); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+    .chart-svg polyline { fill: none; stroke: var(--theme-accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+    .chart-svg circle { fill: var(--theme-accent); stroke: var(--color-surface); stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .chart-y { position: absolute; top: 0; right: 0; bottom: 0; width: 32px; }
+    .chart-y span, .chart-x span { position: absolute; font-size: 12px; line-height: 16px; color: var(--color-text-sub); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .chart-y span { right: 0; transform: translateY(-50%); }
+    .chart-x { position: relative; height: 16px; margin: var(--space-2) 40px 0 0; }
+    .chart-x span { top: 0; transform: translateX(-50%); }
+    .chart-x span.is-start { transform: none; }
+    .chart-x span.is-end { transform: translateX(-100%); }
+
+    /* 삶의 질 점수 — 균등 폭 눈금 */
+    .score-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+    .score-head .t-caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .score-scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+    .score-scale.is-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .score-scale .chip { height: 36px; padding: 0; justify-content: center; font-variant-numeric: tabular-nums; }
+    .score-divider { height: 1px; background: var(--color-border); margin: var(--space-5) 0 var(--space-4); }
+
+    button.list-item { width: 100%; border: 0; border-bottom: 1px solid var(--color-border); background: transparent; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+    button.list-item:last-child { border-bottom: 0; }
+    button.list-item:hover { background: var(--color-bg); }
+
+    /* 기록 추가 시트 — 유형 3열 균등 그리드, 세그먼트 풀폭 */
+    .type-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin-bottom: var(--space-5); }
+    .type-grid .chip { height: 40px; justify-content: center; }
+    .field-mini { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+    .field-mini .field-label { font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 600; }
+    .field-mini .segment { display: flex; }
+    .field-mini .segment .seg-btn { flex: 1; }
+    .receipt-row { display: flex; align-items: center; gap: var(--space-3); }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더 -->
+        <header class="m-header">
+          <a class="icon-btn" href="home.html" aria-label="뒤로 가기"><i data-lucide="arrow-left"></i></a>
+          <div class="m-title is-center">건강·삶의 질 기록</div>
+          <div class="m-header-actions">
+            <button class="icon-btn" id="addRecordBtn" aria-label="기록 추가"><i data-lucide="plus"></i></button>
+          </div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 면책 문구 — 탭 공통 영역, 화면 상시 노출 (F10) -->
+          <section class="m-section">
+            <div class="notice notice-theme">
+              <i data-lucide="info"></i>
+              <div class="grow">본 기록은 수의학적 진단을 대체하지 않아요. 궁금한 점은 담당 동물병원에 확인해 주세요.</div>
+            </div>
+          </section>
+
+          <!-- 내부 탭: 건강 기록 / 삶의 질 체크 -->
+          <div class="tabs hr-tabs" role="tablist">
+            <button class="tab active" data-tab-btn="health">건강 기록</button>
+            <button class="tab" data-tab-btn="quality">삶의 질 체크</button>
+          </div>
+
+          <!-- ============ 건강 기록 탭 (F10) ============ -->
+          <div data-tab-panel="health">
+
+            <section class="m-section">
+              <div class="pet-context">
+                <span class="avatar avatar-sm"><i data-lucide="dog"></i></span>
+                <div class="grow">
+                  <div class="cell-title">보리</div>
+                  <p class="meta">말티즈<span class="meta-sep">·</span>여아<span class="meta-sep">·</span>14살</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- 오늘 요약 -->
+            <section class="m-section">
+              <div class="sec-head"><h2 class="sec-title">오늘 요약</h2></div>
+              <div class="card card-health">
+                <div class="row mb-3">
+                  <span class="ico-wrap sm"><i data-lucide="activity"></i></span>
+                  <span class="t-body-s t-sub">9월 23일 기록 기준</span>
+                </div>
+                <div class="stat-row stat-grid">
+                  <div class="stat"><div class="stat-label">체중</div><div class="stat-value num">3.4<span class="unit">kg</span></div><div class="stat-diff">지난주 -0.1</div></div>
+                  <div class="stat"><div class="stat-label">식사</div><div class="stat-value">보통</div><div class="stat-diff">3단계 중 2</div></div>
+                  <div class="stat"><div class="stat-label">음수</div><div class="stat-value">충분</div><div class="stat-diff">3단계 중 3</div></div>
+                  <div class="stat"><div class="stat-label">배변</div><div class="stat-value">정상</div><div class="stat-diff">9월 22일</div></div>
+                  <div class="stat"><div class="stat-label">투약</div><div class="stat-value">완료</div><div class="stat-diff">관절 영양제</div></div>
+                  <div class="stat"><div class="stat-label">다음 병원</div><div class="stat-value num">10.02</div><div class="stat-diff">해피동물병원</div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 체중 추이 그래프 -->
+            <section class="m-section">
+              <div class="sec-head">
+                <h2 class="sec-title">체중 추이</h2>
+                <div class="segment" role="tablist">
+                  <button class="seg-btn active" data-period-btn="week">주간</button>
+                  <button class="seg-btn" data-period-btn="month">월간</button>
+                </div>
+              </div>
+              <div class="card card-sm chart-card">
+                <div class="chart-top">
+                  <span class="chart-now num" id="weightCurrent">3.4kg</span>
+                  <span class="t-caption t-sub nowrap" id="weightRange">최근 7주</span>
+                </div>
+                <div class="chart-plot">
+                  <svg class="chart-svg" viewBox="0 0 280 100" preserveAspectRatio="none" aria-label="체중 추이 그래프">
+                    <g class="grid"><line x1="0" x2="280" y1="26" y2="26"></line><line x1="0" x2="280" y1="58" y2="58"></line><line x1="0" x2="280" y1="90" y2="90"></line></g>
+                    <polyline id="weightLine" points="0,74 46.7,58 93.3,58 140,42 186.7,42 233.3,42 280,26"></polyline>
+                    <circle id="weightDot" cx="280" cy="26" r="4"></circle>
+                  </svg>
+                  <div class="chart-y" aria-hidden="true"><span style="top:26%">3.4</span><span style="top:58%">3.2</span><span style="top:90%">3.0</span></div>
+                </div>
+                <div class="chart-x" id="weightTicks" aria-hidden="true"><span class="is-start" style="left:0">7주 전</span><span style="left:50%">4주 전</span><span class="is-end" style="left:100%">이번 주</span></div>
+              </div>
+            </section>
+
+            <!-- 최근 기록 목록 -->
+            <section class="m-section">
+              <div class="sec-head"><h2 class="sec-title">최근 기록</h2></div>
+              <div class="list">
+                <button class="list-item" data-log-msg="체중 3.4kg · 지난주보다 -0.1kg 기록을 확인했어요">
+                  <span class="ico-wrap sm mint"><i data-lucide="scale"></i></span>
+                  <div class="grow"><div class="cell-title">체중 기록 · 3.4kg</div><div class="cell-sub">9월 23일 (수) · 지난주보다 -0.1kg</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="식사량 보통 기록을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="utensils"></i></span>
+                  <div class="grow"><div class="cell-title">식사량 · 보통</div><div class="cell-sub">9월 23일 (수) · 3단계 중 2</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="음수량 충분 기록을 확인했어요">
+                  <span class="ico-wrap sm sky"><i data-lucide="droplet"></i></span>
+                  <div class="grow"><div class="cell-title">음수량 · 충분</div><div class="cell-sub">9월 23일 (수) · 3단계 중 3</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="배변 상태 정상 기록을 확인했어요">
+                  <span class="ico-wrap sm soft"><i data-lucide="circle-dot"></i></span>
+                  <div class="grow"><div class="cell-title">배변 · 정상</div><div class="cell-sub">9월 22일 (화)</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="관절 영양제 투약 1회 기록을 확인했어요">
+                  <span class="ico-wrap sm butter"><i data-lucide="pill"></i></span>
+                  <div class="grow"><div class="cell-title">투약 · 관절 영양제</div><div class="cell-sub">9월 21일 (월) · 1회</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="해피동물병원 방문 기록과 영수증 사진을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="stethoscope"></i></span>
+                  <div class="grow"><div class="cell-title">병원 방문 · 해피동물병원</div><div class="cell-sub">9월 19일 (토) · 신장 수치 확인 · 영수증 첨부</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="체중 3.3kg 기록을 확인했어요">
+                  <span class="ico-wrap sm mint"><i data-lucide="scale"></i></span>
+                  <div class="grow"><div class="cell-title">체중 기록 · 3.3kg</div><div class="cell-sub">9월 16일 (수)</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="배변 상태 무름 기록을 확인했어요">
+                  <span class="ico-wrap sm soft"><i data-lucide="circle-dot"></i></span>
+                  <div class="grow"><div class="cell-title">배변 · 무름</div><div class="cell-sub">9월 15일 (화) · 조금 묽었어요</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="관절 영양제 투약 1회 기록을 확인했어요">
+                  <span class="ico-wrap sm butter"><i data-lucide="pill"></i></span>
+                  <div class="grow"><div class="cell-title">투약 · 관절 영양제</div><div class="cell-sub">9월 14일 (월) · 1회</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="정기검진 방문 기록을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="stethoscope"></i></span>
+                  <div class="grow"><div class="cell-title">병원 방문 · 정기검진</div><div class="cell-sub">9월 9일 (수) · 해피동물병원</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+              </div>
+            </section>
+
+          </div>
+
+          <!-- ============ 삶의 질 체크 탭 (F11) ============ -->
+          <div data-tab-panel="quality" hidden>
+
+            <section class="m-section">
+              <div class="notice notice-info">
+                <i data-lucide="heart"></i>
+                <div class="grow">오늘 <b>보리</b>의 컨디션을 이해하기 위한 기록이에요. 점수로 상태를 판단하거나 예측하지 않아요.</div>
+              </div>
+            </section>
+
+            <!-- 최근 결과 -->
+            <section class="m-section">
+              <div class="sec-head"><h2 class="sec-title">최근 결과</h2></div>
+              <div class="card card-health">
+                <div class="row mb-3">
+                  <span class="ico-wrap sm"><i data-lucide="clipboard-list"></i></span>
+                  <span class="t-body-s t-sub">9월 20일에 남긴 기록</span>
+                </div>
+                <div class="stat-row stat-grid">
+                  <div class="stat"><div class="stat-label">통증</div><div class="stat-value num">2<span class="unit">/5</span></div></div>
+                  <div class="stat"><div class="stat-label">식욕</div><div class="stat-value num">3<span class="unit">/5</span></div></div>
+                  <div class="stat"><div class="stat-label">수분</div><div class="stat-value num">4<span class="unit">/5</span></div></div>
+                  <div class="stat"><div class="stat-label">위생</div><div class="stat-value num">4<span class="unit">/5</span></div></div>
+                  <div class="stat"><div class="stat-label">움직임</div><div class="stat-value num">2<span class="unit">/5</span></div></div>
+                  <div class="stat"><div class="stat-label">좋은 날</div><div class="stat-value num">4<span class="unit">/7일</span></div></div>
+                </div>
+                <p class="t-caption t-sub card-note">메모: 오후엔 햇볕 드는 쿠션에서 오래 쉬었어요.</p>
+              </div>
+            </section>
+
+            <!-- 점수 추이 -->
+            <section class="m-section">
+              <div class="sec-head"><h2 class="sec-title">좋은 날 비율 추이</h2></div>
+              <div class="card card-sm chart-card">
+                <div class="chart-top">
+                  <span class="chart-now num">4<small>/ 7일</small></span>
+                  <span class="t-caption t-sub nowrap">9월 20일 기록</span>
+                </div>
+                <div class="chart-plot">
+                  <svg class="chart-svg" viewBox="0 0 280 100" preserveAspectRatio="none" aria-label="좋은 날 비율 추이 그래프">
+                    <g class="grid"><line x1="0" x2="280" y1="10" y2="10"></line><line x1="0" x2="280" y1="50" y2="50"></line><line x1="0" x2="280" y1="90" y2="90"></line></g>
+                    <polyline points="0,50 40,50 80,30 120,50 160,50 200,50 240,50 280,70"></polyline>
+                    <circle cx="280" cy="70" r="4"></circle>
+                  </svg>
+                  <div class="chart-y" aria-hidden="true"><span style="top:10%">7일</span><span style="top:50%">5일</span><span style="top:90%">3일</span></div>
+                </div>
+                <div class="chart-x" aria-hidden="true"><span class="is-start" style="left:0">8월 2일</span><span style="left:42.86%">8월 23일</span><span class="is-end" style="left:100%">9월 20일</span></div>
+              </div>
+              <div class="notice notice-warn mt-3">
+                <i data-lucide="stethoscope"></i>
+                <div class="grow">지난 기록보다 좋은 날이 조금 줄었어요. 담당 수의사와 상담해 보세요.</div>
+              </div>
+            </section>
+
+            <!-- 오늘 체크하기 -->
+            <section class="m-section">
+              <div class="sec-head"><h2 class="sec-title">오늘 체크하기</h2><span class="sec-sub num">9월 29일</span></div>
+              <div class="card">
+                <div class="stack-4">
+                  <div>
+                    <div class="score-head"><span class="t-strong nowrap">통증</span><span class="t-caption t-sub">낮을수록 편안해요</span></div>
+                    <div class="score-scale" data-score-group="pain">
+                      <button class="chip" data-val="1">1</button>
+                      <button class="chip active" data-val="2">2</button>
+                      <button class="chip" data-val="3">3</button>
+                      <button class="chip" data-val="4">4</button>
+                      <button class="chip" data-val="5">5</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="score-head"><span class="t-strong nowrap">식욕</span><span class="t-caption t-sub">밥을 얼마나 잘 먹었나요</span></div>
+                    <div class="score-scale" data-score-group="appetite">
+                      <button class="chip" data-val="1">1</button>
+                      <button class="chip" data-val="2">2</button>
+                      <button class="chip active" data-val="3">3</button>
+                      <button class="chip" data-val="4">4</button>
+                      <button class="chip" data-val="5">5</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="score-head"><span class="t-strong nowrap">수분</span><span class="t-caption t-sub">물을 잘 마셨나요</span></div>
+                    <div class="score-scale" data-score-group="hydration">
+                      <button class="chip" data-val="1">1</button>
+                      <button class="chip" data-val="2">2</button>
+                      <button class="chip" data-val="3">3</button>
+                      <button class="chip active" data-val="4">4</button>
+                      <button class="chip" data-val="5">5</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="score-head"><span class="t-strong nowrap">위생</span><span class="t-caption t-sub">잘 씻기고 깨끗했나요</span></div>
+                    <div class="score-scale" data-score-group="hygiene">
+                      <button class="chip" data-val="1">1</button>
+                      <button class="chip" data-val="2">2</button>
+                      <button class="chip" data-val="3">3</button>
+                      <button class="chip active" data-val="4">4</button>
+                      <button class="chip" data-val="5">5</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="score-head"><span class="t-strong nowrap">행복감</span><span class="t-caption t-sub">기분이 편안해 보였나요</span></div>
+                    <div class="score-scale" data-score-group="happiness">
+                      <button class="chip" data-val="1">1</button>
+                      <button class="chip" data-val="2">2</button>
+                      <button class="chip active" data-val="3">3</button>
+                      <button class="chip" data-val="4">4</button>
+                      <button class="chip" data-val="5">5</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="score-head"><span class="t-strong nowrap">움직임</span><span class="t-caption t-sub">얼마나 활발히 움직였나요</span></div>
+                    <div class="score-scale" data-score-group="mobility">
+                      <button class="chip" data-val="1">1</button>
+                      <button class="chip active" data-val="2">2</button>
+                      <button class="chip" data-val="3">3</button>
+                      <button class="chip" data-val="4">4</button>
+                      <button class="chip" data-val="5">5</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="score-head"><span class="t-strong nowrap">좋은 날 비율</span><span class="t-caption t-sub">최근 일주일 중 며칠</span></div>
+                    <div class="score-scale is-7" data-score-group="goodDays">
+                      <button class="chip" data-val="1">1</button>
+                      <button class="chip" data-val="2">2</button>
+                      <button class="chip" data-val="3">3</button>
+                      <button class="chip active" data-val="4">4</button>
+                      <button class="chip" data-val="5">5</button>
+                      <button class="chip" data-val="6">6</button>
+                      <button class="chip" data-val="7">7</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="score-divider"></div>
+                <div class="field">
+                  <label class="field-label">메모 <span class="opt">선택</span></label>
+                  <textarea class="textarea" placeholder="오늘 보리의 컨디션을 자유롭게 남겨보세요">오후엔 햇볕 드는 쿠션에서 오래 쉬었어요.</textarea>
+                </div>
+                <button class="btn btn-primary btn-lg btn-block" id="qualitySaveBtn"><i data-lucide="check"></i> 오늘 기록 저장하기</button>
+              </div>
+            </section>
+
+            <!-- 최근 체크 기록 -->
+            <section class="m-section">
+              <div class="sec-head"><h2 class="sec-title">최근 체크 기록</h2></div>
+              <div class="list">
+                <button class="list-item" data-log-msg="9월 20일 삶의 질 체크 기록을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="clipboard-list"></i></span>
+                  <div class="grow"><div class="cell-title">좋은 날 4 / 7일</div><div class="cell-sub">9월 20일 (일) · 햇볕 드는 쿠션에서 오래 쉬었어요</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="9월 13일 삶의 질 체크 기록을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="clipboard-list"></i></span>
+                  <div class="grow"><div class="cell-title">좋은 날 5 / 7일</div><div class="cell-sub">9월 13일 (일)</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="9월 6일 삶의 질 체크 기록을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="clipboard-list"></i></span>
+                  <div class="grow"><div class="cell-title">좋은 날 5 / 7일</div><div class="cell-sub">9월 6일 (일)</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="8월 30일 삶의 질 체크 기록을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="clipboard-list"></i></span>
+                  <div class="grow"><div class="cell-title">좋은 날 5 / 7일</div><div class="cell-sub">8월 30일 (일)</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="8월 23일 삶의 질 체크 기록을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="clipboard-list"></i></span>
+                  <div class="grow"><div class="cell-title">좋은 날 5 / 7일</div><div class="cell-sub">8월 23일 (일)</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+                <button class="list-item" data-log-msg="8월 16일 삶의 질 체크 기록을 확인했어요">
+                  <span class="ico-wrap sm"><i data-lucide="clipboard-list"></i></span>
+                  <div class="grow"><div class="cell-title">좋은 날 5 / 7일</div><div class="cell-sub">8월 16일 (일)</div></div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+              </div>
+            </section>
+
+          </div>
+
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print"></i><span id="toastMsg"></span></div>
+
+        <!-- 기록 추가 바텀시트 -->
+        <div class="sheet-dim" id="sheetDim"></div>
+        <div class="sheet" id="addSheet" role="dialog" aria-label="기록 추가">
+          <div class="sheet-grip"></div>
+          <div class="sheet-title">오늘 어떤 걸 기록할까요?</div>
+          <div class="type-grid">
+            <button class="chip active" data-record-type-btn="weight"><i data-lucide="scale"></i> 체중</button>
+            <button class="chip" data-record-type-btn="meal"><i data-lucide="utensils"></i> 식사</button>
+            <button class="chip" data-record-type-btn="water"><i data-lucide="droplet"></i> 음수</button>
+            <button class="chip" data-record-type-btn="stool"><i data-lucide="circle-dot"></i> 배변</button>
+            <button class="chip" data-record-type-btn="med"><i data-lucide="pill"></i> 투약</button>
+            <button class="chip" data-record-type-btn="hospital"><i data-lucide="stethoscope"></i> 병원</button>
+          </div>
+
+          <div data-record-type="weight">
+            <div class="field-mini">
+              <label class="field-label">체중 (kg)</label>
+              <input class="input" type="number" step="0.1" value="3.4">
+            </div>
+          </div>
+
+          <div data-record-type="meal" hidden>
+            <div class="field-mini">
+              <label class="field-label">식사량</label>
+              <div class="segment">
+                <button class="seg-btn">적음</button>
+                <button class="seg-btn active">보통</button>
+                <button class="seg-btn">많음</button>
+              </div>
+            </div>
+          </div>
+
+          <div data-record-type="water" hidden>
+            <div class="field-mini">
+              <label class="field-label">음수량</label>
+              <div class="segment">
+                <button class="seg-btn">부족</button>
+                <button class="seg-btn">보통</button>
+                <button class="seg-btn active">충분</button>
+              </div>
+            </div>
+          </div>
+
+          <div data-record-type="stool" hidden>
+            <div class="field-mini">
+              <label class="field-label">배변 상태</label>
+              <div class="segment">
+                <button class="seg-btn">묽음</button>
+                <button class="seg-btn active">보통</button>
+                <button class="seg-btn">딱딱함</button>
+              </div>
+            </div>
+          </div>
+
+          <div data-record-type="med" hidden>
+            <div class="field-mini">
+              <label class="field-label">약 이름</label>
+              <input class="input" type="text" value="관절 영양제">
+            </div>
+            <div class="field-mini">
+              <label class="field-label">횟수</label>
+              <select class="select">
+                <option>1회</option>
+                <option>2회</option>
+                <option>3회</option>
+              </select>
+            </div>
+          </div>
+
+          <div data-record-type="hospital" hidden>
+            <div class="field-mini">
+              <label class="field-label">방문일</label>
+              <input class="input" type="date" value="2026-09-29">
+            </div>
+            <div class="field-mini">
+              <label class="field-label">병원명</label>
+              <input class="input" type="text" value="해피동물병원">
+            </div>
+            <div class="field-mini">
+              <label class="field-label">진단 메모</label>
+              <textarea class="textarea" placeholder="진료 내용을 남겨보세요"></textarea>
+            </div>
+            <div class="field-mini">
+              <label class="field-label">영수증 사진</label>
+              <div class="receipt-row">
+                <button class="btn btn-utility btn-sm" id="receiptBtn"><i data-lucide="camera"></i> 영수증 사진 추가</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-lg btn-block mt-2" id="recordSaveBtn"><i data-lucide="check"></i> 저장하기</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 내부 탭 전환 — 건강 기록 / 삶의 질 체크
+    document.querySelectorAll('[data-tab-btn]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('[data-tab-btn]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        var tab = btn.dataset.tabBtn;
+        document.querySelectorAll('[data-tab-panel]').forEach(function (p) { p.hidden = p.dataset.tabPanel !== tab; });
+        document.querySelector('.m-content').scrollTop = 0;
+      });
+    });
+
+    // 체중 추이 — 주간/월간 전환
+    var weightData = {
+      week: { points: '0,74 46.7,58 93.3,58 140,42 186.7,42 233.3,42 280,26', dot: [280, 26], range: '최근 7주', current: '3.4kg', ticks: ['7주 전', '4주 전', '이번 주'] },
+      month: { points: '0,90 93.3,74 186.7,42 280,26', dot: [280, 26], range: '최근 4개월', current: '3.4kg', ticks: ['4개월 전', '2개월 전', '이번 달'] }
+    };
+    document.querySelectorAll('[data-period-btn]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('[data-period-btn]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        var d = weightData[btn.dataset.periodBtn];
+        document.getElementById('weightLine').setAttribute('points', d.points);
+        document.getElementById('weightDot').setAttribute('cx', d.dot[0]);
+        document.getElementById('weightDot').setAttribute('cy', d.dot[1]);
+        document.getElementById('weightRange').textContent = d.range;
+        document.getElementById('weightCurrent').textContent = d.current;
+        document.querySelectorAll('#weightTicks span').forEach(function (el, i) { el.textContent = d.ticks[i]; });
+      });
+    });
+
+    // 삶의 질 점수 선택 — 그룹별 단일 선택
+    document.querySelectorAll('[data-score-group]').forEach(function (group) {
+      group.querySelectorAll('.chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          group.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+        });
+      });
+    });
+
+    document.getElementById('qualitySaveBtn').addEventListener('click', function () {
+      showToast('오늘의 기록을 담아뒀어요');
+    });
+
+    // 최근 기록 목록 — 항목 클릭 시 상세 확인 피드백
+    document.querySelectorAll('[data-log-msg]').forEach(function (btn) {
+      btn.addEventListener('click', function () { showToast(btn.dataset.logMsg); });
+    });
+
+    // 기록 추가 바텀시트
+    var sheet = document.getElementById('addSheet');
+    var dim = document.getElementById('sheetDim');
+    function openSheet() { sheet.classList.add('open'); dim.classList.add('open'); }
+    function closeSheet() { sheet.classList.remove('open'); dim.classList.remove('open'); }
+    document.getElementById('addRecordBtn').addEventListener('click', openSheet);
+    dim.addEventListener('click', closeSheet);
+
+    document.querySelectorAll('[data-record-type-btn]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('[data-record-type-btn]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        var type = btn.dataset.recordTypeBtn;
+        document.querySelectorAll('[data-record-type]').forEach(function (sec) { sec.hidden = sec.dataset.recordType !== type; });
+      });
+    });
+
+    // 세그먼트(식사/음수/배변) 단일 선택
+    sheet.querySelectorAll('.segment').forEach(function (seg) {
+      seg.querySelectorAll('.seg-btn').forEach(function (b) {
+        b.addEventListener('click', function () {
+          seg.querySelectorAll('.seg-btn').forEach(function (o) { o.classList.remove('active'); });
+          b.classList.add('active');
+        });
+      });
+    });
+
+    document.getElementById('receiptBtn').addEventListener('click', function () {
+      this.innerHTML = '<i data-lucide="check"></i> 영수증 추가됨';
+      this.classList.add('is-stamped');
+      lucide.createIcons();
+      showToast('영수증 사진을 담았어요');
+    });
+
+    document.getElementById('recordSaveBtn').addEventListener('click', function () {
+      closeSheet();
+      showToast('오늘의 기록을 저장했어요');
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/health-record.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P4 상태별 홈 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P4 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .pet-switch {
+      display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 10px 0 6px;
+      border: 0; border-radius: var(--radius-full); background: transparent;
+      font-size: var(--fs-h3); font-weight: 600; letter-spacing: -0.015em;
+    }
+    .pet-switch:hover { background: var(--color-surface-soft); }
+    .pet-switch [data-lucide="chevron-down"], .pet-switch svg.lucide-chevron-down { width: 18px; height: 18px; color: var(--color-text-sub); }
+
+    .home-hero { margin: var(--space-2) var(--space-4) 0; padding: var(--space-5) var(--space-5) var(--space-5); border-radius: var(--radius-xl); background: var(--theme-header-bg); }
+    .home-hero .rainbow-band { margin: 0 0 var(--space-4); width: 72px; }
+    .home-hero .hero-date { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; color: var(--color-text-sub); }
+    .home-hero h1 { margin-top: var(--space-2); }
+    .home-hero p.t-body-s { margin-top: var(--space-2); color: var(--color-text-sub); }
+    .home-hero .btn-row { margin-top: var(--space-5); }
+
+    /* 프로필 카드 — 상단: 아바타 + 이름·뱃지 / 한 줄 메타, 하단 풋: 함께한 날 + 프로필 버튼 */
+    .pet-card-main { display: flex; align-items: center; gap: var(--space-4); }
+    .pet-card .avatar-lg { width: 64px; height: 64px; background: var(--color-surface-soft); }
+    .pet-card .avatar-lg svg { width: 30px; height: 30px; }
+    .pet-name-row { gap: var(--space-2); margin-bottom: 2px; }
+    .pet-days { font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--color-text-sub); white-space: nowrap; }
+    .pet-days b { color: var(--color-text); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .sched-time { width: 52px; flex-shrink: 0; font-size: var(--fs-body-s); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    .memorial-name { margin-top: var(--space-1); }
+    .memorial-quote { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--color-text-sub); }
+    .revert-link { margin: var(--space-1) 0 calc(var(--space-2) * -1) calc(var(--space-3) * -1); }
+    .sheet-pet:hover { background: var(--color-bg); }
+    .sheet-pet.active { background: var(--theme-header-bg); }
+    .sheet-pet .chk { color: var(--color-primary-strong); visibility: hidden; }
+    .sheet-pet.active .chk { visibility: visible; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+
+    <!-- 시연용 상태 스위처 — 실서비스 UI 아님 (02_PAGE.md 비고). 실제 전환은 P5·P6에서만 -->
+    <aside class="demo-panel" aria-label="시연용 상태 스위처">
+      <div class="demo-panel-label"><i data-lucide="presentation" class="ico-16"></i> 시연용 · 실서비스 UI 아님</div>
+      <div class="demo-panel-title">반려견 상태별 홈 미리보기</div>
+      <div class="segment" role="tablist">
+        <button class="seg-btn active" data-set-state="together"><i data-lucide="sun"></i> 함께하는 중</button>
+        <button class="seg-btn" data-set-state="preparing"><i data-lucide="sunset"></i> 이별 준비</button>
+        <button class="seg-btn" data-set-state="rainbow"><i data-lucide="cloud"></i> 무지개다리</button>
+      </div>
+      <p class="t-caption t-sub mt-3">실제 상태 전환은 <a href="pet-manage.html">반려견 관리(P5)</a>와 <a href="rainbow-transition.html">무지개다리 전환(P6)</a>에서만 이뤄져요.</p>
+    </aside>
+
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 반려견 스위처 + 알림 설정 -->
+        <header class="m-header no-line">
+          <button class="pet-switch" id="petSwitchBtn" aria-label="반려견 바꾸기">
+            <span class="avatar avatar-sm"><i data-lucide="dog"></i></span>
+            <span data-pet-name>보리</span>
+            <i data-lucide="chevron-down"></i>
+          </button>
+          <div class="m-header-actions">
+            <a class="icon-btn" href="notification-settings.html" aria-label="알림·표시 설정"><i data-lucide="bell"></i></a>
+          </div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 인사 영역 — 상태별 문구 (DESIGN.md 8.2) -->
+          <section class="home-hero">
+            <div class="rainbow-band" data-states="rainbow"></div>
+            <span class="t-caption hero-date"><i data-lucide="calendar" class="ico-16"></i> 9월 29일 화요일</span>
+
+            <div data-states="together">
+              <h1>오늘 <span data-pet-name>보리</span>는<br>어떤 하루였나요?</h1>
+              <p class="t-body-s">창밖 햇살이 좋은 날이에요. 작은 순간도 괜찮아요.</p>
+              <div class="btn-row">
+                <a class="btn btn-primary btn-lg" href="diary-write.html"><i data-lucide="pen-line"></i><span class="btn-label">오늘의 <span data-pet-name>보리</span> 남기기</span></a>
+              </div>
+            </div>
+
+            <div data-states="preparing" hidden>
+              <h1>오늘도 <span data-pet-name>보리</span> 곁에<br>있어 줘서 고마워요</h1>
+              <p class="t-body-s">천천히, 편할 때 남겨주세요.</p>
+              <div class="btn-row">
+                <a class="btn btn-primary btn-lg" href="diary-write.html"><i data-lucide="pen-line"></i><span class="btn-label">오늘의 <span data-pet-name>보리</span> 남기기</span></a>
+              </div>
+            </div>
+
+            <div data-states="rainbow" hidden>
+              <h1><span data-pet-name>보리</span>와 함께한 날들이<br>여기 있어요</h1>
+              <p class="t-body-s">보고 싶은 날엔 언제든 들러주세요.</p>
+              <div class="btn-row">
+                <a class="btn btn-primary btn-lg" href="memorial-edit.html"><i data-lucide="flower-2"></i><span class="btn-label"><span data-pet-name>보리</span>의 공간 보기</span></a>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 함께하는 중 · 이별 준비 공통: 반려견 프로필 카드 ===== -->
+          <section class="m-section" data-states="together preparing">
+            <div class="card pet-card">
+              <div class="pet-card-main">
+                <span class="avatar avatar-lg"><i data-lucide="dog"></i></span>
+                <div class="grow">
+                  <div class="row pet-name-row">
+                    <span class="t-h3 clamp-1" data-pet-name>보리</span>
+                    <span class="state-badge state-together" data-states="together"><i data-lucide="sun"></i> 함께하는 중</span>
+                    <span class="state-badge state-preparing" data-states="preparing" hidden><i data-lucide="sunset"></i> 이별 준비</span>
+                  </div>
+                  <p class="meta" data-pet-meta>말티즈 · 여아 · 만 14살</p>
+                </div>
+              </div>
+              <div class="card-foot">
+                <p class="pet-days">함께한 지 <b data-pet-days>5,159</b>일</p>
+                <a class="btn btn-utility btn-sm" href="pet-manage.html">프로필</a>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 무지개다리: 되돌리기 배너 (F6, 전환 후 7일 이내) ===== -->
+          <section class="m-section" data-states="rainbow" hidden>
+            <div class="notice notice-theme">
+              <i data-lucide="undo-2"></i>
+              <div class="grow">
+                <p>혹시 잘못 남기셨다면 <b class="nowrap">10월 1일</b>까지 이전 상태로 되돌릴 수 있어요.</p>
+                <a class="btn btn-ghost btn-sm revert-link" href="rainbow-transition.html?mode=revert&amp;pet=보리">이전 상태로 되돌리기 <i data-lucide="chevron-right"></i></a>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 무지개다리: 추모관 대표 카드 (F35 자동 생성) ===== -->
+          <section class="m-section" data-states="rainbow" hidden>
+            <a class="card card-memorial card-link" href="memorial-edit.html">
+              <span class="avatar avatar-xl"><i data-lucide="dog"></i></span>
+              <div class="t-display memorial-name" data-pet-name>보리</div>
+              <p class="t-body-s t-sub num">2012.08.15 ~ 2026.09.24 · 함께한 5,154일</p>
+              <p class="memorial-quote">“매일 아침 발끝을 핥아 깨워주던 우리 보리, 고마웠어.”</p>
+            </a>
+          </section>
+
+          <!-- ===== 이별 준비: 이별 준비 메뉴 (F3 — 준비 모드에서만 노출) ===== -->
+          <section class="m-section" data-states="preparing" hidden>
+            <div class="sec-head">
+              <h2 class="sec-title">이별 준비</h2>
+              <span class="sec-sub">필요할 때 천천히 살펴보세요</span>
+            </div>
+            <div class="list">
+              <a class="list-item" href="prep-checklist.html">
+                <span class="ico-wrap"><i data-lucide="list-checks"></i></span>
+                <div class="grow">
+                  <div class="cell-title">준비 체크리스트</div>
+                  <div class="row mt-2"><div class="progress grow"><span style="width:44%"></span></div><span class="t-caption t-sub num nowrap">4 / 9</span></div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+              <a class="list-item" href="pre-letter.html">
+                <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+                <div class="grow">
+                  <div class="cell-title">미리 쓰는 편지</div><div class="cell-sub">임시저장 1통 · 9월 20일</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+              <a class="list-item" href="funeral-info.html">
+                <span class="ico-wrap soft"><i data-lucide="map-pin"></i></span>
+                <div class="grow">
+                  <div class="cell-title">장례 정보</div><div class="cell-sub">장례 방식 · 정식 등록 업체</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== 함께하는 중 · 이별 준비: 오늘의 일정 (F34 알림 연계) ===== -->
+          <section class="m-section" data-states="together preparing">
+            <div class="sec-head">
+              <h2 class="sec-title">오늘의 일정</h2>
+              <a class="sec-more" href="notification-settings.html">알림 설정 <i data-lucide="chevron-right" class="ico-16"></i></a>
+            </div>
+            <div class="list">
+              <div class="list-item">
+                <span class="sched-time">20:00</span>
+                <div class="grow">
+                  <div class="cell-title">관절 영양제</div><div class="cell-sub">하루 1번 · 저녁 식사 후</div>
+                </div>
+                <button class="btn btn-outline btn-sm" id="medBtn">챙겼어요</button>
+              </div>
+              <a class="list-item" href="health-record.html">
+                <span class="sched-time">10.02</span>
+                <div class="grow">
+                  <div class="cell-title">해피동물병원 재진</div><div class="cell-sub">금요일 오전 11:00 · 신장 수치 확인</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== 기록하기 퀵메뉴 (함께하는 중 · 이별 준비) ===== -->
+          <section class="m-section" data-states="together preparing">
+            <div class="sec-head"><h2 class="sec-title">기록하기</h2></div>
+            <div class="card card-sm">
+              <div class="quick-grid">
+                <a class="quick-item" href="diary-write.html"><span class="ico-wrap"><i data-lucide="notebook-pen"></i></span>다이어리</a>
+                <a class="quick-item" href="health-record.html"><span class="ico-wrap mint"><i data-lucide="heart-pulse"></i></span>건강</a>
+                <a class="quick-item" href="sound-pawprint.html"><span class="ico-wrap sky"><i data-lucide="mic"></i></span>소리·발도장</a>
+                <a class="quick-item" href="timeline.html"><span class="ico-wrap butter"><i data-lucide="history"></i></span>타임라인</a>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 함께하는 중: 건강 요약 카드 ===== -->
+          <section class="m-section" data-states="together">
+            <div class="sec-head">
+              <h2 class="sec-title">건강 요약</h2>
+              <a class="sec-more" href="health-record.html">자세히 <i data-lucide="chevron-right" class="ico-16"></i></a>
+            </div>
+            <div class="card card-health">
+              <div class="row mb-3">
+                <span class="ico-wrap sm"><i data-lucide="activity"></i></span>
+                <span class="t-body-s t-sub">9월 23일 기록 기준</span>
+              </div>
+              <div class="stat-row">
+                <div class="stat"><div class="stat-label">체중</div><div class="stat-value">3.4<span class="unit">kg</span></div><div class="stat-diff">지난주 -0.1</div></div>
+                <div class="stat"><div class="stat-label">식사</div><div class="stat-value">보통</div><div class="stat-diff">3단계 중 2</div></div>
+                <div class="stat"><div class="stat-label">음수</div><div class="stat-value">충분</div><div class="stat-diff">3단계 중 3</div></div>
+              </div>
+              <p class="disclaimer mt-3"><i data-lucide="info"></i> 본 기록은 수의학적 진단을 대체하지 않습니다.</p>
+            </div>
+          </section>
+
+          <!-- ===== 이별 준비: 삶의 질 체크 (F11, 판단 문구 없음) ===== -->
+          <section class="m-section" data-states="preparing" hidden>
+            <div class="sec-head">
+              <h2 class="sec-title">삶의 질 기록</h2>
+              <a class="sec-more" href="health-record.html">기록 보기 <i data-lucide="chevron-right" class="ico-16"></i></a>
+            </div>
+            <div class="card card-health">
+              <div class="row mb-3">
+                <span class="ico-wrap sm"><i data-lucide="clipboard-list"></i></span>
+                <span class="t-body-s t-sub">9월 20일에 남긴 기록</span>
+              </div>
+              <div class="stat-row">
+                <div class="stat"><div class="stat-label">식욕</div><div class="stat-value num">3<span class="unit">/5</span></div></div>
+                <div class="stat"><div class="stat-label">움직임</div><div class="stat-value num">2<span class="unit">/5</span></div></div>
+                <div class="stat"><div class="stat-label">좋은 날</div><div class="stat-value num">4<span class="unit">/7일</span></div></div>
+              </div>
+              <p class="t-caption t-sub mt-3">메모: 오후엔 햇볕 드는 쿠션에서 오래 쉬었어요.</p>
+            </div>
+          </section>
+
+          <!-- ===== 버킷리스트 (함께하는 중 · 이별 준비) ===== -->
+          <section class="m-section" data-states="together preparing">
+            <div class="sec-head">
+              <h2 class="sec-title">함께하고 싶은 일</h2>
+              <a class="sec-more" href="bucket-list.html">전체 <i data-lucide="chevron-right" class="ico-16"></i></a>
+            </div>
+            <div class="stack-2">
+              <div class="card card-sm card-bucket is-done">
+                <span class="stamp"><i data-lucide="check" class="ico-18"></i></span>
+                <div class="grow"><div class="cell-title">바다 보기</div><div class="cell-sub">8월 17일 · 을왕리에서 함께했어요</div></div>
+              </div>
+              <div class="card card-sm card-bucket" data-bucket>
+                <button class="stamp" aria-label="가족사진 찍기 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>
+                <div class="grow"><div class="cell-title">가족사진 찍기</div><div class="cell-sub" data-bucket-meta>추천 항목</div></div>
+              </div>
+              <div class="card card-sm card-bucket" data-bucket>
+                <button class="stamp" aria-label="첫 산책길 다시 걷기 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>
+                <div class="grow"><div class="cell-title">첫 산책길 다시 걷기</div><div class="cell-sub" data-bucket-meta>컨디션을 먼저 확인하세요</div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 최근 다이어리 (함께하는 중 · 이별 준비) ===== -->
+          <section class="m-section" data-states="together preparing">
+            <div class="sec-head">
+              <h2 class="sec-title">최근 다이어리</h2>
+              <a class="sec-more" href="diary-list.html">전체 <i data-lucide="chevron-right" class="ico-16"></i></a>
+            </div>
+            <!-- 가로 캐러셀(.h-scroll): 2장 + 다음 카드 살짝 노출, 스냅. 좁은 카드라 기분 태그는 사진 위 오버레이 -->
+            <div class="h-scroll diary-scroll">
+              <a class="card card-diary card-link" href="diary-write.html">
+                <div class="photo"><i data-lucide="image"></i><span class="tag photo-tag"><i data-lucide="leaf"></i> 평온</span></div>
+                <div class="body">
+                  <span class="t-caption t-sub num">9월 23일 (수)</span>
+                  <p class="t-body-s clamp-2">창가 햇살 아래서 한참 낮잠을 잤어요. 코 고는 소리가 작게 들렸어요.</p>
+                </div>
+              </a>
+              <a class="card card-diary card-link" href="diary-write.html">
+                <div class="photo tone-butter"><i data-lucide="image"></i><span class="tag photo-tag"><i data-lucide="smile"></i> 행복</span></div>
+                <div class="body">
+                  <span class="t-caption t-sub num">9월 22일 (화)</span>
+                  <p class="t-body-s clamp-2">고구마 간식 두 조각을 다 먹고 꼬리를 흔들었어요.</p>
+                </div>
+              </a>
+              <a class="card card-diary card-link" href="diary-write.html">
+                <div class="photo tone-sky"><i data-lucide="image"></i><span class="tag photo-tag"><i data-lucide="sparkles"></i> 특별한 날</span></div>
+                <div class="body">
+                  <span class="t-caption t-sub num">9월 18일 (금)</span>
+                  <p class="t-body-s clamp-2">언니가 휴가 나와서 보리를 한참 안아줬어요.</p>
+                </div>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== 무지개다리: 추모관 메뉴 (F3 — 무지개다리에서만 노출) ===== -->
+          <section class="m-section" data-states="rainbow" hidden>
+            <div class="sec-head"><h2 class="sec-title">추모관</h2></div>
+            <div class="list">
+              <a class="list-item" href="memorial-edit.html">
+                <span class="ico-wrap"><i data-lucide="flower-2"></i></span>
+                <div class="grow">
+                  <div class="cell-title">메모리얼 페이지</div><div class="cell-sub">링크 공개 · 방명록에 새 글 2개가 있어요</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+              <a class="list-item" href="letter-to-sky.html">
+                <span class="ico-wrap sky"><i data-lucide="send"></i></span>
+                <div class="grow">
+                  <div class="cell-title">하늘로 보내는 편지</div><div class="cell-sub">편지 7통 보관 중</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+              <a class="list-item" href="memorial-extras.html">
+                <span class="ico-wrap soft"><i data-lucide="book-heart"></i></span>
+                <div class="grow">
+                  <div class="cell-title">추억 앨범 · 회고록</div><div class="cell-sub">사진을 모아 한 권으로 남겨요</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== 무지개다리: 최근 편지 ===== -->
+          <section class="m-section" data-states="rainbow" hidden>
+            <div class="sec-head">
+              <h2 class="sec-title">최근 편지</h2>
+              <a class="sec-more" href="letter-to-sky.html">편지함 <i data-lucide="chevron-right" class="ico-16"></i></a>
+            </div>
+            <a class="card card-letter card-link" href="letter-to-sky.html">
+              <div class="row-between mb-2"><span class="t-caption t-sub">9월 27일 (일)</span><span class="tag tag-line"><i data-lucide="lock"></i> 비공개</span></div>
+              <p class="t-body-s clamp-2">보리야, 오늘 아침에도 습관처럼 네 밥그릇부터 봤어. 거기선 다리 안 아프지?</p>
+            </a>
+          </section>
+
+          <!-- ===== 무지개다리: 추억 모아보기 ===== -->
+          <section class="m-section" data-states="rainbow" hidden>
+            <div class="sec-head"><h2 class="sec-title">추억 모아보기</h2></div>
+            <div class="card card-sm">
+              <div class="quick-grid cols-3">
+                <a class="quick-item" href="timeline.html"><span class="ico-wrap"><i data-lucide="history"></i></span>타임라인</a>
+                <a class="quick-item" href="sound-pawprint.html"><span class="ico-wrap sky"><i data-lucide="audio-lines"></i></span>소리·발도장</a>
+                <a class="quick-item" href="diary-list.html"><span class="ico-wrap soft"><i data-lucide="book-open"></i></span>다이어리</a>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 무지개다리: 마음 돌봄 (F19·F20 — 팝업 없이 부드럽게) ===== -->
+          <section class="m-section" data-states="rainbow" hidden>
+            <div class="sec-head">
+              <h2 class="sec-title">마음 돌봄</h2>
+              <a class="sec-more" href="care-content.html">더 보기 <i data-lucide="chevron-right" class="ico-16"></i></a>
+            </div>
+            <div class="list">
+              <a class="list-item" href="care-content.html">
+                <span class="ico-wrap soft"><i data-lucide="book-open-text"></i></span>
+                <div class="grow"><div class="cell-title">슬픔에는 정해진 순서가 없어요</div><div class="cell-sub">애도 과정 이해하기 · 5분</div></div>
+              </a>
+              <a class="list-item" href="care-content.html">
+                <span class="ico-wrap soft"><i data-lucide="messages-square"></i></span>
+                <div class="grow"><div class="cell-title">아이와 이별을 이야기하는 방법</div><div class="cell-sub">가족과의 대화 · 4분</div></div>
+              </a>
+              <a class="list-item" href="care-content.html?state=rainbow&amp;tab=admin">
+                <span class="ico-wrap soft"><i data-lucide="file-text"></i></span>
+                <div class="grow"><div class="cell-title">동물등록 변경(사망) 신고 안내</div><div class="cell-sub">이별 후 30일 이내 · 최종 점검 9월 1일</div></div>
+              </a>
+            </div>
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <!-- 하단 탭바 (02_PAGE.md: 홈 · 기록 · 함께하기 · 마음 돌봄 · 마이) -->
+        <nav class="m-tabbar" aria-label="하단 메뉴">
+          <a class="m-tab active" href="home.html"><span class="m-tab-ico"><i data-lucide="house"></i></span>홈</a>
+          <a class="m-tab" href="diary-list.html"><span class="m-tab-ico"><i data-lucide="notebook-pen"></i></span>기록</a>
+          <a class="m-tab" href="timeline.html"><span class="m-tab-ico"><i data-lucide="footprints"></i></span>함께하기</a>
+          <a class="m-tab" href="care-content.html"><span class="m-tab-ico"><i data-lucide="hand-heart"></i></span>마음 돌봄</a>
+          <a class="m-tab" href="mypage.html"><span class="m-tab-ico"><i data-lucide="user-round"></i></span>마이</a>
+        </nav>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 반려견 바꾸기 바텀시트 -->
+        <div class="sheet-dim" id="sheetDim"></div>
+        <div class="sheet" id="petSheet" role="dialog" aria-label="반려견 바꾸기">
+          <div class="sheet-grip"></div>
+          <div class="sheet-title">어느 아이의 홈을 볼까요?</div>
+          <div class="sheet-list">
+            <button class="list-item sheet-pet active" data-pet="보리">
+              <span class="avatar"><i data-lucide="dog"></i></span>
+              <div class="grow"><div class="cell-title">보리</div><div class="cell-sub">말티즈 · 만 14살</div></div>
+              <i data-lucide="check" class="chk"></i>
+            </button>
+            <button class="list-item sheet-pet" data-pet="콩이">
+              <span class="avatar"><i data-lucide="dog"></i></span>
+              <div class="grow"><div class="cell-title">콩이</div><div class="cell-sub">푸들 · 만 8살 · 함께하는 중</div></div>
+              <i data-lucide="check" class="chk"></i>
+            </button>
+          </div>
+          <a class="btn btn-secondary btn-block mt-4" href="pet-manage.html"><i data-lucide="settings-2"></i> 반려견 관리</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // F8 글자 크기 — 알림·표시 설정에서 고른 값(lg|xl)을 화면 전체에 반영
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var body = document.body;
+    var STATE_KEY = 'rd-pet-state';
+    var toastTimer;
+
+    // 반려견별 기본 정보 (persona.md) — 보리 상태는 시연 스위처 값, 콩이는 함께하는 중 고정
+    var PETS = {
+      '보리': { meta: '말티즈 · 여아 · 만 14살', days: '5,159' },
+      '콩이': { meta: '푸들 · 남아 · 만 8살', days: '3,225', state: 'together' }
+    };
+    var currentPet = '보리';
+    var boriState = 'together';
+
+    // 토스트 — 3초. 무지개다리 상태에서는 발바닥 대신 체크 아이콘 (DESIGN.md 6.7)
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      var rainbow = body.dataset.petState === 'rainbow';
+      var old = t.querySelector('svg, i');
+      var ico = document.createElement('i');
+      ico.setAttribute('data-lucide', rainbow ? 'check' : 'paw-print');
+      old.replaceWith(ico);
+      lucide.createIcons();
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 상태 적용 — data-states 에 현재 상태가 포함된 블록만 노출
+    // persist=false 이면 저장값(보리 상태)을 건드리지 않는다 — 콩이 선택 시
+    function applyState(state, persist) {
+      body.dataset.petState = state;
+      document.querySelectorAll('[data-states]').forEach(function (el) {
+        el.hidden = el.dataset.states.split(' ').indexOf(state) === -1;
+      });
+      document.querySelectorAll('[data-set-state]').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.setState === state);
+      });
+      document.querySelector('.m-content').scrollTop = 0;
+      if (persist === false) return;
+      boriState = state;
+      try { localStorage.setItem(STATE_KEY, state); } catch (e) {}
+    }
+
+    // 선택한 반려견의 이름·정보·상태로 홈 전체를 바꾼다
+    function selectPet(name) {
+      currentPet = name;
+      var p = PETS[name];
+      document.querySelectorAll('.sheet-pet').forEach(function (b) { b.classList.toggle('active', b.dataset.pet === name); });
+      document.querySelectorAll('[data-pet-name]').forEach(function (el) { el.textContent = name; });
+      document.querySelectorAll('[data-pet-meta]').forEach(function (el) { el.textContent = p.meta; });
+      document.querySelectorAll('[data-pet-days]').forEach(function (el) { el.textContent = p.days; });
+      if (p.state) applyState(p.state, false);
+      else applyState(boriState);
+    }
+
+    // 시연 스위처는 보리의 상태 미리보기 — 콩이를 보고 있었다면 보리로 돌아온다
+    document.querySelectorAll('[data-set-state]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        boriState = btn.dataset.setState;
+        if (currentPet !== '보리') selectPet('보리');
+        else applyState(boriState);
+      });
+    });
+
+    // 초기 상태: ?state= 파라미터 > 저장값 > together
+    (function () {
+      var q = new URLSearchParams(location.search).get('state');
+      var saved = null;
+      try { saved = localStorage.getItem(STATE_KEY); } catch (e) {}
+      var s = q || saved || 'together';
+      applyState(['together', 'preparing', 'rainbow'].indexOf(s) > -1 ? s : 'together');
+    })();
+
+    // 반려견 바꾸기 바텀시트
+    var sheet = document.getElementById('petSheet');
+    var dim = document.getElementById('sheetDim');
+    function openSheet() { sheet.classList.add('open'); dim.classList.add('open'); }
+    function closeSheet() { sheet.classList.remove('open'); dim.classList.remove('open'); }
+    document.getElementById('petSwitchBtn').addEventListener('click', openSheet);
+    dim.addEventListener('click', closeSheet);
+    document.querySelectorAll('.sheet-pet').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var name = btn.dataset.pet;
+        selectPet(name);
+        closeSheet();
+        showToast(name + '의 홈을 보고 있어요');
+      });
+    });
+
+    // 오늘의 일정 — 투약 체크 (시각 피드백 + 스탬프)
+    document.getElementById('medBtn').addEventListener('click', function () {
+      var b = this;
+      b.innerHTML = '<i data-lucide="check"></i> 챙겼어요';
+      b.classList.remove('btn-outline');
+      b.classList.add('btn-utility', 'is-stamped');
+      b.disabled = true;
+      lucide.createIcons();
+      showToast('관절 영양제 챙긴 것을 남겨뒀어요');
+    });
+
+    // 버킷리스트 — 완료 토글 (버터 배경 + 체크 스탬프)
+    document.querySelectorAll('[data-bucket] .stamp').forEach(function (stamp) {
+      stamp.addEventListener('click', function () {
+        var card = stamp.closest('[data-bucket]');
+        var meta = card.querySelector('[data-bucket-meta]');
+        var done = card.classList.toggle('is-done');
+        if (done) {
+          meta.dataset.prev = meta.textContent;
+          meta.textContent = '9월 29일 · 함께했어요';
+          stamp.classList.remove('is-stamped'); void stamp.offsetWidth; stamp.classList.add('is-stamped');
+          showToast('함께한 일로 담아뒀어요');
+        } else {
+          meta.textContent = meta.dataset.prev || '';
+        }
+      });
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/home.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

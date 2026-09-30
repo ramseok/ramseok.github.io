@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P32 신고·모더레이션 · 무지개 일기 관리자</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P32 전용 — 공통 레이아웃(.admin-*)은 common.css 그대로 쓴다 */
+    .nav-count { margin-left: auto; font-size: var(--fs-caption); color: var(--color-text-sub); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .summary-line { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .summary-line b { color: var(--color-text); font-weight: 700; }
+    /* 패널 헤더 우측 필터 — 세그먼트 두 개를 세로 헤어라인으로 구분 */
+    .filter-group { display: flex; align-items: center; gap: var(--space-3); }
+    .filter-group .vr { width: 1px; height: 24px; background: var(--color-border); }
+    /* 표 */
+    .report-target { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .td-target { width: 100%; max-width: 0; }
+    .td-target .cell-title { font-size: var(--fs-body-s); font-weight: 500; }
+    .col-dt { width: 120px; }
+    .col-src { width: 104px; }
+    .col-reason { width: 140px; }
+    .col-who { width: 96px; }
+    .col-st { width: 104px; }
+    .col-act { width: 96px; }
+    .col-htarget { width: 34%; }
+    .td-note { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .table td.t-empty { height: auto; padding: var(--space-10) 0; text-align: center; color: var(--color-text-sub); }
+    /* 상세 모달 */
+    .report-modal { max-width: 580px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .report-modal .modal-head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-5) var(--space-4) var(--space-4) var(--space-6); border-bottom: 1px solid var(--color-border); }
+    .report-modal .modal-head .modal-title { margin-bottom: 0; }
+    .report-modal .modal-head .meta-line { display: flex; align-items: center; gap: var(--space-2); margin-top: 6px; }
+    .report-modal .modal-head .meta-line .dt { font-size: var(--fs-caption); color: var(--color-text-sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .report-modal .modal-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-5) var(--space-6) var(--space-2); }
+    .report-modal .modal-actions { margin-top: 0; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--color-border); }
+    .report-modal .modal-actions .spacer { flex: 1; }
+    .report-modal .modal-actions .btn { flex: 0 0 auto; min-width: 112px; }
+    .report-preview { padding: var(--space-4); border-radius: var(--radius-md); background: var(--color-surface-soft); font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+    .report-preview .cell-title { font-size: var(--fs-body-s); }
+    .report-preview .quote { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); overflow-wrap: anywhere; }
+    .report-meta-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+    .report-meta-row > div { min-width: 0; padding: var(--space-3) var(--space-4); border-right: 1px solid var(--color-border); }
+    .report-meta-row > div:last-child { border-right: 0; }
+    .report-meta-row .k { display: block; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); }
+    .report-meta-row .v { display: block; margin-top: 2px; font-size: var(--fs-body-s); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .report-modal .field { margin-bottom: var(--space-4); }
+    .report-modal .textarea { min-height: 96px; }
+    #actionSeg { display: flex; width: 100%; }
+    #actionSeg .seg-btn { flex: 1; }
+    .modal-sub-title { font-size: var(--fs-body-s); font-weight: 600; margin-bottom: var(--space-2); }
+    .history-mini { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+    .history-mini-item { padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--color-bg); font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); }
+    @media (max-width: 1100px) { .col-reason { width: 110px; } }
+  </style>
+</head>
+<body>
+  <div class="admin">
+
+    <!-- 사이드바 (P28~P33) — dashboard.html 블록 그대로, active만 이동 -->
+    <aside class="admin-side">
+      <div class="admin-brand">
+        <span class="ico-wrap"><i data-lucide="rainbow" class="ico-18"></i></span>
+        <div>
+          <div class="admin-brand-name">무지개 일기</div>
+          <div class="admin-brand-sub">운영 관리자</div>
+        </div>
+      </div>
+
+      <div class="admin-nav-label">통계</div>
+      <nav class="admin-nav">
+        <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> 대시보드</a>
+      </nav>
+
+      <div class="admin-nav-label">운영</div>
+      <nav class="admin-nav">
+        <a href="members.html"><i data-lucide="users"></i> 회원·반려견</a>
+        <a href="inquiries.html"><i data-lucide="message-circle-question"></i> 1:1 문의 <span class="nav-count">대기 7</span></a>
+        <a href="content-cms.html"><i data-lucide="file-pen-line"></i> 콘텐츠(CMS)</a>
+        <a href="reports.html" class="active"><i data-lucide="flag"></i> 신고·모더레이션 <span class="nav-count" id="pendingNavCount">5</span></a>
+        <a href="partners.html"><i data-lucide="handshake"></i> 제휴 업체</a>
+      </nav>
+
+      <div class="admin-side-foot">
+        <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+        <div class="grow">
+          <div class="t-body-s t-strong">김하늘</div>
+          <div class="t-caption t-sub">운영 매니저</div>
+        </div>
+        <a class="icon-btn" href="login.html" aria-label="로그아웃" title="로그아웃"><i data-lucide="log-out" class="ico-18"></i></a>
+      </div>
+    </aside>
+
+    <!-- 메인 -->
+    <div class="admin-main">
+      <header class="admin-top">
+        <div class="admin-top-title">신고·모더레이션</div>
+        <span class="crumb">운영 · 방명록·커뮤니티 신고 검토</span>
+      </header>
+
+      <main class="admin-body">
+
+        <!-- F42: 신고 목록 (출처·상태 필터) -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">신고 목록</div>
+              <div class="summary-line" id="summaryLine">대기 <b>5</b>건 · 처리완료 <b>5</b>건 · 반려 <b>2</b>건</div>
+            </div>
+            <div class="filter-group">
+              <div class="segment" role="tablist" aria-label="출처 필터" id="sourceSeg">
+                <button class="seg-btn active" data-source="all">전체</button>
+                <button class="seg-btn" data-source="guestbook">방명록</button>
+                <button class="seg-btn" data-source="community">커뮤니티</button>
+              </div>
+              <span class="vr" aria-hidden="true"></span>
+              <div class="segment" role="tablist" aria-label="상태 필터" id="statusSeg">
+                <button class="seg-btn active" data-status="all">전체</button>
+                <button class="seg-btn" data-status="pending">대기</button>
+                <button class="seg-btn" data-status="done">처리완료</button>
+                <button class="seg-btn" data-status="reject">반려</button>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th class="col-dt">접수일시</th><th class="col-src">출처</th><th>신고 대상</th><th class="col-reason">신고 사유</th><th class="col-who">신고자</th><th class="col-st">상태</th><th class="col-act td-actions"><span class="sr-only">관리</span></th></tr>
+              </thead>
+              <tbody id="reportBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- F42: 처리 이력 -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">처리 이력</div>
+              <div class="panel-sub">최근 처리 순</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th class="col-dt">처리일시</th><th class="col-htarget">신고 대상</th><th class="col-src">처리 유형</th><th class="col-who">처리자</th><th>사유·메모</th></tr>
+              </thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- 신고 상세·처리 모달 -->
+    <div class="modal-dim" id="reportModalDim">
+      <div class="modal report-modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+        <div class="modal-head">
+          <div class="grow">
+            <div class="modal-title" id="mTitle">신고 상세</div>
+            <div class="meta-line">
+              <span class="tag tag-line" id="mSourceTag">방명록</span>
+              <span class="status" id="mStatusTag"></span>
+              <span class="meta-sep">·</span>
+              <span class="dt" id="mDt">09.29 11:20 접수</span>
+            </div>
+          </div>
+          <button class="icon-btn" id="mCloseBtn" aria-label="닫기"><i data-lucide="x" class="ico-18"></i></button>
+        </div>
+
+        <div class="modal-scroll">
+        <div class="report-preview">
+          <div class="cell-title" id="mTarget">보리 추모관 방명록</div>
+          <div class="cell-sub" id="mAuthor">비회원</div>
+          <div class="quote" id="mContent">원문 내용이 여기 표시돼요.</div>
+        </div>
+
+        <div class="report-meta-row">
+          <div><span class="k">신고 사유</span><span class="v" id="mReason">-</span></div>
+          <div><span class="k">신고자</span><span class="v" id="mReporter">-</span></div>
+          <div><span class="k">누적 신고</span><span class="v" id="mCount">-</span></div>
+        </div>
+
+        <div class="field" style="margin-top: var(--space-5);">
+          <div class="field-label">처리 유형</div>
+          <div class="segment" role="tablist" aria-label="처리 유형" id="actionSeg">
+            <button class="seg-btn" data-action="hide"><i data-lucide="eye-off" class="ico-16"></i> 숨김</button>
+            <button class="seg-btn" data-action="delete"><i data-lucide="trash-2" class="ico-16"></i> 삭제</button>
+            <button class="seg-btn" data-action="sanction"><i data-lucide="shield-alert" class="ico-16"></i> 제재</button>
+            <button class="seg-btn" data-action="reject"><i data-lucide="circle-slash" class="ico-16"></i> 반려</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="mNote">제재·처리 사유</label>
+          <textarea class="textarea" id="mNote" placeholder="처리 사유를 남겨주세요 (예: 상업적 홍보 확인, 작성자 7일 이용정지 등)"></textarea>
+        </div>
+
+        <div>
+          <div class="modal-sub-title">이 대상의 이전 처리 이력</div>
+          <div class="history-mini" id="mHistoryMini"></div>
+        </div>
+        </div>
+
+        <div class="modal-actions">
+          <span class="spacer"></span>
+          <button class="btn btn-secondary" id="mCancelBtn">취소</button>
+          <button class="btn btn-primary" id="mConfirmBtn"><i data-lucide="check"></i> 처리 완료</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check"></i><span id="toastMsg"></span></div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 더미 신고 목록 (F42)
+    var REPORTS = [
+      { id: 'r1', dt: '09.29 11:20', source: 'guestbook', target: '보리 추모관 방명록', author: '비회원', content: '위로 전합니다.. 참고로 반려동물 화장 전문 업체 할인 이벤트 진행중이에요! 문의 010-9999-2222', reason: '상업적 홍보', reporter: '김*은', count: 3, status: 'pending', actionType: null, note: '', processedAt: null, processor: null, order: 0 },
+      { id: 'r2', dt: '09.29 09:47', source: 'community', target: '게시글 · 오늘 우리 아이가 떠났어요', author: '박*수', content: '진짜 유난이다 너만 힘든 줄 아나ㅋㅋ 다들 겪는 일 갖고', reason: '욕설·비방', reporter: '최*영', count: 1, status: 'pending', actionType: null, note: '', processedAt: null, processor: null, order: 1 },
+      { id: 'r3', dt: '09.28 22:10', source: 'guestbook', target: '몽이 추모관 방명록', author: '비회원', content: '몽이야 잘가~ (조롱성 합성 사진 첨부)', reason: '부적절한 표현', reporter: '정*희', count: 2, status: 'pending', actionType: null, note: '', processedAt: null, processor: null, order: 2 },
+      { id: 'r4', dt: '09.28 19:32', source: 'community', target: '게시글 · 반려동물 보험 추천 정보', author: '이*훈', content: '반려동물 보험 비교 견적 무료로 받아보세요 → [링크] 가입 시 사은품 증정', reason: '상업적 홍보', reporter: '한*미', count: 1, status: 'pending', actionType: null, note: '', processedAt: null, processor: null, order: 3 },
+      { id: 'r5', dt: '09.28 15:05', source: 'community', target: '댓글 · 그렇게 유난 떨 일이야?', author: '오*진', content: '그렇게 유난 떨 일이야? 남들도 다 보내는데', reason: '욕설·비방', reporter: '김*연', count: 2, status: 'pending', actionType: null, note: '', processedAt: null, processor: null, order: 4 },
+      { id: 'r6', dt: '09.27 14:20', source: 'guestbook', target: '구름이 추모관 방명록', author: '비회원', content: '노령견 화장 전문! 지금 상담하면 20% 할인 010-1234-0000', reason: '상업적 홍보', reporter: '박*아', count: 4, status: 'done', actionType: 'hide', note: '반복 광고 링크 확인 후 숨김 처리', processedAt: '09.27 14:35', processor: '김하늘', order: 5 },
+      { id: 'r7', dt: '09.27 10:11', source: 'community', target: '게시글 · 필독) 마지막으로 꼭 보세요', author: '신*우', content: '필독) 마지막으로 꼭 보세요 - 클릭 시 상조 상품 가입 페이지로 연결', reason: '상업적 홍보', reporter: '이*수', count: 2, status: 'done', actionType: 'delete', note: '낚시성 홍보 게시글 삭제', processedAt: '09.27 10:20', processor: '김하늘', order: 6 },
+      { id: 'r8', dt: '09.26 20:44', source: 'community', target: '댓글 · 진작 정리했어야죠', author: '조*민', content: '그러게 진작 정리했어야지 유난 떨더니', reason: '욕설·비방', reporter: '최*은', count: 3, status: 'done', actionType: 'sanction', note: '악성 댓글 · 작성자 7일 이용정지', processedAt: '09.26 21:00', processor: '김하늘', order: 7 },
+      { id: 'r9', dt: '09.26 13:02', source: 'guestbook', target: '하늘이 추모관 방명록', author: '비회원', content: '축복합니다축복합니다축복합니다축복합니다 (동일 문구 반복 도배)', reason: '도배', reporter: '김*호', count: 5, status: 'done', actionType: 'delete', note: '동일 문구 반복 도배 삭제', processedAt: '09.26 13:15', processor: '김하늘', order: 8 },
+      { id: 'r10', dt: '09.25 18:27', source: 'community', target: '게시글 · 무료 체험 이벤트 안내', author: '백*진', content: '지금 가입하면 무료 체험 이벤트! 링크 클릭하세요', reason: '상업적 홍보', reporter: '오*빈', count: 1, status: 'done', actionType: 'hide', note: '무자격 경품 홍보 숨김 처리', processedAt: '09.25 18:40', processor: '김하늘', order: 9 },
+      { id: 'r11', dt: '09.25 09:50', source: 'guestbook', target: '보리 추모관 방명록', author: '비회원', content: '많이 힘드시겠어요.. 마음 잘 추스르시길 바라요', reason: '오신고로 판단', reporter: '정*수', count: 1, status: 'reject', actionType: 'reject', note: '위로 메시지로 확인, 정상 게시물', processedAt: '09.25 10:05', processor: '김하늘', order: 10 },
+      { id: 'r12', dt: '09.24 21:15', source: 'community', target: '댓글 · 저도 비슷한 시기였어요', author: '남*희', content: '저도 비슷한 시기에 아이를 보내서 마음이 더 아프네요', reason: '오신고로 판단', reporter: '이*진', count: 1, status: 'reject', actionType: 'reject', note: '신고 사유 불명확, 반려', processedAt: '09.24 21:30', processor: '김하늘', order: 11 }
+    ];
+
+    var sourceFilter = 'all', statusFilter = 'all';
+    var currentReportId = null;
+    var historyCounter = -1;
+
+    function sourceLabel(s) { return s === 'guestbook' ? '방명록' : '커뮤니티'; }
+    function statusMeta(s) {
+      if (s === 'pending') return { cls: 'wait', text: '대기' };
+      if (s === 'done') return { cls: 'ok', text: '처리완료' };
+      return { cls: '', text: '반려' };
+    }
+    // 처리 유형 태그 톤 — 반려는 중립(라인), 숨김은 부드럽게, 삭제·제재는 강조
+    function actionTag(t) {
+      return { hide: 'tag-butter', delete: 'tag-primary', sanction: 'tag-primary', reject: 'tag-line' }[t] || 'tag-line';
+    }
+    function actionLabel(t) {
+      return { hide: '숨김', delete: '삭제', sanction: '제재', reject: '반려' }[t] || '-';
+    }
+
+    function renderTable() {
+      var rows = REPORTS.filter(function (r) {
+        return (sourceFilter === 'all' || r.source === sourceFilter) && (statusFilter === 'all' || r.status === statusFilter);
+      });
+      document.getElementById('reportBody').innerHTML = rows.length ? rows.map(function (r) {
+        var sm = statusMeta(r.status);
+        return '<tr>' +
+          '<td class="td-date">' + r.dt + '</td>' +
+          '<td><span class="tag tag-line">' + sourceLabel(r.source) + '</span></td>' +
+          '<td class="td-target"><div class="cell-title report-target" title="' + r.target + '">' + r.target + '</div><div class="cell-sub">' + r.author + '</div></td>' +
+          '<td class="t-sub nowrap">' + r.reason + '</td>' +
+          '<td class="nowrap">' + r.reporter + '</td>' +
+          '<td><span class="status ' + sm.cls + '">' + sm.text + '</span></td>' +
+          '<td class="td-actions"><button class="btn btn-ghost btn-sm" onclick="openReport(\'' + r.id + '\')"><i data-lucide="search"></i> 상세</button></td>' +
+          '</tr>';
+      }).join('') : '<tr><td colspan="7" class="t-empty">조건에 맞는 신고가 없어요</td></tr>';
+      updateSummary();
+      lucide.createIcons();
+    }
+
+    function renderHistory() {
+      var rows = REPORTS.filter(function (r) { return r.status !== 'pending'; })
+        .sort(function (a, b) { return a.order - b.order; });
+      document.getElementById('historyBody').innerHTML = rows.length ? rows.map(function (r) {
+        return '<tr>' +
+          '<td class="td-date">' + r.processedAt + '</td>' +
+          '<td class="td-note"><span class="report-target" title="' + r.target + '">' + r.target + '</span></td>' +
+          '<td><span class="tag ' + actionTag(r.actionType) + '">' + actionLabel(r.actionType) + '</span></td>' +
+          '<td class="nowrap">' + r.processor + '</td>' +
+          '<td class="t-sub td-note" title="' + (r.note || '-') + '">' + (r.note || '-') + '</td>' +
+          '</tr>';
+      }).join('') : '<tr><td colspan="5" class="t-empty">처리 이력이 없어요</td></tr>';
+    }
+
+    function updateSummary() {
+      var pending = REPORTS.filter(function (r) { return r.status === 'pending'; }).length;
+      var done = REPORTS.filter(function (r) { return r.status === 'done'; }).length;
+      var reject = REPORTS.filter(function (r) { return r.status === 'reject'; }).length;
+      document.getElementById('summaryLine').innerHTML = '대기 <b>' + pending + '</b>건 · 처리완료 <b>' + done + '</b>건 · 반려 <b>' + reject + '</b>건';
+      document.getElementById('pendingNavCount').textContent = pending;
+    }
+
+    // 출처 필터
+    document.querySelectorAll('#sourceSeg [data-source]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#sourceSeg [data-source]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        sourceFilter = btn.dataset.source;
+        renderTable();
+      });
+    });
+    // 상태 필터
+    document.querySelectorAll('#statusSeg [data-status]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#statusSeg [data-status]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        statusFilter = btn.dataset.status;
+        renderTable();
+      });
+    });
+
+    // 신고 상세 모달 열기
+    window.openReport = function (id) {
+      var r = REPORTS.find(function (x) { return x.id === id; });
+      if (!r) return;
+      currentReportId = id;
+      document.getElementById('mSourceTag').textContent = sourceLabel(r.source);
+      var sm = statusMeta(r.status);
+      var st = document.getElementById('mStatusTag');
+      st.className = 'status ' + sm.cls;
+      st.textContent = sm.text;
+      document.getElementById('mDt').textContent = r.dt + ' 접수';
+      document.getElementById('mTarget').textContent = r.target;
+      document.getElementById('mAuthor').textContent = '작성자 · ' + r.author;
+      document.getElementById('mContent').textContent = r.content;
+      document.getElementById('mReason').textContent = r.reason;
+      document.getElementById('mReporter').textContent = r.reporter;
+      document.getElementById('mCount').textContent = r.count + '건';
+      document.getElementById('mNote').value = r.note || '';
+
+      document.querySelectorAll('#actionSeg [data-action]').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.action === r.actionType);
+      });
+
+      var hist = REPORTS.filter(function (x) { return x.id !== r.id && x.target === r.target && x.status !== 'pending'; });
+      document.getElementById('mHistoryMini').innerHTML = hist.length ? hist.map(function (h) {
+        return '<div class="history-mini-item">' + h.processedAt + ' · <span class="t-strong" style="color:var(--color-text);">' + actionLabel(h.actionType) + '</span> · ' + (h.note || '-') + '</div>';
+      }).join('') : '<div class="history-mini-item">이전 처리 이력이 없어요</div>';
+
+      document.getElementById('reportModalDim').classList.add('open');
+      lucide.createIcons();
+    };
+
+    function closeReportModal() {
+      document.getElementById('reportModalDim').classList.remove('open');
+      currentReportId = null;
+    }
+    document.getElementById('mCloseBtn').addEventListener('click', closeReportModal);
+    document.getElementById('mCancelBtn').addEventListener('click', closeReportModal);
+    document.getElementById('reportModalDim').addEventListener('click', function (e) {
+      if (e.target === this) closeReportModal();
+    });
+
+    // 처리 유형 선택 (시각 피드백)
+    document.querySelectorAll('#actionSeg [data-action]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#actionSeg [data-action]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+      });
+    });
+
+    // 처리 완료 — 상태 변경 + 처리 이력 반영
+    document.getElementById('mConfirmBtn').addEventListener('click', function () {
+      var active = document.querySelector('#actionSeg [data-action].active');
+      if (!active) { showToast('처리 유형을 먼저 선택해주세요'); return; }
+      var type = active.dataset.action;
+      var r = REPORTS.find(function (x) { return x.id === currentReportId; });
+      if (!r) return;
+      var now = new Date();
+      var hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
+      r.status = type === 'reject' ? 'reject' : 'done';
+      r.actionType = type;
+      r.note = document.getElementById('mNote').value.trim();
+      r.processedAt = '09.29 ' + hh + ':' + mm;
+      r.processor = '김하늘';
+      r.order = historyCounter--;
+      closeReportModal();
+      renderTable();
+      renderHistory();
+      showToast(type === 'reject' ? '신고를 반려 처리했어요' : '신고를 처리했어요 · ' + actionLabel(type));
+    });
+
+    renderTable();
+    renderHistory();
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/admin/reports.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2 로그인 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P2 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 브랜드 — 한 화면에 입력칸·로그인 버튼이 모두 보이도록 높이를 줄인다 */
+    .login-brand { text-align: center; padding: var(--space-6) var(--space-5) var(--space-6); }
+    .login-brand .avatar-lg { margin: 0 auto var(--space-3); background: var(--theme-header-bg); color: var(--color-primary-strong); }
+    .login-brand h1 { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+    .login-brand .brand-tag { font-family: var(--font-body); font-size: var(--fs-caption); line-height: 1; color: var(--color-text-sub); letter-spacing: 0; }
+    .login-brand p.t-body-s { margin-top: var(--space-1); color: var(--color-text-sub); text-wrap: balance; }
+    .login-body { padding: 0 var(--space-4) var(--space-8); }
+
+    /* 로그인/회원가입 탭 — 폭을 반씩 나눠 입력 영역과 좌우 정렬을 맞춘다 */
+    .auth-tabs.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0; }
+    .auth-tabs .tab { width: 100%; }
+    .auth-tabs .tab.active::after { left: 0; right: 0; }
+
+    .auth-panel { display: flex; flex-direction: column; gap: 0; margin-top: var(--space-5); }
+    .auth-actions { display: flex; flex-direction: column; gap: var(--space-3); }
+
+    .pw-field .input { padding-right: 52px; }
+    .pw-toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; color: var(--color-text-sub); }
+    .pw-toggle:active { transform: translateY(-50%) scale(0.94); }
+
+    /* 비밀번호 찾기 — 비밀번호 칸 바로 아래 우측 */
+    .forgot-row { display: flex; justify-content: flex-end; margin: calc(var(--space-3) * -1) calc(var(--space-2) * -1) var(--space-3) 0; }
+    .forgot-link { height: 36px; padding: 0 var(--space-2); font-size: var(--fs-caption); }
+
+    .or-divider { display: flex; align-items: center; gap: var(--space-3); color: var(--color-text-sub); font-size: var(--fs-caption); line-height: var(--lh-caption); white-space: nowrap; margin: var(--space-6) 0 var(--space-4); }
+    .or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--color-border); }
+
+    /* 소셜 버튼 — 좌측 고정 마크 + 가운데 라벨 (실서비스 간편로그인 패턴) */
+    .social-list { display: flex; flex-direction: column; gap: var(--space-2); }
+    .social-btn { position: relative; justify-content: center; padding: 0 56px; }
+    .social-mark {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: var(--radius-full);
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--color-surface-soft); color: var(--color-text);
+      font-size: 15px; font-weight: 800; line-height: 1; letter-spacing: 0;
+    }
+    .social-mark [data-lucide], .social-mark svg { width: 17px; height: 17px; }
+    .social-mark.kakao { background: var(--color-butter); }
+    .social-mark.kakao svg { fill: currentColor; }
+    .social-mark.naver { background: var(--color-mint); }
+    .social-mark.apple { background: var(--color-text); color: var(--color-bg); }
+
+    .switch-row { display: flex; align-items: center; justify-content: center; gap: 2px; margin-top: var(--space-5); font-size: var(--fs-body-s); color: var(--color-text-sub); white-space: nowrap; }
+    .switch-row button { min-height: 44px; color: var(--color-primary-strong); font-size: var(--fs-body-s); font-weight: 700; background: transparent; border: 0; padding: 0 var(--space-2); }
+
+    .agree-row { margin: calc(var(--space-2) * -1) 0 var(--space-4); align-items: center; }
+    .agree-row .t-body-s { min-width: 0; }
+  </style>
+</head>
+<body class="is-mobile">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 본문 (유일한 스크롤 영역) — 진입 화면이라 헤더·탭바는 생략 -->
+        <main class="m-content">
+
+          <section class="login-brand">
+            <span class="avatar avatar-lg"><i data-lucide="dog"></i></span>
+            <div><h1 class="t-display">무지개 일기<span class="brand-tag">(가칭)</span></h1></div>
+            <p class="t-body-s">함께한 하루하루를 기록하고,<br>언제까지나 간직해요</p>
+          </section>
+
+          <section class="login-body">
+
+            <!-- 초대 링크로 진입한 경우에만 노출 (P7 가족 공유 초대 수락 경유) -->
+            <div class="notice notice-theme mb-4" id="inviteNotice" hidden>
+              <i data-lucide="users"></i>
+              <div class="grow">
+                <b>해피동물병원</b>님이 <b data-invite-pet>보리</b>의 가족 공유에 초대했어요. 로그인하면 바로 참여할 수 있어요.
+              </div>
+            </div>
+
+            <div class="tabs auth-tabs" role="tablist">
+              <button class="tab active" role="tab" aria-selected="true" data-tab="login">로그인</button>
+              <button class="tab" role="tab" aria-selected="false" data-tab="signup">회원가입</button>
+            </div>
+
+            <!-- ===== 로그인 패널 ===== -->
+            <div class="auth-panel" id="loginPanel">
+              <div class="field">
+                <label class="field-label" for="loginEmail">이메일</label>
+                <div class="input-wrap">
+                  <i data-lucide="mail"></i>
+                  <input class="input" type="email" id="loginEmail" placeholder="example@email.com" autocomplete="email">
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="loginPw">비밀번호</label>
+                <div class="input-wrap pw-field">
+                  <i data-lucide="lock"></i>
+                  <input class="input" type="password" id="loginPw" placeholder="비밀번호를 입력해주세요" autocomplete="current-password">
+                  <button type="button" class="icon-btn pw-toggle" data-pw-toggle aria-label="비밀번호 표시"><i data-lucide="eye"></i></button>
+                </div>
+              </div>
+              <div class="forgot-row">
+                <button type="button" class="btn btn-ghost btn-sm forgot-link" id="forgotBtn">비밀번호를 잊으셨나요?</button>
+              </div>
+
+              <div class="auth-actions">
+                <button type="button" class="btn btn-primary btn-lg btn-block" id="loginBtn">로그인</button>
+              </div>
+
+              <div class="or-divider">또는</div>
+              <div class="social-list">
+                <button type="button" class="btn btn-secondary btn-lg btn-block social-btn" data-provider="kakao"><span class="social-mark kakao"><i data-lucide="message-circle"></i></span><span class="btn-label">카카오로 계속하기</span></button>
+                <button type="button" class="btn btn-secondary btn-lg btn-block social-btn" data-provider="naver"><span class="social-mark naver">N</span><span class="btn-label">네이버로 계속하기</span></button>
+                <button type="button" class="btn btn-secondary btn-lg btn-block social-btn" data-provider="apple"><span class="social-mark apple"><i data-lucide="apple"></i></span><span class="btn-label">애플로 계속하기</span></button>
+                <button type="button" class="btn btn-secondary btn-lg btn-block social-btn" data-provider="google"><span class="social-mark">G</span><span class="btn-label">구글로 계속하기</span></button>
+              </div>
+
+              <div class="switch-row">
+                계정이 없으신가요? <button type="button" id="gotoSignup">회원가입</button>
+              </div>
+            </div>
+
+            <!-- ===== 회원가입 패널 ===== -->
+            <div class="auth-panel" id="signupPanel" hidden>
+              <div class="field">
+                <label class="field-label" for="signupName">이름</label>
+                <div class="input-wrap">
+                  <i data-lucide="user"></i>
+                  <input class="input" type="text" id="signupName" placeholder="보호자님 성함" autocomplete="name">
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="signupEmail">이메일</label>
+                <div class="input-wrap">
+                  <i data-lucide="mail"></i>
+                  <input class="input" type="email" id="signupEmail" placeholder="example@email.com" autocomplete="email">
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="signupPw">비밀번호</label>
+                <div class="input-wrap pw-field">
+                  <i data-lucide="lock"></i>
+                  <input class="input" type="password" id="signupPw" placeholder="8자 이상 입력해주세요" autocomplete="new-password">
+                  <button type="button" class="icon-btn pw-toggle" data-pw-toggle aria-label="비밀번호 표시"><i data-lucide="eye"></i></button>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="signupPw2">비밀번호 확인</label>
+                <div class="input-wrap">
+                  <i data-lucide="lock"></i>
+                  <input class="input" type="password" id="signupPw2" placeholder="비밀번호를 한 번 더 입력해주세요" autocomplete="new-password">
+                </div>
+              </div>
+
+              <label class="check agree-row">
+                <input type="checkbox" id="agreeChk">
+                <span class="box"><i data-lucide="check"></i></span>
+                <span class="t-body-s">(필수) 이용약관 및 개인정보 처리방침에 동의해요</span>
+              </label>
+
+              <div class="auth-actions">
+                <button type="button" class="btn btn-primary btn-lg btn-block" id="signupBtn" disabled>가입하기</button>
+              </div>
+
+              <div class="or-divider">또는</div>
+              <div class="social-list">
+                <button type="button" class="btn btn-secondary btn-lg btn-block social-btn" data-provider="kakao"><span class="social-mark kakao"><i data-lucide="message-circle"></i></span><span class="btn-label">카카오로 계속하기</span></button>
+                <button type="button" class="btn btn-secondary btn-lg btn-block social-btn" data-provider="naver"><span class="social-mark naver">N</span><span class="btn-label">네이버로 계속하기</span></button>
+                <button type="button" class="btn btn-secondary btn-lg btn-block social-btn" data-provider="apple"><span class="social-mark apple"><i data-lucide="apple"></i></span><span class="btn-label">애플로 계속하기</span></button>
+                <button type="button" class="btn btn-secondary btn-lg btn-block social-btn" data-provider="google"><span class="social-mark">G</span><span class="btn-label">구글로 계속하기</span></button>
+              </div>
+
+              <div class="switch-row">
+                이미 계정이 있으신가요? <button type="button" id="gotoLogin">로그인</button>
+              </div>
+            </div>
+
+          </section>
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 비밀번호 재설정 바텀시트 -->
+        <div class="sheet-dim" id="sheetDim"></div>
+        <div class="sheet" id="resetSheet" role="dialog" aria-label="비밀번호 재설정">
+          <div class="sheet-grip"></div>
+          <div class="sheet-title">비밀번호를 재설정할게요</div>
+          <p class="sheet-desc">가입하신 이메일로 재설정 링크를 보내드려요.</p>
+          <div class="field">
+            <label class="field-label" for="resetEmail">이메일</label>
+            <div class="input-wrap">
+              <i data-lucide="mail"></i>
+              <input class="input" type="email" id="resetEmail" placeholder="example@email.com">
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-lg btn-block" id="resetSendBtn">재설정 링크 보내기</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 초대 링크 진입 — 02_PAGE.md 비고: 초대 링크로 들어온 미가입자는 P2를 거쳐 P7 수락 배너로 이동
+    var params = new URLSearchParams(location.search);
+    var isInvite = params.has('invite');
+    var nextAfterLogin = isInvite ? 'family-share.html' : 'home.html';
+    var nextAfterSignup = isInvite ? 'family-share.html' : 'onboarding-pet.html';
+    if (isInvite) { document.getElementById('inviteNotice').hidden = false; }
+
+    // 탭 전환 — 회원가입·비밀번호 재설정은 별도 페이지 없이 P2 내 탭/바텀시트로 처리
+    var tabs = document.querySelectorAll('.tab');
+    var panels = { login: document.getElementById('loginPanel'), signup: document.getElementById('signupPanel') };
+    function selectTab(name) {
+      tabs.forEach(function (b) {
+        var on = b.dataset.tab === name;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      Object.keys(panels).forEach(function (k) { panels[k].hidden = (k !== name); });
+      document.querySelector('.m-content').scrollTop = 0;
+    }
+    tabs.forEach(function (t) { t.addEventListener('click', function () { selectTab(t.dataset.tab); }); });
+    document.getElementById('gotoSignup').addEventListener('click', function () { selectTab('signup'); });
+    document.getElementById('gotoLogin').addEventListener('click', function () { selectTab('login'); });
+
+    // 비밀번호 표시/숨김 토글
+    document.querySelectorAll('[data-pw-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var input = btn.parentElement.querySelector('input');
+        var showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        btn.innerHTML = showing ? '<i data-lucide="eye"></i>' : '<i data-lucide="eye-off"></i>';
+        lucide.createIcons();
+      });
+    });
+
+    // 회원가입 — 약관 동의해야 가입 버튼 활성화
+    var agreeChk = document.getElementById('agreeChk');
+    var signupBtn = document.getElementById('signupBtn');
+    agreeChk.addEventListener('change', function () { signupBtn.disabled = !agreeChk.checked; });
+
+    // 로그인 — P4(상태별 홈) 또는 초대 시 P7(가족 공유)로 이동
+    document.getElementById('loginBtn').addEventListener('click', function () {
+      showToast('로그인하고 있어요');
+      setTimeout(function () { location.href = nextAfterLogin; }, 300);
+    });
+
+    // 회원가입 — 최초 가입은 P3(반려견 등록)로, 초대 시 P7로 이동
+    signupBtn.addEventListener('click', function () {
+      if (signupBtn.disabled) return;
+      showToast('가입 정보를 확인하고 있어요');
+      setTimeout(function () { location.href = nextAfterSignup; }, 300);
+    });
+
+    // 소셜 로그인 — 현재 탭 기준 목적지로 이동 (기존 회원은 홈, 최초 가입은 반려견 등록)
+    document.querySelectorAll('[data-provider]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var inSignup = !panels.signup.hidden;
+        location.href = inSignup ? nextAfterSignup : nextAfterLogin;
+      });
+    });
+
+    // 비밀번호 재설정 바텀시트
+    var sheet = document.getElementById('resetSheet');
+    var dim = document.getElementById('sheetDim');
+    function openSheet() { sheet.classList.add('open'); dim.classList.add('open'); }
+    function closeSheet() { sheet.classList.remove('open'); dim.classList.remove('open'); }
+    document.getElementById('forgotBtn').addEventListener('click', openSheet);
+    dim.addEventListener('click', closeSheet);
+    document.getElementById('resetSendBtn').addEventListener('click', function () {
+      closeSheet();
+      showToast('재설정 링크를 보내드렸어요');
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/login.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

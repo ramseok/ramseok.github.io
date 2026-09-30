@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P22 커뮤니티 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P22 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 게시글 카드 — 작성자 행(아바타 · 이름/메타 · 신고) / 제목·본문 2줄 / 공감·댓글 */
+    .post-card { display: block; }
+    .post-head { display: flex; align-items: center; gap: var(--space-3); margin: -4px -10px 0 0; }
+    .post-head .grow { flex: 1; min-width: 0; }
+    .post-author { font-size: var(--fs-body-s); line-height: 1.35; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .report-post-btn { width: 40px; height: 40px; color: var(--color-text-disabled); }
+    .report-post-btn svg, .report-post-btn [data-lucide] { width: 18px; height: 18px; }
+    .report-post-btn.is-on { color: var(--color-success); }
+    .post-open { display: block; width: 100%; margin-top: var(--space-3); border: 0; background: transparent; padding: 0; text-align: left; color: inherit; }
+    .post-title { font-size: var(--fs-body); line-height: 1.45; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+    .post-excerpt { margin-top: var(--space-1); font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--color-text-sub); min-height: calc(var(--lh-body-s) * 2); }
+    .post-foot { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-3); }
+    .post-comments { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-caption); line-height: 1; color: var(--color-text-sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .like-btn { height: 30px; padding: 0 10px; font-variant-numeric: tabular-nums; }
+    .like-btn.active { background: var(--theme-accent-soft); font-weight: 700; }
+    .like-btn.active [data-lucide], .like-btn.active svg { fill: var(--theme-accent); fill-opacity: 0.35; stroke: var(--color-primary-strong); }
+    .fab-spacer { height: 88px; }
+
+    /* 상세 시트 */
+    .detail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: 0 -10px var(--space-2) 0; }
+    .detail-author { gap: var(--space-2); min-width: 0; }
+    .detail-actions { display: inline-flex; align-items: center; flex-shrink: 0; }
+    .detail-actions .icon-btn { width: 40px; height: 40px; }
+    #reportFromDetailBtn { color: var(--color-text-sub); }
+    #reportFromDetailBtn svg { width: 18px; height: 18px; }
+    #detailSheet .sheet-title { margin-bottom: var(--space-3); }
+    .detail-stats { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-border); }
+    .detail-comments { margin-top: var(--space-4); }
+    .comment-item { padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-surface-soft); }
+    .comment-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: -6px -10px 0 0; }
+    .comment-author { font-size: var(--fs-body-s); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .report-comment-btn { width: 32px; height: 32px; color: var(--color-text-disabled); }
+    .report-comment-btn svg { width: 16px; height: 16px; }
+    .comment-text { font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+    .comment-item .meta { margin-top: 2px; }
+    .comment-row { margin-top: var(--space-4); }
+
+    /* 작성 · 신고 시트 */
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: 0 -10px var(--space-4) 0; }
+    .sheet-head .sheet-title { margin-bottom: 0; }
+    .sheet-head + .sheet-desc { margin-top: calc(var(--space-2) * -1); }
+    .sheet-notice { margin-bottom: var(--space-5); }
+    #reportReasons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #reportReasons .chip { justify-content: center; height: 40px; }
+    #writeBodyInput { min-height: 140px; }
+    .report-field { margin-top: var(--space-5); }
+    .form-error { margin: calc(var(--space-2) * -1) 0 var(--space-3); font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-error-text); }
+    .sheet-submit { margin-top: var(--space-2); }
+
+    .fab-write {
+      position: absolute; right: var(--space-4); bottom: 80px; z-index: 15;
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      height: 52px; padding: 0 var(--space-5); border: 0; border-radius: var(--radius-full);
+      background: var(--theme-accent); color: var(--color-text); font-weight: 700; font-size: var(--fs-body-s); white-space: nowrap;
+      box-shadow: var(--shadow-md);
+    }
+    .fab-write:active { transform: scale(0.97); }
+    .input.is-error { border-color: var(--color-error); }
+    #reportError, #writeError { display: none; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더 -->
+        <header class="m-header no-line">
+          <div class="m-title">마음 돌봄</div>
+        </header>
+
+        <!-- 콘텐츠·커뮤니티 전환 탭 (P21/P22 묶음) -->
+        <nav class="tabs" aria-label="마음 돌봄 하위 메뉴">
+          <a class="tab" href="care-content.html">아티클·상담</a>
+          <span class="tab active" aria-current="page">커뮤니티</span>
+        </nav>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <section class="m-section">
+            <div class="notice notice-theme">
+              <i data-lucide="hand-heart"></i>
+              <div class="grow">비슷한 마음을 지나온 이웃 보호자들과 이야기를 나누는 공간이에요. 서로를 배려하는 말로 함께해요.</div>
+            </div>
+          </section>
+
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">이웃들의 이야기</h2>
+              <span class="sec-sub">전체 7개</span>
+            </div>
+
+            <div class="stack" id="postList">
+
+              <!-- 게시글 1 -->
+              <article class="card card-sm post-card">
+                <div class="post-head">
+                  <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+                  <div class="grow">
+                    <div class="post-author">달빛엄마</div>
+                    <div class="meta"><span class="post-time">2시간 전</span><span class="meta-sep">·</span>경험 공유</div>
+                  </div>
+                  <button class="icon-btn report-post-btn" aria-label="게시글 신고"><i data-lucide="flag"></i></button>
+                </div>
+                <button class="post-open" type="button">
+                  <div class="post-title">무지개다리를 건넌 지 한&nbsp;달, 이렇게 견뎌내고 있어요</div>
+                  <p class="post-excerpt clamp-2">가을이가 떠난 지 벌써 한 달이 지났어요. 처음엔 밥그릇 씻는 것도 힘들었는데 요즘은 사진첩을 보면서 웃는 날이 조금씩 늘었어요.</p>
+                </button>
+                <div class="post-foot">
+                  <button class="chip like-btn" data-base-count="18"><i data-lucide="heart" class="ico-16"></i> <span class="like-count">18</span></button>
+                  <span class="post-comments"><i data-lucide="message-circle" class="ico-16"></i> <span class="comment-count">2</span></span>
+                </div>
+                <template class="post-detail-data">
+                  <div class="post-detail-body">
+                    <p class="t-body">가을이가 떠난 지 벌써 한 달이 지났어요. 처음엔 밥그릇 씻는 것도, 산책줄을 정리하는 것도 너무 힘들었는데 요즘은 사진첩을 열어보면서 조금씩 웃는 날이 늘었어요.</p>
+                    <p class="t-body mt-3">같은 마음이신 분들은 하루하루를 어떻게 견디고 계신가요? 서로 이야기 나누고 싶어서 글 남겨요.</p>
+                  </div>
+                  <ul class="post-detail-comments">
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">하늘구름</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">저도 딱 한 달 됐어요. 조금씩 웃는 날이 는다는 말에 위로받았어요.</p>
+                      <span class="meta">1시간 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">두부아빠</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">천천히 가셔도 괜찮아요. 응원할게요.</p>
+                      <span class="meta">40분 전</span>
+                    </li>
+                  </ul>
+                </template>
+              </article>
+
+              <!-- 게시글 2 -->
+              <article class="card card-sm post-card">
+                <div class="post-head">
+                  <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+                  <div class="grow">
+                    <div class="post-author">하늘구름</div>
+                    <div class="meta"><span class="post-time">5시간 전</span><span class="meta-sep">·</span>경험 공유</div>
+                  </div>
+                  <button class="icon-btn report-post-btn" aria-label="게시글 신고"><i data-lucide="flag"></i></button>
+                </div>
+                <button class="post-open" type="button">
+                  <div class="post-title">장례식 다녀온 후기, 비슷한 결정 고민 중이신 분께</div>
+                  <p class="post-excerpt clamp-2">화장을 결정하기까지 고민이 많았는데, 막상 다녀오니 정성스럽게 진행해주셔서 마음이 한결 편해졌어요.</p>
+                </button>
+                <div class="post-foot">
+                  <button class="chip like-btn" data-base-count="9"><i data-lucide="heart" class="ico-16"></i> <span class="like-count">9</span></button>
+                  <span class="post-comments"><i data-lucide="message-circle" class="ico-16"></i> <span class="comment-count">3</span></span>
+                </div>
+                <template class="post-detail-data">
+                  <div class="post-detail-body">
+                    <p class="t-body">초코를 보내며 화장을 결정하기까지 고민이 많았는데, 막상 다녀오니 정성스럽게 진행해주셔서 마음이 한결 편해졌어요.</p>
+                    <p class="t-body mt-3">비용이나 절차가 궁금하신 분들은 장례 정보 메뉴도 참고해보세요. 혼자 알아볼 때 막막했던 기억이 나서 공유해요.</p>
+                  </div>
+                  <ul class="post-detail-comments">
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">초록창</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">저도 고민 중이었는데 큰 도움이 됐어요.</p>
+                      <span class="meta">3시간 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">노을빛</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">정성스럽게 해주셨다니 다행이에요.</p>
+                      <span class="meta">2시간 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">달빛엄마</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">글 남겨주셔서 감사해요.</p>
+                      <span class="meta">1시간 전</span>
+                    </li>
+                  </ul>
+                </template>
+              </article>
+
+              <!-- 게시글 3 -->
+              <article class="card card-sm post-card">
+                <div class="post-head">
+                  <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+                  <div class="grow">
+                    <div class="post-author">초록창</div>
+                    <div class="meta"><span class="post-time">어제</span><span class="meta-sep">·</span>경험 공유</div>
+                  </div>
+                  <button class="icon-btn report-post-btn" aria-label="게시글 신고"><i data-lucide="flag"></i></button>
+                </div>
+                <button class="post-open" type="button">
+                  <div class="post-title">13년 함께한 아이를 보내고 나서</div>
+                  <p class="post-excerpt clamp-2">13년을 같이 산 나비였는데, 요즘도 현관문 여는 소리에 마중 나올 것 같은 느낌이 들어요.</p>
+                </button>
+                <div class="post-foot">
+                  <button class="chip like-btn" data-base-count="24"><i data-lucide="heart" class="ico-16"></i> <span class="like-count">24</span></button>
+                  <span class="post-comments"><i data-lucide="message-circle" class="ico-16"></i> <span class="comment-count">2</span></span>
+                </div>
+                <template class="post-detail-data">
+                  <div class="post-detail-body">
+                    <p class="t-body">13년을 같이 산 고양이 나비였는데, 요즘도 현관문 여는 소리에 마중 나올 것 같은 느낌이 들어요.</p>
+                    <p class="t-body mt-3">가족들과 이야기하면서 조금씩 마음을 추스르고 있어요. 같은 마음이신 분들 모두 힘내셨으면 해요.</p>
+                  </div>
+                  <ul class="post-detail-comments">
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">하늘구름</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">13년이면 정말 가족이셨겠어요.</p>
+                      <span class="meta">5시간 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">두부아빠</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">마중 나올 것 같다는 말, 마음이 아프네요. 힘내세요.</p>
+                      <span class="meta">4시간 전</span>
+                    </li>
+                  </ul>
+                </template>
+              </article>
+
+              <!-- 게시글 4 -->
+              <article class="card card-sm post-card">
+                <div class="post-head">
+                  <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+                  <div class="grow">
+                    <div class="post-author">두부아빠</div>
+                    <div class="meta"><span class="post-time">어제</span><span class="meta-sep">·</span>경험 공유</div>
+                  </div>
+                  <button class="icon-btn report-post-btn" aria-label="게시글 신고"><i data-lucide="flag"></i></button>
+                </div>
+                <button class="post-open" type="button">
+                  <div class="post-title">펫로스 상담센터 다녀온 이야기 공유해요</div>
+                  <p class="post-excerpt clamp-2">혼자 삭히기 힘들어서 상담센터를 찾아갔는데 생각보다 편하게 이야기할 수 있어서 좋았어요.</p>
+                </button>
+                <div class="post-foot">
+                  <button class="chip like-btn" data-base-count="7"><i data-lucide="heart" class="ico-16"></i> <span class="like-count">7</span></button>
+                  <span class="post-comments"><i data-lucide="message-circle" class="ico-16"></i> <span class="comment-count">2</span></span>
+                </div>
+                <template class="post-detail-data">
+                  <div class="post-detail-body">
+                    <p class="t-body">두부를 보내고 혼자 삭히기 힘들어서 펫로스 상담센터를 찾아갔는데, 생각보다 편하게 이야기할 수 있어서 좋았어요.</p>
+                    <p class="t-body mt-3">마음 돌봄 메뉴에 있는 상담기관 안내도 참고해보시길 추천드려요.</p>
+                  </div>
+                  <ul class="post-detail-comments">
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">노을빛</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">용기 내주셔서 감사해요. 저도 알아볼게요.</p>
+                      <span class="meta">20시간 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">초록창</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">좋은 정보 감사합니다.</p>
+                      <span class="meta">18시간 전</span>
+                    </li>
+                  </ul>
+                </template>
+              </article>
+
+              <!-- 게시글 5 -->
+              <article class="card card-sm post-card">
+                <div class="post-head">
+                  <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+                  <div class="grow">
+                    <div class="post-author">마루보호자</div>
+                    <div class="meta"><span class="post-time">2일 전</span><span class="meta-sep">·</span>경험 공유</div>
+                  </div>
+                  <button class="icon-btn report-post-btn" aria-label="게시글 신고"><i data-lucide="flag"></i></button>
+                </div>
+                <button class="post-open" type="button">
+                  <div class="post-title">마루 1주기가 다가와요</div>
+                  <p class="post-excerpt clamp-2">다음 주가 마루의 1주기예요. 그날엔 마루가 좋아하던 공원에 다녀오려고 해요.</p>
+                </button>
+                <div class="post-foot">
+                  <button class="chip like-btn" data-base-count="31"><i data-lucide="heart" class="ico-16"></i> <span class="like-count">31</span></button>
+                  <span class="post-comments"><i data-lucide="message-circle" class="ico-16"></i> <span class="comment-count">3</span></span>
+                </div>
+                <template class="post-detail-data">
+                  <div class="post-detail-body">
+                    <p class="t-body">다음 주가 마루의 1주기예요. 시간이 이렇게 빨리 지날 줄 몰랐어요. 그날엔 마루가 좋아하던 공원에 다녀오려고 해요.</p>
+                    <p class="t-body mt-3">1주기를 앞두고 계신 분들, 어떻게 하루를 보내실 계획이신가요? 같이 이야기 나누고 싶어요.</p>
+                  </div>
+                  <ul class="post-detail-comments">
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">다래맘</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">저도 다음 달이 1주기예요. 공원에 다녀오신다니 좋은 계획이네요.</p>
+                      <span class="meta">1일 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">달빛엄마</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">마루가 좋아하던 곳에서 좋은 하루 보내시길 바라요.</p>
+                      <span class="meta">1일 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">노을빛</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">응원하고 있을게요.</p>
+                      <span class="meta">20시간 전</span>
+                    </li>
+                  </ul>
+                </template>
+              </article>
+
+              <!-- 게시글 6 -->
+              <article class="card card-sm post-card">
+                <div class="post-head">
+                  <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+                  <div class="grow">
+                    <div class="post-author">다래맘</div>
+                    <div class="meta"><span class="post-time">3일 전</span><span class="meta-sep">·</span>경험 공유</div>
+                  </div>
+                  <button class="icon-btn report-post-btn" aria-label="게시글 신고"><i data-lucide="flag"></i></button>
+                </div>
+                <button class="post-open" type="button">
+                  <div class="post-title">다래 사진 보다가 오랜만에 웃었어요</div>
+                  <p class="post-excerpt clamp-2">타임라인에 저장해둔 다래 사진을 넘겨보다가 오랜만에 소리 내어 웃었어요.</p>
+                </button>
+                <div class="post-foot">
+                  <button class="chip like-btn" data-base-count="15"><i data-lucide="heart" class="ico-16"></i> <span class="like-count">15</span></button>
+                  <span class="post-comments"><i data-lucide="message-circle" class="ico-16"></i> <span class="comment-count">2</span></span>
+                </div>
+                <template class="post-detail-data">
+                  <div class="post-detail-body">
+                    <p class="t-body">타임라인에 저장해둔 다래 사진을 넘겨보다가 오랜만에 소리 내어 웃었어요. 눈 오는 날 뛰어다니던 영상이었는데 그때가 참 좋았네요.</p>
+                    <p class="t-body mt-3">슬픈 기억만 있는 줄 알았는데 좋은 기억도 참 많더라고요. 오늘은 그 기억으로 하루를 보내볼게요.</p>
+                  </div>
+                  <ul class="post-detail-comments">
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">마루보호자</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">웃으실 수 있어서 다행이에요.</p>
+                      <span class="meta">2일 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">초록창</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">저도 오늘 사진첩 열어봐야겠어요.</p>
+                      <span class="meta">1일 전</span>
+                    </li>
+                  </ul>
+                </template>
+              </article>
+
+              <!-- 게시글 7 -->
+              <article class="card card-sm post-card">
+                <div class="post-head">
+                  <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+                  <div class="grow">
+                    <div class="post-author">노을빛</div>
+                    <div class="meta"><span class="post-time">4일 전</span><span class="meta-sep">·</span>경험 공유</div>
+                  </div>
+                  <button class="icon-btn report-post-btn" aria-label="게시글 신고"><i data-lucide="flag"></i></button>
+                </div>
+                <button class="post-open" type="button">
+                  <div class="post-title">혹시 반려동물 장묘업체 다녀오신 분 계신가요?</div>
+                  <p class="post-excerpt clamp-2">별이를 위해 어느 업체를 골라야 할지 고민이에요. 다녀오신 분들 후기나 조언 부탁드려요.</p>
+                </button>
+                <div class="post-foot">
+                  <button class="chip like-btn" data-base-count="5"><i data-lucide="heart" class="ico-16"></i> <span class="like-count">5</span></button>
+                  <span class="post-comments"><i data-lucide="message-circle" class="ico-16"></i> <span class="comment-count">2</span></span>
+                </div>
+                <template class="post-detail-data">
+                  <div class="post-detail-body">
+                    <p class="t-body">별이를 위해 어느 장묘업체를 골라야 할지 고민이에요. 정식 등록된 곳인지 확인하려면 어떻게 해야 하는지도 궁금해요.</p>
+                    <p class="t-body mt-3">다녀오신 분들 후기나 조언 부탁드려요. 장례 정보 메뉴에서도 업체 목록을 찾아볼 수 있다고 들었어요.</p>
+                  </div>
+                  <ul class="post-detail-comments">
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">하늘구름</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">장례 정보 메뉴에 정식 등록 업체만 나온다고 하니 거기서 먼저 찾아보세요.</p>
+                      <span class="meta">3일 전</span>
+                    </li>
+                    <li class="comment-item">
+                      <div class="comment-head"><span class="comment-author">두부아빠</span><button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>
+                      <p class="comment-text">저도 그곳에서 찾아서 다녀왔는데 만족스러웠어요.</p>
+                      <span class="meta">3일 전</span>
+                    </li>
+                  </ul>
+                </template>
+              </article>
+
+            </div>
+          </section>
+
+          <div class="fab-spacer" aria-hidden="true"></div>
+        </main>
+
+        <!-- 글쓰기 플로팅 버튼 -->
+        <button class="fab-write" id="fabWrite" aria-label="새 글 쓰기"><i data-lucide="pen-line"></i> 글쓰기</button>
+
+        <!-- 하단 탭바 (02_PAGE.md: 홈 · 기록 · 함께하기 · 마음 돌봄 · 마이) -->
+        <nav class="m-tabbar" aria-label="하단 메뉴">
+          <a class="m-tab" href="home.html"><span class="m-tab-ico"><i data-lucide="house"></i></span>홈</a>
+          <a class="m-tab" href="diary-list.html"><span class="m-tab-ico"><i data-lucide="notebook-pen"></i></span>기록</a>
+          <a class="m-tab" href="timeline.html"><span class="m-tab-ico"><i data-lucide="footprints"></i></span>함께하기</a>
+          <a class="m-tab active" href="care-content.html"><span class="m-tab-ico"><i data-lucide="hand-heart"></i></span>마음 돌봄</a>
+          <a class="m-tab" href="mypage.html"><span class="m-tab-ico"><i data-lucide="user-round"></i></span>마이</a>
+        </nav>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 바텀시트 공통 딤 -->
+        <div class="sheet-dim" id="sheetDim"></div>
+
+        <!-- 게시글 상세 바텀시트 -->
+        <div class="sheet" id="detailSheet" role="dialog" aria-label="게시글 상세">
+          <div class="sheet-grip"></div>
+          <div class="detail-head">
+            <div class="row detail-author">
+              <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+              <span class="meta" id="detailMeta">작성자 · 시간</span>
+            </div>
+            <div class="detail-actions">
+              <button class="icon-btn" id="reportFromDetailBtn" aria-label="게시글 신고"><i data-lucide="flag"></i></button>
+              <button class="icon-btn" data-close-sheet aria-label="닫기"><i data-lucide="x"></i></button>
+            </div>
+          </div>
+          <div class="sheet-title" id="detailTitle">제목</div>
+          <div id="detailBody" class="detail-body"></div>
+          <div class="detail-stats">
+            <span class="post-comments"><i data-lucide="heart" class="ico-16"></i> <span id="detailLikeCount">0</span></span>
+            <span class="post-comments" id="detailCommentCountLabel">댓글 0</span>
+          </div>
+          <ul class="stack-2 detail-comments" id="detailComments"></ul>
+          <div class="field-row comment-row">
+            <input class="input" id="commentInput" placeholder="따뜻한 댓글을 남겨주세요">
+            <button class="btn btn-primary" id="commentSubmitBtn">등록</button>
+          </div>
+        </div>
+
+        <!-- 글 작성 바텀시트 -->
+        <div class="sheet" id="writeSheet" role="dialog" aria-label="새 글 작성">
+          <div class="sheet-grip"></div>
+          <div class="sheet-head">
+            <div class="sheet-title">경험을 나눠주세요</div>
+            <button class="icon-btn" data-close-sheet aria-label="닫기"><i data-lucide="x"></i></button>
+          </div>
+          <div class="notice notice-theme sheet-notice">
+            <i data-lucide="megaphone-off"></i>
+            <div class="grow">상업적 홍보나 판매 글은 안내 없이 숨김 처리될 수 있어요. 이웃을 위한 따뜻한 이야기를 나눠주세요.</div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="writeTitleInput">제목<span class="req">*</span></label>
+            <input class="input" id="writeTitleInput" placeholder="제목을 적어주세요" maxlength="40">
+          </div>
+          <div class="field">
+            <label class="field-label" for="writeBodyInput">내용<span class="req">*</span></label>
+            <textarea class="textarea" id="writeBodyInput" placeholder="오늘 하고 싶은 이야기를 편하게 적어주세요"></textarea>
+          </div>
+          <p class="form-error" id="writeError">제목과 내용을 모두 적어주세요.</p>
+          <button class="btn btn-primary btn-lg btn-block sheet-submit" id="writeSubmitBtn"><i data-lucide="pen-line"></i> 등록하기</button>
+        </div>
+
+        <!-- 신고 바텀시트 (게시글·댓글 공통) -->
+        <div class="sheet" id="reportSheet" role="dialog" aria-label="신고하기">
+          <div class="sheet-grip"></div>
+          <div class="sheet-head">
+            <div class="sheet-title" id="reportTitle">게시글 신고</div>
+            <button class="icon-btn" data-close-sheet aria-label="닫기"><i data-lucide="x"></i></button>
+          </div>
+          <p class="sheet-desc">이웃을 배려하는 공간을 위해 신고 사유를 알려주세요.</p>
+          <div class="chip-row" id="reportReasons">
+            <button class="chip" data-reason="상업적 홍보">상업적 홍보</button>
+            <button class="chip" data-reason="부적절한 표현">부적절한 표현</button>
+            <button class="chip" data-reason="개인정보 노출">개인정보 노출</button>
+            <button class="chip" data-reason="기타">기타</button>
+          </div>
+          <div class="field report-field">
+            <label class="field-label" for="reportDetail">자세한 내용 <span class="opt">선택</span></label>
+            <textarea class="textarea" id="reportDetail" placeholder="신고 사유를 조금 더 알려주시면 검토에 도움이 돼요"></textarea>
+          </div>
+          <p class="form-error" id="reportError">신고 사유를 선택해 주세요.</p>
+          <button class="btn btn-danger btn-lg btn-block sheet-submit" id="reportSubmitBtn"><i data-lucide="flag"></i> 신고 접수하기</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    // 토스트
+    var toastEl = document.getElementById('toast');
+    var toastMsg = document.getElementById('toastMsg');
+    var toastTimer;
+    function showToast(msg) {
+      toastMsg.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 3000);
+    }
+
+    // 바텀시트 공통 열기/닫기
+    var dim = document.getElementById('sheetDim');
+    function openSheet(el) { dim.classList.add('open'); el.classList.add('open'); }
+    function closeSheets() {
+      document.querySelectorAll('.sheet.open').forEach(function (s) { s.classList.remove('open'); });
+      dim.classList.remove('open');
+    }
+    dim.addEventListener('click', closeSheets);
+    document.querySelectorAll('[data-close-sheet]').forEach(function (btn) {
+      btn.addEventListener('click', closeSheets);
+    });
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ===== 게시글 목록: 공감 토글 · 상세 열기 · 신고 (이벤트 위임 — 새 글에도 그대로 동작) =====
+    var postList = document.getElementById('postList');
+
+    function toggleLike(btn) {
+      var countEl = btn.querySelector('.like-count');
+      var base = parseInt(btn.dataset.baseCount, 10) || 0;
+      var active = btn.classList.toggle('active');
+      countEl.textContent = active ? base + 1 : base;
+    }
+
+    var currentCard = null;
+    var detailSheet = document.getElementById('detailSheet');
+    var detailTitle = document.getElementById('detailTitle');
+    var detailMeta = document.getElementById('detailMeta');
+    var detailBody = document.getElementById('detailBody');
+    var detailComments = document.getElementById('detailComments');
+    var detailLikeCount = document.getElementById('detailLikeCount');
+    var detailCommentCountLabel = document.getElementById('detailCommentCountLabel');
+
+    function updateDetailCommentCountLabel() {
+      detailCommentCountLabel.textContent = '댓글 ' + detailComments.children.length;
+    }
+
+    function openDetail(card) {
+      currentCard = card;
+      detailTitle.textContent = card.querySelector('.post-title').textContent;
+      detailMeta.textContent = card.querySelector('.post-author').textContent + ' · ' + card.querySelector('.post-time').textContent;
+      var tpl = card.querySelector('template.post-detail-data');
+      detailBody.innerHTML = tpl.content.querySelector('.post-detail-body').innerHTML;
+      detailComments.innerHTML = tpl.content.querySelector('.post-detail-comments').innerHTML;
+      var likeBtn = card.querySelector('.like-btn');
+      detailLikeCount.textContent = likeBtn.querySelector('.like-count').textContent;
+      updateDetailCommentCountLabel();
+      lucide.createIcons();
+      closeSheets();
+      openSheet(detailSheet);
+    }
+
+    var reportTargetBtn = null;
+    var reportSheet = document.getElementById('reportSheet');
+    var reportTitleEl = document.getElementById('reportTitle');
+    var reportError = document.getElementById('reportError');
+
+    function openReportSheet(label, triggerBtn) {
+      reportTitleEl.textContent = label + ' 신고';
+      reportTargetBtn = triggerBtn || null;
+      document.querySelectorAll('#reportReasons .chip').forEach(function (c) { c.classList.remove('active'); });
+      document.getElementById('reportDetail').value = '';
+      reportError.style.display = 'none';
+      closeSheets();
+      openSheet(reportSheet);
+    }
+
+    postList.addEventListener('click', function (e) {
+      var likeBtn = e.target.closest('.like-btn');
+      if (likeBtn) { toggleLike(likeBtn); return; }
+      var reportBtn = e.target.closest('.report-post-btn');
+      if (reportBtn) { openReportSheet('게시글', reportBtn); return; }
+      var openBtn = e.target.closest('.post-open');
+      if (openBtn) { openDetail(openBtn.closest('.post-card')); return; }
+    });
+
+    document.getElementById('reportFromDetailBtn').addEventListener('click', function () {
+      var btn = currentCard ? currentCard.querySelector('.report-post-btn') : null;
+      openReportSheet('게시글', btn);
+    });
+
+    // 댓글 신고 (상세 시트 내부, 새로 추가되는 댓글에도 위임으로 동작)
+    detailComments.addEventListener('click', function (e) {
+      var btn = e.target.closest('.report-comment-btn');
+      if (btn) { openReportSheet('댓글', btn); }
+    });
+
+    // 댓글 등록
+    document.getElementById('commentSubmitBtn').addEventListener('click', function () {
+      var input = document.getElementById('commentInput');
+      var text = input.value.trim();
+      if (!text) { input.classList.add('is-error'); return; }
+      input.classList.remove('is-error');
+
+      var li = document.createElement('li');
+      li.className = 'comment-item';
+      li.innerHTML = '<div class="comment-head"><span class="comment-author">나</span>' +
+        '<button class="icon-btn report-comment-btn" aria-label="댓글 신고"><i data-lucide="flag" class="ico-16"></i></button></div>' +
+        '<p class="comment-text">' + escapeHtml(text) + '</p>' +
+        '<span class="meta">방금 전</span>';
+      detailComments.appendChild(li);
+      lucide.createIcons();
+      input.value = '';
+      updateDetailCommentCountLabel();
+
+      if (currentCard) {
+        var cEl = currentCard.querySelector('.comment-count');
+        cEl.textContent = (parseInt(cEl.textContent, 10) || 0) + 1;
+        var tpl = currentCard.querySelector('template.post-detail-data');
+        tpl.content.querySelector('.post-detail-comments').appendChild(li.cloneNode(true));
+      }
+      showToast('댓글이 등록됐어요');
+    });
+
+    // ===== 신고 제출 =====
+    document.getElementById('reportSubmitBtn').addEventListener('click', function () {
+      var selected = document.querySelector('#reportReasons .chip.active');
+      if (!selected) { reportError.style.display = 'block'; return; }
+      closeSheets();
+      showToast('신고가 접수됐어요. 검토 후 처리할게요');
+      if (reportTargetBtn) {
+        reportTargetBtn.innerHTML = '<i data-lucide="check"></i>';
+        reportTargetBtn.disabled = true;
+        reportTargetBtn.classList.add('is-on');
+        lucide.createIcons();
+      }
+    });
+
+    document.querySelectorAll('#reportReasons .chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        document.querySelectorAll('#reportReasons .chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        reportError.style.display = 'none';
+      });
+    });
+
+    // ===== 글쓰기 =====
+    var writeSheet = document.getElementById('writeSheet');
+    var writeError = document.getElementById('writeError');
+    document.getElementById('fabWrite').addEventListener('click', function () {
+      document.getElementById('writeTitleInput').value = '';
+      document.getElementById('writeBodyInput').value = '';
+      writeError.style.display = 'none';
+      closeSheets();
+      openSheet(writeSheet);
+    });
+
+    document.getElementById('writeSubmitBtn').addEventListener('click', function () {
+      var titleInput = document.getElementById('writeTitleInput');
+      var bodyInput = document.getElementById('writeBodyInput');
+      var title = titleInput.value.trim();
+      var body = bodyInput.value.trim();
+      if (!title || !body) { writeError.style.display = 'block'; return; }
+      writeError.style.display = 'none';
+
+      var html = '<article class="card card-sm post-card">' +
+        '<div class="post-head"><span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>' +
+        '<div class="grow"><div class="post-author">나</div><div class="meta"><span class="post-time">방금 전</span><span class="meta-sep">·</span>경험 공유</div></div>' +
+        '<button class="icon-btn report-post-btn" aria-label="게시글 신고"><i data-lucide="flag"></i></button></div>' +
+        '<button class="post-open" type="button"><div class="post-title">' + escapeHtml(title) + '</div>' +
+        '<p class="post-excerpt clamp-2">' + escapeHtml(body) + '</p></button>' +
+        '<div class="post-foot"><button class="chip like-btn" data-base-count="0"><i data-lucide="heart" class="ico-16"></i> <span class="like-count">0</span></button>' +
+        '<span class="post-comments"><i data-lucide="message-circle" class="ico-16"></i> <span class="comment-count">0</span></span></div>' +
+        '<template class="post-detail-data"><div class="post-detail-body"><p class="t-body">' + escapeHtml(body) + '</p></div>' +
+        '<ul class="post-detail-comments"></ul></template></article>';
+
+      postList.insertAdjacentHTML('afterbegin', html);
+      lucide.createIcons();
+      closeSheets();
+      showToast('게시글이 등록됐어요');
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/community.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

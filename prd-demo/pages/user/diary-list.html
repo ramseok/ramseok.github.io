@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P9 일상 다이어리 목록 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P9 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .diary-hero { margin: var(--space-2) var(--space-4) 0; padding: var(--space-5); border-radius: var(--radius-xl); background: var(--theme-header-bg); }
+    .diary-hero .hero-date { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; color: var(--color-text-sub); }
+    .diary-hero p.t-body-s { margin-top: var(--space-1); color: var(--color-text-sub); }
+    /* 용량 안내(F36) — 콘텐츠 아래 보관 현황 카드 */
+    .storage-card { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-lg); background: #EEF5FC; }
+    .storage-card .storage-msg { font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 500; }
+    .storage-card .progress { height: 6px; margin-top: var(--space-3); background: var(--color-surface); }
+    .storage-card .storage-cap { margin-top: 6px; }
+
+    .view-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+    /* 기분 필터 — 좌우 화면 끝까지 스크롤(bleed) */
+    #moodFilterSection { padding-top: var(--space-4); }
+    #moodFilterSection .chip-row { margin: 0 calc(var(--space-4) * -1); padding: 0 var(--space-4); scroll-padding: 0 var(--space-4); }
+    #listView { padding-top: var(--space-4); }
+
+    /* 목록형 — 2열 갤러리 카드 (사진 4:3 + 기분 태그 오버레이 + 날짜 + 본문 2줄) */
+    .diary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+    .diary-grid .card-diary .body { padding: var(--space-3) var(--space-3) var(--space-4); gap: 4px; }
+    .diary-grid .card-diary .date { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    /* 가장 최근 기록은 풀폭으로 크게 (9장 홀수 → 1 + 2열 8장으로 빈칸 없이) */
+    .diary-grid > .card-diary:first-child { grid-column: 1 / -1; }
+    .diary-grid > .card-diary:first-child .photo { aspect-ratio: 16 / 9; }
+    .diary-grid > .card-diary:first-child .body { padding: var(--space-4); }
+    #emptyMoodNotice { padding: var(--space-8) 0; text-align: center; }
+
+    /* 캘린더형 */
+    #calView { padding-top: var(--space-4); }
+    .cal-nav { margin-bottom: var(--space-2); }
+    .cal-nav .icon-btn:disabled { opacity: 0.3; cursor: default; }
+    .cal-card { padding: var(--space-4) var(--space-3) var(--space-3); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .cal-dow { text-align: center; font-size: var(--fs-caption); line-height: var(--lh-caption); font-weight: 600; color: var(--color-text-sub); padding-bottom: var(--space-1); }
+    .cal-day {
+      position: relative; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; border-radius: var(--radius-md); color: var(--color-text);
+      font-size: var(--fs-body-s); line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums;
+    }
+    .cal-day.is-blank { pointer-events: none; }
+    .cal-day .dot { width: 6px; height: 6px; border-radius: 50%; background: transparent; }
+    .cal-day.has-happy .dot { background: var(--color-butter); }
+    .cal-day.has-calm .dot { background: var(--color-mint); }
+    .cal-day.has-special .dot { background: var(--color-sky); }
+    .cal-day.has-hard .dot { background: var(--color-text-disabled); }
+    .cal-day[class*="has-"] { font-weight: 700; }
+    .cal-day.is-today { background: var(--theme-accent-soft); box-shadow: 0 0 0 1.5px var(--theme-accent) inset; font-weight: 700; }
+    a.cal-day:hover { background: var(--color-surface-soft); text-decoration: none; }
+    a.cal-day.is-today:hover { background: var(--theme-accent-soft); }
+
+    .cal-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+    .cal-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); white-space: nowrap; }
+    .cal-legend i.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+    .cal-legend .dot.happy { background: var(--color-butter); }
+    .cal-legend .dot.calm { background: var(--color-mint); }
+    .cal-legend .dot.special { background: var(--color-sky); }
+    .cal-legend .dot.hard { background: var(--color-text-disabled); }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더 -->
+        <header class="m-header no-line">
+          <span class="m-title">다이어리</span>
+          <div class="m-header-actions">
+            <a class="icon-btn" href="diary-write.html" aria-label="새 다이어리 쓰기"><i data-lucide="square-pen"></i></a>
+          </div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 인사 영역 -->
+          <section class="diary-hero">
+            <span class="t-caption hero-date"><i data-lucide="calendar-days" class="ico-16"></i> 2026년 9월</span>
+            <h2 class="t-h2 mt-1">보리와 함께한 날들</h2>
+            <p class="t-body-s">사진과 영상, 짧은 글로 오늘 하루를 남겨보세요.</p>
+          </section>
+
+          <!-- 보기 전환 (목록형·캘린더형) -->
+          <section class="m-section">
+            <div class="view-bar">
+              <div class="segment" role="tablist" aria-label="보기 방식">
+                <button class="seg-btn active" id="viewListBtn" data-view="list"><i data-lucide="list"></i> 목록형</button>
+                <button class="seg-btn" id="viewCalBtn" data-view="calendar"><i data-lucide="calendar"></i> 캘린더형</button>
+              </div>
+              <a class="sec-more" href="timeline.html">타임라인 <i data-lucide="chevron-right" class="ico-16"></i></a>
+            </div>
+          </section>
+
+          <!-- 기분 태그 필터 (목록형 전용) -->
+          <section class="m-section" id="moodFilterSection">
+            <div class="chip-row scroll">
+              <button class="chip active" data-mood="all"><i data-lucide="grid-2x2"></i> 전체</button>
+              <button class="chip" data-mood="happy"><i data-lucide="smile"></i> 행복</button>
+              <button class="chip" data-mood="calm"><i data-lucide="leaf"></i> 평온</button>
+              <button class="chip" data-mood="hard"><i data-lucide="cloud-drizzle"></i> 아픔</button>
+              <button class="chip" data-mood="special"><i data-lucide="sparkles"></i> 특별한 날</button>
+            </div>
+          </section>
+
+          <!-- ===== 목록형 ===== -->
+          <section class="m-section" id="listView">
+            <div class="diary-grid" id="diaryList">
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="calm">
+                <div class="photo tone-mint"><i data-lucide="image"></i><span class="tag photo-tag tag-mint"><i data-lucide="leaf"></i> 평온</span></div>
+                <div class="body">
+                  <span class="date">9월 23일 (수)</span>
+                  <p class="t-body-s clamp-2">창가 햇살 아래서 한참 낮잠을 잤어요. 코 고는 소리가 작게 들렸어요.</p>
+                </div>
+              </a>
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="happy">
+                <div class="photo tone-butter"><i data-lucide="image"></i><span class="tag photo-tag tag-butter"><i data-lucide="smile"></i> 행복</span></div>
+                <div class="body">
+                  <span class="date">9월 22일 (화)</span>
+                  <p class="t-body-s clamp-2">고구마 간식 두 조각을 다 먹고 꼬리를 흔들었어요.</p>
+                </div>
+              </a>
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="hard">
+                <div class="photo"><i data-lucide="image"></i><span class="tag photo-tag tag-line"><i data-lucide="cloud-drizzle"></i> 아픔</span></div>
+                <div class="body">
+                  <span class="date">9월 20일 (일)</span>
+                  <p class="t-body-s clamp-2">아침 산책 중에 뒷다리를 살짝 절었어요. 병원 예약을 잡아뒀어요.</p>
+                </div>
+              </a>
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="special">
+                <div class="photo tone-sky"><i data-lucide="image"></i><span class="tag photo-tag tag-sky"><i data-lucide="sparkles"></i> 특별한 날</span></div>
+                <div class="body">
+                  <span class="date">9월 18일 (금)</span>
+                  <p class="t-body-s clamp-2">언니가 휴가 나와서 보리를 한참 안아줬어요.</p>
+                </div>
+              </a>
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="calm">
+                <div class="photo tone-mint"><i data-lucide="image"></i><span class="tag photo-tag tag-mint"><i data-lucide="leaf"></i> 평온</span></div>
+                <div class="body">
+                  <span class="date">9월 17일 (목)</span>
+                  <p class="t-body-s clamp-2">거실 카펫 위에서 배를 보이고 늘어지게 쉬었어요.</p>
+                </div>
+              </a>
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="happy">
+                <div class="photo tone-butter"><i data-lucide="image"></i><span class="tag photo-tag tag-butter"><i data-lucide="smile"></i> 행복</span></div>
+                <div class="body">
+                  <span class="date">9월 14일 (월)</span>
+                  <p class="t-body-s clamp-2">동네 산책로에서 처음 보는 강아지와 신나게 인사했어요.</p>
+                </div>
+              </a>
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="calm">
+                <div class="photo tone-mint"><i data-lucide="image"></i><span class="tag photo-tag tag-mint"><i data-lucide="leaf"></i> 평온</span></div>
+                <div class="body">
+                  <span class="date">9월 10일 (목)</span>
+                  <p class="t-body-s clamp-2">비 오는 소리를 들으며 무릎 위에서 조용히 잠들었어요.</p>
+                </div>
+              </a>
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="hard">
+                <div class="photo"><i data-lucide="image"></i><span class="tag photo-tag tag-line"><i data-lucide="cloud-drizzle"></i> 아픔</span></div>
+                <div class="body">
+                  <span class="date">9월 6일 (일)</span>
+                  <p class="t-body-s clamp-2">밥을 평소보다 적게 먹었어요. 내일 컨디션을 더 지켜보기로 했어요.</p>
+                </div>
+              </a>
+
+              <a class="card card-diary card-link" href="diary-write.html" data-mood="special">
+                <div class="photo tone-sky"><i data-lucide="image"></i><span class="tag photo-tag tag-sky"><i data-lucide="sparkles"></i> 특별한 날</span></div>
+                <div class="body">
+                  <span class="date">9월 2일 (수)</span>
+                  <p class="t-body-s clamp-2">보리의 14번째 생일! 좋아하는 호박전을 조금 나눠 먹었어요.</p>
+                </div>
+              </a>
+
+            </div>
+            <p class="t-body-s t-sub" id="emptyMoodNotice" hidden>이 기분으로 남긴 기록이 아직 없어요.</p>
+          </section>
+
+          <!-- ===== 캘린더형 ===== -->
+          <section class="m-section" id="calView" hidden>
+            <div class="row-between cal-nav">
+              <button class="icon-btn" id="calPrevBtn" aria-label="이전 달"><i data-lucide="chevron-left"></i></button>
+              <span class="t-h3" id="calMonthLabel">2026년 9월</span>
+              <button class="icon-btn" id="calNextBtn" aria-label="다음 달" disabled><i data-lucide="chevron-right"></i></button>
+            </div>
+
+            <div class="card cal-card">
+              <div class="cal-grid mb-1">
+                <span class="cal-dow">일</span><span class="cal-dow">월</span><span class="cal-dow">화</span><span class="cal-dow">수</span><span class="cal-dow">목</span><span class="cal-dow">금</span><span class="cal-dow">토</span>
+              </div>
+
+              <!-- 9월 -->
+              <div class="cal-grid" data-month="9">
+                <span class="cal-day is-blank"></span><span class="cal-day is-blank"></span>
+                <a class="cal-day" href="diary-write.html">1<span class="dot"></span></a>
+                <a class="cal-day has-special" href="diary-write.html">2<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">3<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">4<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">5<span class="dot"></span></a>
+                <a class="cal-day has-hard" href="diary-write.html">6<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">7<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">8<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">9<span class="dot"></span></a>
+                <a class="cal-day has-calm" href="diary-write.html">10<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">11<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">12<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">13<span class="dot"></span></a>
+                <a class="cal-day has-happy" href="diary-write.html">14<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">15<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">16<span class="dot"></span></a>
+                <a class="cal-day has-calm" href="diary-write.html">17<span class="dot"></span></a>
+                <a class="cal-day has-special" href="diary-write.html">18<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">19<span class="dot"></span></a>
+                <a class="cal-day has-hard" href="diary-write.html">20<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">21<span class="dot"></span></a>
+                <a class="cal-day has-happy" href="diary-write.html">22<span class="dot"></span></a>
+                <a class="cal-day has-calm" href="diary-write.html">23<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">24<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">25<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">26<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">27<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">28<span class="dot"></span></a>
+                <a class="cal-day is-today" href="diary-write.html">29<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">30<span class="dot"></span></a>
+              </div>
+
+              <!-- 8월 -->
+              <div class="cal-grid" data-month="8" hidden>
+                <span class="cal-day is-blank"></span><span class="cal-day is-blank"></span><span class="cal-day is-blank"></span><span class="cal-day is-blank"></span><span class="cal-day is-blank"></span><span class="cal-day is-blank"></span>
+                <a class="cal-day" href="diary-write.html">1<span class="dot"></span></a>
+                <a class="cal-day has-calm" href="diary-write.html">2<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">3<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">4<span class="dot"></span></a>
+                <a class="cal-day has-happy" href="diary-write.html">5<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">6<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">7<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">8<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">9<span class="dot"></span></a>
+                <a class="cal-day has-hard" href="diary-write.html">10<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">11<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">12<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">13<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">14<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">15<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">16<span class="dot"></span></a>
+                <a class="cal-day has-special" href="diary-write.html">17<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">18<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">19<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">20<span class="dot"></span></a>
+                <a class="cal-day has-calm" href="diary-write.html">21<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">22<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">23<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">24<span class="dot"></span></a>
+                <a class="cal-day has-happy" href="diary-write.html">25<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">26<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">27<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">28<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">29<span class="dot"></span></a>
+                <a class="cal-day has-calm" href="diary-write.html">30<span class="dot"></span></a>
+                <a class="cal-day" href="diary-write.html">31<span class="dot"></span></a>
+              </div>
+
+              <div class="cal-legend">
+                <span><i class="dot happy"></i>행복</span>
+                <span><i class="dot calm"></i>평온</span>
+                <span><i class="dot hard"></i>아픔</span>
+                <span><i class="dot special"></i>특별한 날</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 용량 안내 배너 (F36 미디어 처리·백업) — 목록형·캘린더형 공통, 콘텐츠 아래 -->
+          <section class="m-section">
+            <div class="storage-card">
+              <span class="ico-wrap sm sky"><i data-lucide="shield-check"></i></span>
+              <div class="grow">
+                <p class="storage-msg">사진 246장 · 영상 8개를 안전하게 보관하고 있어요. 원본은 따로 저장되니 걱정 마세요.</p>
+                <div class="progress"><span style="width:24%"></span></div>
+                <p class="t-caption t-sub storage-cap">저장 용량 0.48GB / 2GB 사용 중 · 영상은 1개당 최대 1분까지 올릴 수 있어요</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <!-- 하단 탭바 -->
+        <nav class="m-tabbar" aria-label="하단 메뉴">
+          <a class="m-tab" href="home.html"><span class="m-tab-ico"><i data-lucide="house"></i></span>홈</a>
+          <a class="m-tab active" href="diary-list.html"><span class="m-tab-ico"><i data-lucide="notebook-pen"></i></span>기록</a>
+          <a class="m-tab" href="timeline.html"><span class="m-tab-ico"><i data-lucide="footprints"></i></span>함께하기</a>
+          <a class="m-tab" href="care-content.html"><span class="m-tab-ico"><i data-lucide="hand-heart"></i></span>마음 돌봄</a>
+          <a class="m-tab" href="mypage.html"><span class="m-tab-ico"><i data-lucide="user-round"></i></span>마이</a>
+        </nav>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print"></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 목록형 · 캘린더형 보기 전환
+    var listBtn = document.getElementById('viewListBtn');
+    var calBtn = document.getElementById('viewCalBtn');
+    var listView = document.getElementById('listView');
+    var calView = document.getElementById('calView');
+    var moodFilterSection = document.getElementById('moodFilterSection');
+    var content = document.querySelector('.m-content');
+
+    function setView(view) {
+      listBtn.classList.toggle('active', view === 'list');
+      calBtn.classList.toggle('active', view === 'calendar');
+      listView.hidden = view !== 'list';
+      calView.hidden = view !== 'calendar';
+      moodFilterSection.hidden = view !== 'list';
+      content.scrollTop = 0;
+    }
+    listBtn.addEventListener('click', function () { setView('list'); });
+    calBtn.addEventListener('click', function () { setView('calendar'); });
+
+    // 기분 태그 필터
+    var chips = document.querySelectorAll('#moodFilterSection .chip');
+    var diaryCards = document.querySelectorAll('#diaryList .card-diary');
+    var emptyNotice = document.getElementById('emptyMoodNotice');
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        chips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        var mood = chip.dataset.mood;
+        var visible = 0;
+        diaryCards.forEach(function (card) {
+          var show = mood === 'all' || card.dataset.mood === mood;
+          card.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+        emptyNotice.hidden = visible !== 0;
+      });
+    });
+
+    // 캘린더 이전·다음 달 (8월 · 9월 데모 데이터만 보유)
+    var calPrevBtn = document.getElementById('calPrevBtn');
+    var calNextBtn = document.getElementById('calNextBtn');
+    var calMonthLabel = document.getElementById('calMonthLabel');
+    var monthSep = document.querySelector('.cal-grid[data-month="9"]');
+    var monthAug = document.querySelector('.cal-grid[data-month="8"]');
+
+    calPrevBtn.addEventListener('click', function () {
+      monthSep.hidden = true;
+      monthAug.hidden = false;
+      calMonthLabel.textContent = '2026년 8월';
+      calPrevBtn.disabled = true;
+      calNextBtn.disabled = false;
+      showToast('8월 기록을 보고 있어요');
+    });
+    calNextBtn.addEventListener('click', function () {
+      monthAug.hidden = true;
+      monthSep.hidden = false;
+      calMonthLabel.textContent = '2026년 9월';
+      calNextBtn.disabled = true;
+      calPrevBtn.disabled = false;
+      showToast('9월 기록을 보고 있어요');
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/diary-list.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

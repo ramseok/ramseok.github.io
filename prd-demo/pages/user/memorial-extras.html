@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P23 추모 확장 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P23 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .album-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
+    /* 사진 자리는 공통 .photo(웜톤 면 + 흐린 라인 아이콘) 위에 선택 배지만 얹는다 */
+    .album-photo {
+      aspect-ratio: 1; border: 0; padding: 0; border-radius: var(--radius-md);
+      transition: box-shadow var(--duration-fast) var(--ease-soft), transform var(--duration-fast) var(--ease-soft);
+    }
+    .album-photo:active { transform: scale(0.97); }
+    .album-photo .chk-badge {
+      position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--color-surface); border: 1.5px solid var(--color-border);
+      display: flex; align-items: center; justify-content: center; color: transparent;
+    }
+    .album-photo .chk-badge [data-lucide] { width: 14px; height: 14px; }
+    .album-photo.is-selected { box-shadow: 0 0 0 3px var(--theme-accent) inset; }
+    .album-photo.is-selected .chk-badge { background: var(--theme-accent); border-color: var(--theme-accent); color: var(--color-text); }
+
+    /* 상품 안내 — 아이콘 · 이름/가격/설명 3줄 (가격을 우측에 두면 이름이 두 줄로 쪼개져 아래로 내림) */
+    .product-info { display: flex; align-items: flex-start; gap: var(--space-3); }
+    .product-price { display: block; margin-top: 2px; font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 700; color: var(--color-primary-strong); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .product-info .cell-sub { margin-top: var(--space-1); }
+    /* 탭은 스크롤해도 상단에 붙어 있게 */
+    .m-content > .tabs { position: sticky; top: 0; z-index: 2; background: var(--color-bg); }
+    .field-last { margin-bottom: var(--space-4); }
+    .memoir-draft { margin-top: var(--space-5); }
+
+    .memoir-actions .btn { margin-bottom: var(--space-3); }
+    #memoirText { min-height: 180px; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="rainbow">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기(메모리얼 페이지 관리) + 제목 -->
+        <header class="m-header">
+          <a class="icon-btn" href="memorial-edit.html" aria-label="뒤로 가기"><i data-lucide="arrow-left"></i></a>
+          <h1 class="m-title is-center">추억 앨범 · 회고록</h1>
+          <span class="m-header-spacer" aria-hidden="true"></span>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 탭 -->
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="album" role="tab" aria-selected="true">앨범 제작</button>
+            <button class="tab" data-tab="memoir" role="tab" aria-selected="false">AI 회고록</button>
+          </div>
+
+          <!-- ===== 탭 1. 추억 앨범 제작 (F29) ===== -->
+          <section data-tab-panel="album">
+
+            <div class="m-section">
+              <div class="notice notice-theme">
+                <i data-lucide="sparkles"></i>
+                <div class="grow"><span>보리</span>와 함께한 타임라인 사진을 골라 <span class="nowrap">포토북·액자·소품으로</span> 남겨보세요. 원본 화질 그대로 제작돼요.</div>
+              </div>
+            </div>
+
+            <div class="m-section">
+              <div class="sec-head">
+                <h2 class="sec-title">사진 고르기</h2>
+                <span class="sec-sub num" id="photoCount">0장 선택</span>
+              </div>
+              <div class="album-grid" id="albumGrid">
+                <button class="photo album-photo" data-photo aria-label="2012년 6월, 보리 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+                <button class="photo album-photo tone-butter" data-photo aria-label="2015년 여름 산책, 보리 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+                <button class="photo album-photo tone-sky" data-photo aria-label="2017년 생일, 보리 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+                <button class="photo album-photo tone-mint" data-photo aria-label="2019년 겨울, 보리 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+                <button class="photo album-photo" data-photo aria-label="2021년 을왕리 바다, 보리 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+                <button class="photo album-photo tone-butter" data-photo aria-label="2023년 마당, 보리 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+                <button class="photo album-photo tone-sky" data-photo aria-label="2024년 가족사진, 보리 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+                <button class="photo album-photo" data-photo aria-label="2025년 산책길, 보리 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+                <button class="photo album-photo tone-mint" data-photo aria-label="2026년 9월, 마지막 나들이 사진 선택"><i data-lucide="image"></i><span class="chk-badge"><i data-lucide="check"></i></span></button>
+              </div>
+              <p class="t-caption t-sub mt-3"><a href="timeline.html">타임라인 전체 보기</a>에서 더 많은 사진을 확인할 수 있어요.</p>
+            </div>
+
+            <div class="m-section">
+              <div class="sec-head"><h2 class="sec-title">상품 종류</h2></div>
+              <div class="chip-row" id="productChips">
+                <button class="chip active" data-product="photobook"><i data-lucide="book-open"></i> 포토북<span class="chip-check"><i data-lucide="check"></i></span></button>
+                <button class="chip" data-product="frame"><i data-lucide="frame"></i> 액자<span class="chip-check"><i data-lucide="check"></i></span></button>
+                <button class="chip" data-product="goods"><i data-lucide="gift"></i> 미니 굿즈<span class="chip-check"><i data-lucide="check"></i></span></button>
+              </div>
+              <div class="card card-sm mt-3 product-info">
+                <span class="ico-wrap"><i data-lucide="package" id="productIco"></i></span>
+                <div class="grow">
+                  <div class="cell-title" id="productDesc">20페이지 하드커버 포토북</div>
+                  <span class="product-price" id="productPrice">28,000원부터</span>
+                  <div class="cell-sub">외부 인쇄 업체에서 제작해 배송해요</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="m-section">
+              <div class="sec-head"><h2 class="sec-title">배송 정보</h2></div>
+              <div class="field">
+                <label class="field-label">받는 사람</label>
+                <input class="input" type="text" id="shipName" placeholder="이름을 입력해주세요" value="김서현">
+              </div>
+              <div class="field">
+                <label class="field-label">연락처</label>
+                <input class="input" type="text" id="shipPhone" placeholder="010-0000-0000" value="010-2345-6789">
+              </div>
+              <div class="field field-last">
+                <label class="field-label">배송 주소</label>
+                <input class="input" type="text" id="shipAddr" placeholder="주소를 입력해주세요" value="서울시 마포구 성산로 12길 8">
+              </div>
+              <button class="btn btn-primary btn-block" id="orderBtn"><i data-lucide="truck"></i> 주문 요청하기</button>
+              <p class="t-caption t-sub mt-2">주문 정보는 정식 계약된 외부 인쇄 업체로 전달돼요.</p>
+            </div>
+
+            <div class="m-section">
+              <div class="sec-head"><h2 class="sec-title">주문 내역</h2></div>
+              <div class="list" id="orderList">
+                <div class="list-item">
+                  <span class="ico-wrap sm soft"><i data-lucide="frame"></i></span>
+                  <div class="grow">
+                    <div class="cell-title">액자 주문</div>
+                    <div class="cell-sub">8월 22일 접수</div>
+                  </div>
+                  <span class="tag tag-mint"><i data-lucide="check"></i> 배송 완료</span>
+                </div>
+                <div class="list-item">
+                  <span class="ico-wrap sm soft"><i data-lucide="book-open"></i></span>
+                  <div class="grow">
+                    <div class="cell-title">포토북 주문</div>
+                    <div class="cell-sub">9월 10일 접수</div>
+                  </div>
+                  <span class="tag tag-butter"><i data-lucide="hammer"></i> 제작 중</span>
+                </div>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- ===== 탭 2. AI 회고록 (F30) ===== -->
+          <section data-tab-panel="memoir" hidden>
+
+            <div class="m-section">
+              <div class="notice notice-theme">
+                <i data-lucide="book-heart"></i>
+                <div class="grow">
+                  다이어리·편지·타임라인 기록을 바탕으로 <span>보리</span>의 이야기를 정리해 드려요.
+                  반려견 목소리를 합성하거나 "보리가 보내는 메시지" 형식으로 만드는 기능은 제공하지 않아요.
+                </div>
+              </div>
+            </div>
+
+            <div class="m-section memoir-actions">
+              <button class="btn btn-outline btn-block" id="generateBtn"><i data-lucide="sparkles"></i> AI 초안 생성 요청</button>
+              <p class="t-caption t-sub" id="memoirMeta">아직 생성한 초안이 없어요.</p>
+
+              <div class="field memoir-draft">
+                <label class="field-label">회고록 초안</label>
+                <textarea class="textarea" id="memoirText" placeholder="초안을 생성하면 여기에 나타나요. 자유롭게 고쳐 써도 좋아요."></textarea>
+              </div>
+
+              <button class="btn btn-primary btn-block" id="saveMemoirBtn"><i data-lucide="save"></i> 회고록 저장하기</button>
+              <p class="disclaimer mt-2"><i data-lucide="info"></i> 저장하기 전에는 추모관에 보이지 않아요. 보호자가 확인한 뒤에만 반영돼요.</p>
+            </div>
+
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check" data-toast-ico></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      document.getElementById('toastMsg').textContent = msg;
+      var t = document.getElementById('toast');
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 탭 전환
+    document.querySelectorAll('.tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t === tab); t.setAttribute('aria-selected', t === tab ? 'true' : 'false'); });
+        document.querySelectorAll('[data-tab-panel]').forEach(function (panel) {
+          panel.hidden = panel.dataset.tabPanel !== tab.dataset.tab;
+        });
+        document.querySelector('.m-content').scrollTop = 0;
+      });
+    });
+
+    // 사진 선택
+    var photoCount = document.getElementById('photoCount');
+    function updatePhotoCount() {
+      var n = document.querySelectorAll('.album-photo.is-selected').length;
+      photoCount.textContent = n + '장 선택';
+    }
+    document.querySelectorAll('.album-photo').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        btn.classList.toggle('is-selected');
+        updatePhotoCount();
+      });
+    });
+
+    // 상품 종류 선택
+    var PRODUCTS = {
+      photobook: { name: '포토북', ico: 'book-open', desc: '20페이지 하드커버 포토북', price: '28,000원부터' },
+      frame:     { name: '액자', ico: 'frame',     desc: '8x10 우드프레임 인화', price: '19,000원부터' },
+      goods:     { name: '미니 굿즈', ico: 'gift',      desc: '미니 액자·키링·머그컵 중 선택', price: '15,000원부터' }
+    };
+    var productDesc = document.getElementById('productDesc');
+    var productPrice = document.getElementById('productPrice');
+    var productIco = document.getElementById('productIco');
+    var currentProduct = 'photobook';
+    document.querySelectorAll('#productChips .chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        document.querySelectorAll('#productChips .chip').forEach(function (c) { c.classList.toggle('active', c === chip); });
+        currentProduct = chip.dataset.product;
+        var p = PRODUCTS[currentProduct];
+        productDesc.textContent = p.desc;
+        productPrice.textContent = p.price;
+        productIco.setAttribute('data-lucide', p.ico);
+        lucide.createIcons();
+      });
+    });
+
+    // 주문 요청
+    var orderList = document.getElementById('orderList');
+    document.getElementById('orderBtn').addEventListener('click', function () {
+      var n = document.querySelectorAll('.album-photo.is-selected').length;
+      var addr = document.getElementById('shipAddr').value.trim();
+      if (n === 0) { showToast('사진을 1장 이상 골라주세요'); return; }
+      if (!addr) { showToast('배송 주소를 입력해주세요'); return; }
+
+      var p = PRODUCTS[currentProduct];
+      var row = document.createElement('div');
+      row.className = 'list-item';
+      row.innerHTML =
+        '<span class="ico-wrap sm soft"><i data-lucide="' + p.ico + '"></i></span>' +
+        '<div class="grow"><div class="cell-title">' + p.name + ' 주문 · 사진 ' + n + '장</div>' +
+        '<div class="cell-sub">9월 29일 접수</div></div>' +
+        '<span class="tag tag-sky"><i data-lucide="clock"></i> 접수됨</span>';
+      orderList.insertBefore(row, orderList.firstChild);
+      lucide.createIcons();
+
+      document.querySelectorAll('.album-photo.is-selected').forEach(function (el) { el.classList.remove('is-selected'); });
+      updatePhotoCount();
+      showToast('주문 요청이 인쇄 업체로 전달됐어요');
+    });
+
+    // AI 회고록 — 초안 생성
+    var memoirText = document.getElementById('memoirText');
+    var memoirMeta = document.getElementById('memoirMeta');
+    var DRAFT = '보리는 2012년 8월, 작은 솜뭉치 같은 모습으로 우리 가족이 됐어요. 14년 동안 매일 아침 발끝을 핥으며 하루를 깨워주고, 늦은 밤에는 조용히 곁을 지켜준 든든한 친구였습니다. 산책길의 바람 냄새를 좋아했고, 고구마 간식 앞에서는 늘 꼬리를 힘차게 흔들었어요. 마지막 순간까지 가족 곁에서 편안하게 잠들었고, 그 온기는 우리 모두의 기억 속에 따뜻하게 남아있습니다.';
+
+    document.getElementById('generateBtn').addEventListener('click', function () {
+      var btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader-circle"></i> 초안을 만들고 있어요…';
+      lucide.createIcons();
+      memoirMeta.textContent = '다이어리 32건 · 편지 2통 · 타임라인을 살펴보는 중…';
+
+      setTimeout(function () {
+        memoirText.value = DRAFT;
+        memoirMeta.textContent = '초안 생성됨 · 방금 전 · 저장 전이라 아직 보이지 않아요';
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="sparkles"></i> 다시 생성하기';
+        lucide.createIcons();
+        showToast('초안이 만들어졌어요. 편하게 고쳐보세요');
+      }, 900);
+    });
+
+    document.getElementById('saveMemoirBtn').addEventListener('click', function () {
+      if (!memoirText.value.trim()) { showToast('먼저 초안을 생성하거나 내용을 적어주세요'); return; }
+      memoirMeta.textContent = '마지막 저장 · 9월 29일 14:02';
+      showToast('회고록을 잘 저장해뒀어요');
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/memorial-extras.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

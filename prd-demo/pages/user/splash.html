@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P1 스플래시 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P1 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 로고·이름을 광학 중심(살짝 위)에 두고, 로딩 점은 홈 인디케이터 위에 고정 */
+    .splash-body {
+      min-height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: var(--space-5); padding: var(--space-8) var(--space-6) 96px;
+      text-align: center;
+    }
+    .splash-mark {
+      width: 104px; height: 104px; border-radius: var(--radius-full);
+      background: var(--theme-header-bg); color: var(--color-primary-strong);
+      box-shadow: 0 0 0 10px color-mix(in srgb, var(--theme-header-bg) 55%, transparent);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .splash-mark [data-lucide], .splash-mark svg { width: 48px; height: 48px; stroke-width: 1.75; }
+    .splash-copy { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+    .splash-name { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; font-size: var(--fs-display); line-height: var(--lh-display); font-family: var(--font-title); font-weight: 400; letter-spacing: -0.015em; }
+    .splash-name .t-caption { font-family: var(--font-body); }
+    .splash-tag { color: var(--color-text-sub); text-wrap: balance; }
+    .splash-loading { position: absolute; left: 0; right: 0; bottom: var(--space-10); display: flex; justify-content: center; }
+    .splash-dots { display: inline-flex; gap: 6px; }
+    .splash-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-disabled); animation: splash-blink 1.2s var(--ease-soft) infinite; }
+    .splash-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .splash-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes splash-blink { 0%, 80%, 100% { opacity: 0.35; } 40% { opacity: 1; } }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 본문 (헤더·탭바 없음 — 스플래시는 자동 전환 화면) -->
+        <main class="m-content">
+          <div class="splash-body">
+            <span class="splash-mark"><i data-lucide="dog"></i></span>
+            <div class="splash-copy">
+              <div class="splash-name">무지개 일기<span class="t-caption t-sub">(가칭)</span></div>
+              <p class="t-body-s splash-tag">오늘도, 이별 후에도<br>곁에 있어요</p>
+            </div>
+          </div>
+          <div class="splash-loading">
+            <span class="splash-dots"><span></span><span></span><span></span></span>
+          </div>
+        </main>
+
+        <div class="m-home"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    // 자동 전환 — 1.8초 후 로그인(P2)으로 이동
+    setTimeout(function () {
+      location.href = 'login.html';
+    }, 1800);
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/splash.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P29 회원·반려견 관리 · 무지개 일기 관리자</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P29 전용 — 공통 레이아웃(.admin-*)은 common.css 그대로 쓴다 */
+    .nav-count { margin-left: auto; font-size: var(--fs-caption); color: var(--color-text-sub); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    /* 목록 패널 안 필터 바 — 검색·필터·결과 수 한 줄 */
+    .member-toolbar { flex-wrap: nowrap; padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border); }
+    .member-toolbar .search { flex: 0 1 300px; min-width: 220px; }
+    .member-toolbar .input, .member-toolbar .select { height: 40px; }
+    .member-toolbar .select { flex: 0 0 auto; min-width: 180px; }
+    .result-count { font-size: var(--fs-body-s); color: var(--color-text-sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    /* 표 — 셀 한 줄 고정, 회원 셀의 이메일·연락처는 말줄임 */
+    .member-table th, .member-table td { padding-left: var(--space-3); padding-right: var(--space-3); white-space: nowrap; }
+    .member-table td { height: 60px; }
+    .member-cell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+    .member-cell .grow { min-width: 0; max-width: 240px; }
+    .member-cell .cell-title { font-size: var(--fs-body-s); }
+    .last-login .t { font-variant-numeric: tabular-nums; }
+    .joined .d { font-variant-numeric: tabular-nums; }
+    .pet-tags { display: flex; flex-wrap: nowrap; gap: 6px; }
+    .reg-no { font-variant-numeric: tabular-nums; font-size: var(--fs-caption); color: var(--color-text-sub); }
+    .reg-no .more { margin-left: 4px; color: var(--color-text); font-weight: 600; }
+    .row-actions { display: inline-flex; align-items: center; gap: 6px; }
+    tr.is-withdrawn td > * { opacity: 0.55; }
+    /* 상세 모달 — 헤더 / 스크롤 본문 / 하단 액션 바 */
+    .modal.modal-detail { max-width: 560px; padding: 0; overflow: hidden; }
+    .modal-detail .md-head { padding: var(--space-6) var(--space-6) var(--space-4); }
+    .modal-detail .md-head .modal-title { margin-bottom: 2px; }
+    .modal-detail .md-body { padding: 0 var(--space-6); max-height: calc(100vh - 240px); overflow-y: auto; }
+    .modal-detail .modal-actions { margin-top: var(--space-6); padding: var(--space-4) var(--space-6); border-top: 1px solid var(--color-border); }
+    .detail-info { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4) var(--space-5); padding: var(--space-4) var(--space-5); background: var(--color-bg); border-radius: var(--radius-md); }
+    .detail-info > div { min-width: 0; }
+    .detail-info .k { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); margin-bottom: 2px; }
+    .detail-info .v { font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+    .detail-sec { margin: var(--space-5) 0 var(--space-2); font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 700; }
+    .detail-pets { border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+    .detail-pet-card { display: flex; align-items: center; gap: var(--space-3); min-height: 64px; padding: var(--space-3) var(--space-4); }
+    .detail-pet-card + .detail-pet-card { border-top: 1px solid var(--color-border); }
+    .detail-pet-card .grow { min-width: 0; }
+    .detail-pet-card .pname { font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 700; }
+    .detail-pet-card .pmeta { margin-top: 2px; font-variant-numeric: tabular-nums; }
+    @media (max-width: 1366px) { .member-cell .avatar { display: none; } .member-cell .grow { max-width: 15vw; } .member-table th, .member-table td { padding-left: 9px; padding-right: 9px; } .last-login .t { display: block; margin-top: 2px; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); } }
+    @media (max-width: 1100px) { .detail-info { grid-template-columns: 1fr; } .member-toolbar { flex-wrap: wrap; } }
+  </style>
+</head>
+<body>
+  <div class="admin">
+
+    <!-- 사이드바 (P28~P33) — dashboard.html과 동일, active만 이동 -->
+    <aside class="admin-side">
+      <div class="admin-brand">
+        <span class="ico-wrap"><i data-lucide="rainbow" class="ico-18"></i></span>
+        <div>
+          <div class="admin-brand-name">무지개 일기</div>
+          <div class="admin-brand-sub">운영 관리자</div>
+        </div>
+      </div>
+
+      <div class="admin-nav-label">통계</div>
+      <nav class="admin-nav">
+        <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> 대시보드</a>
+      </nav>
+
+      <div class="admin-nav-label">운영</div>
+      <nav class="admin-nav">
+        <a href="members.html" class="active"><i data-lucide="users"></i> 회원·반려견</a>
+        <a href="inquiries.html"><i data-lucide="message-circle-question"></i> 1:1 문의 <span class="nav-count">대기 7</span></a>
+        <a href="content-cms.html"><i data-lucide="file-pen-line"></i> 콘텐츠(CMS)</a>
+        <a href="reports.html"><i data-lucide="flag"></i> 신고·모더레이션 <span class="nav-count">5</span></a>
+        <a href="partners.html"><i data-lucide="handshake"></i> 제휴 업체</a>
+      </nav>
+
+      <div class="admin-side-foot">
+        <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+        <div class="grow">
+          <div class="t-body-s t-strong">김하늘</div>
+          <div class="t-caption t-sub">운영 매니저</div>
+        </div>
+        <a class="icon-btn" href="login.html" aria-label="로그아웃" title="로그아웃"><i data-lucide="log-out" class="ico-18"></i></a>
+      </div>
+    </aside>
+
+    <!-- 메인 -->
+    <div class="admin-main">
+      <header class="admin-top">
+        <div class="admin-top-title">회원·반려견 관리</div>
+        <span class="crumb">운영 · F39</span>
+        <div class="admin-top-actions">
+          <a class="btn btn-ghost btn-sm" href="dashboard.html"><i data-lucide="arrow-left" class="ico-16"></i> 대시보드로</a>
+        </div>
+      </header>
+
+      <main class="admin-body">
+
+        <p class="disclaimer"><i data-lucide="shield-check"></i> 연락처·동물등록번호 등 개인정보는 목록·상세보기 모두에서 마스킹해 표시해요 (F37).</p>
+
+        <!-- 회원 목록 -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">회원 목록</div>
+              <div class="panel-sub clamp-1" title="회원 검색·조회 · 반려견 상태 조회 · 탈퇴 처리">회원 검색·조회 · 반려견 상태 조회 · 탈퇴 처리</div>
+            </div>
+            <span class="panel-sub">가입일 최신순</span>
+          </div>
+
+          <!-- 검색 · 필터 툴바 -->
+          <div class="toolbar member-toolbar">
+            <div class="input-wrap search">
+              <i data-lucide="search" class="ico-18"></i>
+              <input type="text" class="input" id="searchInput" placeholder="회원명 또는 이메일로 검색">
+            </div>
+            <select class="select" id="petStateFilter">
+              <option value="all">반려견 상태 전체</option>
+              <option value="together">함께하는 중</option>
+              <option value="preparing">이별 준비</option>
+              <option value="rainbow">무지개다리</option>
+            </select>
+            <div class="segment" role="tablist" aria-label="회원 상태">
+              <button class="seg-btn active" data-status="all">전체</button>
+              <button class="seg-btn" data-status="active">활성</button>
+              <button class="seg-btn" data-status="withdrawn">탈퇴</button>
+            </div>
+            <span class="spacer"></span>
+            <span class="result-count" id="resultCount">전체 15명</span>
+          </div>
+          <div class="table-wrap">
+            <table class="table member-table">
+              <thead>
+                <tr>
+                  <th>회원</th>
+                  <th>가입일 · 경로</th>
+                  <th>반려견</th>
+                  <th>등록번호</th>
+                  <th>구독</th>
+                  <th>최근 로그인</th>
+                  <th>상태</th>
+                  <th class="td-actions" aria-label="관리"></th>
+                </tr>
+              </thead>
+              <tbody id="memberBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="pagination"></div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- 상세 모달 -->
+    <div class="modal-dim" id="detailModal">
+      <div class="modal modal-detail">
+        <div class="md-head">
+          <div class="modal-title">회원 상세</div>
+          <div class="meta" id="detailSub">가입일 · 경로</div>
+        </div>
+        <div class="md-body">
+          <div class="detail-info" id="detailInfo"></div>
+          <div class="detail-sec">등록된 반려견</div>
+          <div class="detail-pets" id="detailPets"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="detailCloseBtn">닫기</button>
+          <button class="btn btn-danger" id="detailWithdrawBtn"><i data-lucide="user-x"></i> 회원 탈퇴 처리</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 탈퇴 확인 모달 -->
+    <div class="modal-dim" id="confirmModal">
+      <div class="modal">
+        <div class="modal-title">회원 탈퇴 처리</div>
+        <p class="t-body-s" id="confirmText">해당 회원을 탈퇴 처리할까요?</p>
+        <p class="disclaimer mt-2"><i data-lucide="info"></i> 탈퇴 처리하면 기록과 추모관이 모두 삭제되고 되돌릴 수 없어요. 필요하면 회원에게 먼저 데이터 내보내기를 안내해 주세요.</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="confirmCancelBtn">취소</button>
+          <button class="btn btn-danger" id="confirmOkBtn"><i data-lucide="user-x"></i> 탈퇴 처리</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check"></i><span id="toastMsg"></span></div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    var STATE_META = {
+      together: { label: '함께하는 중', icon: 'sun', cls: 'state-together' },
+      preparing: { label: '이별 준비', icon: 'sunset', cls: 'state-preparing' },
+      rainbow: { label: '무지개다리', icon: 'cloud', cls: 'state-rainbow' }
+    };
+
+    // 더미 회원 15명 (F39: 회원 검색·조회 · 반려견·상태 조회 · 탈퇴 처리 · 개인정보 마스킹)
+    var MEMBERS = [
+      { name: '김*연', email: 'bor***@example.com', phone: '010-****-1021', joined: '2024.03.11', channel: '카카오', plan: '프리미엄', lastLogin: '2026.09.29 10:42', status: 'active',
+        pets: [
+          { name: '보리', breed: '말티즈', age: '이별일 2026.09.24', state: 'rainbow', reg: '4100*******8901' },
+          { name: '콩이', breed: '푸들', age: '만 8살', state: 'together', reg: '미등록' }
+        ] },
+      { name: '박*준', email: 'park***@example.com', phone: '010-****-2284', joined: '2026.08.30', channel: '네이버', plan: '프리미엄', lastLogin: '2026.09.29 09:15', status: 'active',
+        pets: [
+          { name: '호두', breed: '말티즈', age: '11세', state: 'together', reg: '4100*******5284' },
+          { name: '두부', breed: '믹스견', age: '3세', state: 'together', reg: '4100*******5285' }
+        ] },
+      { name: '이*희', email: 'lee***@example.com', phone: '010-****-3391', joined: '2026.07.18', channel: '애플', plan: '무료', lastLogin: '2026.09.28 22:03', status: 'active',
+        pets: [{ name: '초코', breed: '푸들', age: '14세', state: 'preparing', reg: '4100*******5291' }] },
+      { name: '최*민', email: 'choi***@example.com', phone: '010-****-4472', joined: '2026.06.02', channel: '이메일', plan: '무료', lastLogin: '2026.09.28 18:47', status: 'active',
+        pets: [{ name: '단추', breed: '시츄', age: '5세', state: 'together', reg: '4100*******5272' }] },
+      { name: '정*아', email: 'jung***@example.com', phone: '010-****-5563', joined: '2026.03.11', channel: '구글', plan: '프리미엄', lastLogin: '2026.09.28 13:30', status: 'active',
+        pets: [{ name: '몽이', breed: '진돗개', age: '15세', state: 'rainbow', reg: '4100*******5263' }] },
+      { name: '오*림', email: 'oh***@example.com', phone: '010-****-6654', joined: '2026.02.27', channel: '카카오', plan: '무료', lastLogin: '2026.09.28 08:12', status: 'active',
+        pets: [{ name: '두리', breed: '비숑프리제', age: '4세', state: 'together', reg: '4100*******5254' }] },
+      { name: '한*수', email: 'han***@example.com', phone: '010-****-7745', joined: '2026.01.19', channel: '카카오', plan: '무료', lastLogin: '2026.09.27 20:11', status: 'active',
+        pets: [{ name: '별이', breed: '포메라니안', age: '9세', state: 'together', reg: '4100*******5245' }] },
+      { name: '서*진', email: 'seo***@example.com', phone: '010-****-8836', joined: '2025.12.08', channel: '네이버', plan: '무료', lastLogin: '2026.09.27 11:04', status: 'active',
+        pets: [{ name: '봄이', breed: '치와와', age: '13세', state: 'preparing', reg: '4100*******5236' }] },
+      { name: '강*희', email: 'kang***@example.com', phone: '010-****-9927', joined: '2025.11.21', channel: '애플', plan: '프리미엄', lastLogin: '2026.09.26 21:38', status: 'active',
+        pets: [{ name: '하루', breed: '웰시코기', age: '2세', state: 'together', reg: '4100*******5227' }] },
+      { name: '윤*서', email: 'yoon***@example.com', phone: '010-****-1018', joined: '2025.10.15', channel: '이메일', plan: '무료', lastLogin: '2026.09.26 14:52', status: 'active',
+        pets: [{ name: '유자', breed: '믹스견', age: '6세', state: 'together', reg: '4100*******5218' }] },
+      { name: '임*훈', email: 'lim***@example.com', phone: '010-****-2109', joined: '2025.09.02', channel: '카카오', plan: '무료', lastLogin: '2026.09.20 09:47', status: 'active',
+        pets: [{ name: '구름이', breed: '슈나우저', age: '16세', state: 'rainbow', reg: '4100*******5209' }] },
+      { name: '조*은', email: 'jo***@example.com', phone: '010-****-3290', joined: '2025.07.29', channel: '네이버', plan: '무료', lastLogin: '2026.09.24 19:03', status: 'active',
+        pets: [{ name: '마루', breed: '보더콜리', age: '3세', state: 'together', reg: '4100*******5290' }] },
+      { name: '배*현', email: 'bae***@example.com', phone: '010-****-4381', joined: '2025.05.14', channel: '구글', plan: '프리미엄', lastLogin: '2026.09.23 08:29', status: 'active',
+        pets: [
+          { name: '순이', breed: '삽살개', age: '10세', state: 'together', reg: '4100*******5281' },
+          { name: '복실이', breed: '푸들', age: '1세', state: 'together', reg: '4100*******5282' }
+        ] },
+      { name: '신*우', email: 'shin***@example.com', phone: '010-****-5472', joined: '2025.03.06', channel: '카카오', plan: '무료', lastLogin: '2026.09.18 16:11', status: 'active',
+        pets: [{ name: '도담이', breed: '믹스견', age: '8세', state: 'together', reg: '4100*******5472' }] },
+      { name: '황*라', email: 'hwang***@example.com', phone: '010-****-6563', joined: '2024.12.19', channel: '네이버', plan: '무료', lastLogin: '2026.06.02 10:20', status: 'withdrawn',
+        pets: [{ name: '별사탕', breed: '말티즈', age: '17세', state: 'rainbow', reg: '4100*******6563' }] }
+    ];
+    // 가입일 최신순(내림차순) 정렬
+    MEMBERS.sort(function (a, b) { return b.joined.localeCompare(a.joined); });
+
+    var PAGE_SIZE = 8;
+    var currentPage = 1;
+    var filtered = MEMBERS.map(function (m, i) { return i; });
+    var pendingWithdrawIdx = null;
+
+    function petBadges(pets) {
+      return pets.map(function (p) {
+        var s = STATE_META[p.state];
+        return '<span class="state-badge ' + s.cls + '"><i data-lucide="' + s.icon + '" class="ico-16"></i>' + p.name + '</span>';
+      }).join('');
+    }
+
+    function statusCell(status) {
+      return status === 'active'
+        ? '<span class="status ok">활성</span>'
+        : '<span class="status err">탈퇴</span>';
+    }
+
+    function applyFilters() {
+      var q = document.getElementById('searchInput').value.trim().toLowerCase();
+      var petState = document.getElementById('petStateFilter').value;
+      var statusFilter = document.querySelector('[data-status].active').dataset.status;
+
+      filtered = [];
+      MEMBERS.forEach(function (m, i) {
+        if (q && m.name.toLowerCase().indexOf(q) === -1 && m.email.toLowerCase().indexOf(q) === -1) return;
+        if (statusFilter !== 'all' && m.status !== statusFilter) return;
+        if (petState !== 'all' && !m.pets.some(function (p) { return p.state === petState; })) return;
+        filtered.push(i);
+      });
+      currentPage = 1;
+      document.getElementById('resultCount').textContent = q || petState !== 'all' || statusFilter !== 'all'
+        ? '검색 결과 ' + filtered.length + '명'
+        : '전체 ' + filtered.length + '명';
+      renderTable();
+    }
+
+    function renderTable() {
+      var start = (currentPage - 1) * PAGE_SIZE;
+      var pageIdxs = filtered.slice(start, start + PAGE_SIZE);
+      var body = document.getElementById('memberBody');
+
+      if (pageIdxs.length === 0) {
+        body.innerHTML = '<tr><td colspan="8" class="t-center t-sub" style="padding:40px 0;">조건에 맞는 회원이 없어요.</td></tr>';
+      } else {
+        body.innerHTML = pageIdxs.map(function (i) {
+          var m = MEMBERS[i];
+          var reg = m.pets[0] ? m.pets[0].reg : '-';
+          var regMore = m.pets.length > 1 ? '<span class="more">외 ' + (m.pets.length - 1) + '</span>' : '';
+          var withdrawDisabled = m.status === 'withdrawn' ? ' disabled' : '';
+          return '<tr class="' + (m.status === 'withdrawn' ? 'is-withdrawn' : '') + '">' +
+            '<td><div class="member-cell"><span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>' +
+              '<div class="grow"><div class="cell-title">' + m.name + '</div><div class="cell-sub" title="' + m.email + ' · ' + m.phone + '">' + m.email + ' · ' + m.phone + '</div></div></div></td>' +
+            '<td class="td-date joined"><div class="d">' + m.joined + '</div><div class="cell-sub">' + m.channel + '</div></td>' +
+            '<td><div class="pet-tags">' + petBadges(m.pets) + '</div></td>' +
+            '<td class="reg-no">' + reg + regMore + '</td>' +
+            '<td><span class="tag ' + (m.plan === '프리미엄' ? 'tag-primary' : 'tag-line') + '">' + m.plan + '</span></td>' +
+            '<td class="td-date last-login">' + m.lastLogin.replace(' ', ' <span class="t">') + '</span></td>' +
+            '<td>' + statusCell(m.status) + '</td>' +
+            '<td class="td-actions"><div class="row-actions">' +
+              '<button class="btn btn-ghost btn-sm" data-detail="' + i + '">상세</button>' +
+              '<button class="btn btn-danger btn-sm" data-withdraw="' + i + '"' + withdrawDisabled + '>탈퇴</button>' +
+            '</div></td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      lucide.createIcons();
+      renderPagination();
+      bindRowButtons();
+    }
+
+    function renderPagination() {
+      var totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      var el = document.getElementById('pagination');
+      var html = '<button class="page-btn" data-page="prev" aria-label="이전"><i data-lucide="chevron-left" class="ico-16"></i></button>';
+      for (var p = 1; p <= totalPages; p++) {
+        html += '<button class="page-btn' + (p === currentPage ? ' active' : '') + '" data-page="' + p + '">' + p + '</button>';
+      }
+      html += '<button class="page-btn" data-page="next" aria-label="다음"><i data-lucide="chevron-right" class="ico-16"></i></button>';
+      el.innerHTML = html;
+      lucide.createIcons();
+
+      el.querySelectorAll('[data-page]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var totalP = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+          var v = btn.dataset.page;
+          if (v === 'prev') currentPage = Math.max(1, currentPage - 1);
+          else if (v === 'next') currentPage = Math.min(totalP, currentPage + 1);
+          else currentPage = parseInt(v, 10);
+          renderTable();
+        });
+      });
+    }
+
+    function bindRowButtons() {
+      document.querySelectorAll('[data-detail]').forEach(function (btn) {
+        btn.addEventListener('click', function () { openDetail(parseInt(btn.dataset.detail, 10)); });
+      });
+      document.querySelectorAll('[data-withdraw]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (btn.disabled) return;
+          openConfirm(parseInt(btn.dataset.withdraw, 10));
+        });
+      });
+    }
+
+    function openDetail(i) {
+      var m = MEMBERS[i];
+      document.getElementById('detailSub').textContent = m.joined + ' 가입 · ' + m.channel + ' · ' + statusCellText(m.status);
+      document.getElementById('detailInfo').innerHTML =
+        '<div><div class="k">회원명</div><div class="v">' + m.name + '</div></div>' +
+        '<div><div class="k">이메일</div><div class="v">' + m.email + '</div></div>' +
+        '<div><div class="k">연락처</div><div class="v">' + m.phone + '</div></div>' +
+        '<div><div class="k">구독 플랜</div><div class="v">' + m.plan + '</div></div>' +
+        '<div><div class="k">최근 로그인</div><div class="v">' + m.lastLogin + '</div></div>' +
+        '<div><div class="k">회원 상태</div><div class="v">' + statusCell(m.status) + '</div></div>';
+
+      document.getElementById('detailPets').innerHTML = m.pets.map(function (p) {
+        var s = STATE_META[p.state];
+        return '<div class="detail-pet-card">' +
+          '<span class="ico-wrap sm"><i data-lucide="dog"></i></span>' +
+          '<div class="grow"><div class="pname">' + p.name + '</div>' +
+          '<div class="meta pmeta">' + p.breed + '<span class="meta-sep">·</span>' + p.age + '<span class="meta-sep">·</span>등록번호 ' + p.reg + '</div></div>' +
+          '<span class="state-badge ' + s.cls + '"><i data-lucide="' + s.icon + '" class="ico-16"></i>' + s.label + '</span>' +
+        '</div>';
+      }).join('');
+
+      var withdrawBtn = document.getElementById('detailWithdrawBtn');
+      withdrawBtn.disabled = m.status === 'withdrawn';
+      withdrawBtn.onclick = function () {
+        closeModal('detailModal');
+        openConfirm(i);
+      };
+
+      lucide.createIcons();
+      document.getElementById('detailModal').classList.add('open');
+    }
+
+    function statusCellText(status) { return status === 'active' ? '활성 회원' : '탈퇴 회원'; }
+
+    function openConfirm(i) {
+      pendingWithdrawIdx = i;
+      document.getElementById('confirmText').textContent = MEMBERS[i].name + ' 님(' + MEMBERS[i].email + ')을 탈퇴 처리할까요?';
+      document.getElementById('confirmModal').classList.add('open');
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.getElementById('detailCloseBtn').addEventListener('click', function () { closeModal('detailModal'); });
+    document.getElementById('confirmCancelBtn').addEventListener('click', function () { closeModal('confirmModal'); pendingWithdrawIdx = null; });
+    document.getElementById('confirmOkBtn').addEventListener('click', function () {
+      if (pendingWithdrawIdx === null) return;
+      MEMBERS[pendingWithdrawIdx].status = 'withdrawn';
+      var nm = MEMBERS[pendingWithdrawIdx].name;
+      closeModal('confirmModal');
+      pendingWithdrawIdx = null;
+      applyFilters();
+      showToast(nm + ' 님의 탈퇴가 처리됐어요');
+    });
+    [document.getElementById('detailModal'), document.getElementById('confirmModal')].forEach(function (dim) {
+      dim.addEventListener('click', function (e) { if (e.target === dim) dim.classList.remove('open'); });
+    });
+
+    // 검색 · 필터
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('petStateFilter').addEventListener('change', applyFilters);
+    document.querySelectorAll('[data-status]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('[data-status]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        applyFilters();
+      });
+    });
+
+    applyFilters();
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/admin/members.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

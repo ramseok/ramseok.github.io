@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P16 미리 쓰는 편지 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P16 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 편지 목록 셀 — 아이콘은 제목 줄에 맞춰 상단 정렬, 화살표는 세로 가운데 */
+    .letter-item { width: 100%; border: 0; border-bottom: 1px solid var(--color-border); background: transparent; text-align: left; font: inherit; color: inherit; cursor: pointer; align-items: flex-start; padding-top: var(--space-4); padding-bottom: var(--space-4); }
+    .letter-item:last-child { border-bottom: 0; }
+    .letter-item:hover { background: var(--color-bg); }
+    .letter-item .ico-wrap { width: 36px; height: 36px; }
+    .letter-item .ico-wrap svg { width: 18px; height: 18px; }
+    .letter-item .chev { align-self: center; }
+    .letter-head { display: flex; align-items: center; gap: var(--space-2); min-height: 24px; }
+    .letter-head > .t-strong { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .letter-head > .t-caption { flex-shrink: 0; white-space: nowrap; }
+    .letter-item .clamp-2 { margin-top: 2px; }
+    .letter-tag { display: inline-flex; margin-top: var(--space-2); }
+    /* 작성 화면 */
+    .write-lead { margin-bottom: var(--space-5); }
+    .publish-card .row-between { align-items: flex-start; gap: var(--space-4); }
+    .publish-card .switch { margin-top: 2px; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="preparing">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기(작성 중엔 목록으로) + 제목 -->
+        <header class="m-header">
+          <a class="icon-btn" href="prep-checklist.html" id="backBtn" aria-label="뒤로가기"><i data-lucide="arrow-left"></i></a>
+          <div class="m-title is-center" id="pageTitle">미리 쓰는 편지</div>
+          <div class="m-header-spacer" aria-hidden="true"></div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- ===== 목록 화면 ===== -->
+          <div id="listView">
+            <section class="m-section">
+              <div class="notice notice-theme">
+                <i data-lucide="lock"></i>
+                <div class="grow">
+                  편지는 기본적으로 <b>나만 볼 수 있어요.</b> 나중에 무지개다리를 건널 때, 추모관에 함께 남길지 다시 한번 여쭤볼게요.
+                </div>
+              </div>
+            </section>
+
+            <section class="m-section">
+              <div class="sec-head">
+                <h2 class="sec-title"><span data-pet-name>보리</span>에게 쓴 편지</h2>
+                <span class="sec-sub">모두 <b class="num" id="letterCount">6</b>통</span>
+              </div>
+
+              <div class="list" id="letterList">
+                <button type="button" class="list-item letter-item" data-id="1" data-title="고마웠어" data-date="9월 20일" data-publish="true"
+                  data-body="매일 아침 네 발끝부터 확인했던 거 알아? 그게 하루의 시작이었어. 오늘도 문득 현관에서 제일 먼저 반겨주던 네 발소리가 그리웠어. 늘 그 자리에 있어 줘서 고마웠어.">
+                  <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+                  <div class="grow">
+                    <div class="letter-head">
+                      <span class="t-strong">고마웠어</span>
+                      <span class="t-caption t-sub num">9월 20일</span>
+                    </div>
+                    <p class="t-body-s t-sub clamp-2">매일 아침 네 발끝부터 확인했던 거 알아? 그게 하루의 시작이었어.</p>
+                    <span class="tag tag-sky letter-tag" data-publish-tag><i data-lucide="flower-2"></i> 추모관에 남길 편지</span>
+                  </div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+
+                <button type="button" class="list-item letter-item" data-id="2" data-title="우리 처음 만난 날" data-date="9월 15일" data-publish="false"
+                  data-body="네가 우리 집에 온 첫날, 상자에서 나오자마자 작은 발로 온 집을 다 돌아다녔었지. 그날 밤 내 옆에 딱 붙어 잠들었을 때, 이제 진짜 가족이 됐구나 싶었어.">
+                  <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+                  <div class="grow">
+                    <div class="letter-head">
+                      <span class="t-strong">우리 처음 만난 날</span>
+                      <span class="t-caption t-sub num">9월 15일</span>
+                    </div>
+                    <p class="t-body-s t-sub clamp-2">네가 우리 집에 온 첫날, 상자에서 나오자마자 작은 발로 온 집을 다 돌아다녔었지.</p>
+                  </div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+
+                <button type="button" class="list-item letter-item" data-id="3" data-title="미안한 마음도 담아" data-date="9월 8일" data-publish="false"
+                  data-body="가끔 바빠서 산책을 짧게 한 날들, 병원 가는 걸 미룬 날들이 자꾸 마음에 걸려. 그래도 늘 꼬리 흔들어줘서 고마웠어. 미안했어, 그리고 고마웠어.">
+                  <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+                  <div class="grow">
+                    <div class="letter-head">
+                      <span class="t-strong">미안한 마음도 담아</span>
+                      <span class="t-caption t-sub num">9월 8일</span>
+                    </div>
+                    <p class="t-body-s t-sub clamp-2">가끔 바빠서 산책을 짧게 한 날들, 자꾸 마음에 걸려. 그래도 고마웠어.</p>
+                  </div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+
+                <button type="button" class="list-item letter-item" data-id="4" data-title="" data-date="8월 30일" data-publish="false"
+                  data-body="오늘은 그냥 네 옆에 가만히 앉아있었어. 별다른 말 없이도, 그냥 그 시간이 참 따뜻했어. 그것만으로 충분했어.">
+                  <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+                  <div class="grow">
+                    <div class="letter-head">
+                      <span class="t-strong t-sub" data-empty-title>제목 없음</span>
+                      <span class="t-caption t-sub num">8월 30일</span>
+                    </div>
+                    <p class="t-body-s t-sub clamp-2">오늘은 그냥 네 옆에 가만히 앉아있었어. 그것만으로 충분했어.</p>
+                  </div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+
+                <button type="button" class="list-item letter-item" data-id="5" data-title="함께한 여름" data-date="8월 22일" data-publish="true"
+                  data-body="작년 여름 바다에서 뛰어놀던 네 모습이 자꾸 생각나. 파도를 무서워하면서도 끝까지 내 옆을 안 떠났었지. 그 여름을 잊지 못할 것 같아.">
+                  <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+                  <div class="grow">
+                    <div class="letter-head">
+                      <span class="t-strong">함께한 여름</span>
+                      <span class="t-caption t-sub num">8월 22일</span>
+                    </div>
+                    <p class="t-body-s t-sub clamp-2">작년 여름 바다에서 뛰어놀던 네 모습이 자꾸 생각나.</p>
+                    <span class="tag tag-sky letter-tag" data-publish-tag><i data-lucide="flower-2"></i> 추모관에 남길 편지</span>
+                  </div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+
+                <button type="button" class="list-item letter-item" data-id="6" data-title="고맙다는 말로는 부족해" data-date="8월 14일" data-publish="false"
+                  data-body="이 말로는 다 담을 수 없다는 거 알아. 그래도 꼭 남기고 싶었어. 함께해줘서, 정말 고마워.">
+                  <span class="ico-wrap sky"><i data-lucide="mail"></i></span>
+                  <div class="grow">
+                    <div class="letter-head">
+                      <span class="t-strong">고맙다는 말로는 부족해</span>
+                      <span class="t-caption t-sub num">8월 14일</span>
+                    </div>
+                    <p class="t-body-s t-sub clamp-2">이 말로는 다 담을 수 없지만, 그래도 고마워.</p>
+                  </div>
+                  <i data-lucide="chevron-right" class="chev"></i>
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <!-- ===== 작성·수정 화면 ===== -->
+          <div id="writeView" hidden>
+            <section class="m-section">
+              <p class="t-body-s t-sub write-lead">천천히, 마음이 가는 대로 적어보세요. 언제든 다시 와서 이어 쓸 수 있어요.</p>
+
+              <div class="field">
+                <label class="field-label" for="letterTitle">제목 <span class="opt">선택</span></label>
+                <input class="input" id="letterTitle" type="text" placeholder="예: 우리 보리에게">
+              </div>
+
+              <div class="field" id="bodyField">
+                <label class="field-label" for="letterBody">편지 내용</label>
+                <textarea class="textarea" id="letterBody" rows="9" placeholder="보리에게 하고 싶은 말을 적어보세요."></textarea>
+                <p class="field-error">편지 내용을 조금만 더 적어주세요.</p>
+              </div>
+
+              <div class="card card-theme publish-card">
+                <div class="row-between">
+                  <div class="grow">
+                    <div class="t-strong">무지개다리를 건널 때 추모관에 남길까요?</div>
+                    <p class="t-caption t-sub mt-1">지금 켜두어도 그때 다시 한번 여쭤보고 정해요. 언제든 바꿀 수 있어요.</p>
+                  </div>
+                  <label class="switch" aria-label="추모관 게시 여부">
+                    <input type="checkbox" id="publishToggle">
+                    <span class="track"></span>
+                  </label>
+                </div>
+              </div>
+
+              <p class="t-caption t-sub mt-3" id="savedMeta">아직 저장되지 않았어요.</p>
+            </section>
+          </div>
+
+        </main>
+
+        <!-- 하단 고정 CTA (탭바 없는 플로우 — 02_PAGE.md: 이별 준비 메뉴는 탭바 없음) -->
+        <div class="m-bottom-cta">
+          <div id="listCta">
+            <a class="btn btn-primary btn-block" href="#" id="newLetterBtn"><i data-lucide="pen-line"></i> 새 편지 쓰기</a>
+          </div>
+          <div class="btn-row" id="writeCta" hidden>
+            <button class="btn btn-secondary" id="cancelBtn">목록으로</button>
+            <button class="btn btn-primary grow" id="saveDraftBtn"><i data-lucide="save"></i> 임시저장</button>
+          </div>
+        </div>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var listView = document.getElementById('listView');
+    var writeView = document.getElementById('writeView');
+    var listCta = document.getElementById('listCta');
+    var writeCta = document.getElementById('writeCta');
+    var pageTitle = document.getElementById('pageTitle');
+    var backBtn = document.getElementById('backBtn');
+    var letterList = document.getElementById('letterList');
+    var letterCountEl = document.getElementById('letterCount');
+    var titleInput = document.getElementById('letterTitle');
+    var bodyInput = document.getElementById('letterBody');
+    var bodyField = document.getElementById('bodyField');
+    var publishToggle = document.getElementById('publishToggle');
+    var savedMeta = document.getElementById('savedMeta');
+    var editingItem = null;
+    var toastTimer;
+
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    function showList() {
+      editingItem = null;
+      writeView.hidden = true;
+      listView.hidden = false;
+      writeCta.hidden = true;
+      listCta.hidden = false;
+      pageTitle.textContent = '미리 쓰는 편지';
+      bodyField.classList.remove('is-error');
+      document.querySelector('.m-content').scrollTop = 0;
+    }
+
+    function showWrite(mode, item) {
+      listView.hidden = true;
+      writeView.hidden = false;
+      listCta.hidden = true;
+      writeCta.hidden = false;
+      bodyField.classList.remove('is-error');
+      document.querySelector('.m-content').scrollTop = 0;
+
+      if (mode === 'edit' && item) {
+        editingItem = item;
+        pageTitle.textContent = '편지 수정';
+        titleInput.value = item.dataset.title || '';
+        bodyInput.value = item.dataset.body || '';
+        publishToggle.checked = item.dataset.publish === 'true';
+        savedMeta.textContent = item.dataset.date + '에 저장한 편지예요.';
+      } else {
+        editingItem = null;
+        pageTitle.textContent = '새 편지 쓰기';
+        titleInput.value = '';
+        bodyInput.value = '';
+        publishToggle.checked = false;
+        savedMeta.textContent = '아직 저장되지 않았어요.';
+      }
+      titleInput.focus();
+    }
+
+    // 새 편지 쓰기
+    document.getElementById('newLetterBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      showWrite('new');
+    });
+
+    // 기존 편지 탭 → 수정 화면
+    letterList.addEventListener('click', function (e) {
+      var item = e.target.closest('.letter-item');
+      if (item) showWrite('edit', item);
+    });
+
+    // 목록으로 (취소)
+    document.getElementById('cancelBtn').addEventListener('click', showList);
+
+    // 뒤로가기 — 작성 중이면 목록으로, 아니면 P15(준비 체크리스트)로 이동
+    backBtn.addEventListener('click', function (e) {
+      if (!writeView.hidden) {
+        e.preventDefault();
+        showList();
+      }
+    });
+
+    function renderItem(item) {
+      var title = item.dataset.title || '';
+      var titleHtml = title
+        ? '<span class="t-strong">' + title + '</span>'
+        : '<span class="t-strong t-sub" data-empty-title>제목 없음</span>';
+      var tagHtml = item.dataset.publish === 'true'
+        ? '<span class="tag tag-sky letter-tag" data-publish-tag><i data-lucide="flower-2"></i> 추모관에 남길 편지</span>'
+        : '';
+      item.innerHTML =
+        '<span class="ico-wrap sky"><i data-lucide="mail"></i></span>' +
+        '<div class="grow">' +
+          '<div class="letter-head">' + titleHtml + '<span class="t-caption t-sub num">' + item.dataset.date + '</span></div>' +
+          '<p class="t-body-s t-sub clamp-2">' + item.dataset.body + '</p>' +
+          tagHtml +
+        '</div>' +
+        '<i data-lucide="chevron-right" class="chev"></i>';
+      lucide.createIcons();
+    }
+
+    // 임시저장
+    document.getElementById('saveDraftBtn').addEventListener('click', function () {
+      var body = bodyInput.value.trim();
+      if (body.length < 2) {
+        bodyField.classList.add('is-error');
+        bodyInput.focus();
+        return;
+      }
+      bodyField.classList.remove('is-error');
+
+      var title = titleInput.value.trim();
+      var publish = publishToggle.checked;
+      var today = '9월 29일';
+
+      if (editingItem) {
+        editingItem.dataset.title = title;
+        editingItem.dataset.body = body;
+        editingItem.dataset.publish = publish ? 'true' : 'false';
+        editingItem.dataset.date = today;
+        renderItem(editingItem);
+        showToast('보리에게 쓴 편지를 잘 담아뒀어요');
+      } else {
+        var el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'list-item letter-item';
+        el.dataset.id = String(Date.now());
+        el.dataset.title = title;
+        el.dataset.body = body;
+        el.dataset.publish = publish ? 'true' : 'false';
+        el.dataset.date = today;
+        renderItem(el);
+        letterList.insertBefore(el, letterList.firstChild);
+        letterCountEl.textContent = letterList.children.length;
+        showToast('보리에게 쓴 편지를 잘 담아뒀어요');
+      }
+      showList();
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/pre-letter.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

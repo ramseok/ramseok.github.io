@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P13 추억 타임라인 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P13 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .tl-hero { margin: var(--space-2) var(--space-4) 0; padding: var(--space-4) var(--space-5); border-radius: var(--radius-xl); background: var(--theme-header-bg); display: flex; align-items: center; gap: var(--space-3); }
+    .tl-hero .avatar { background: var(--color-surface); }
+    .tl-hero .cell-sub { white-space: normal; }
+
+    /* 필터 — 좌측 라벨 + 칩(가로 스크롤은 화면 오른쪽 끝까지 bleed) */
+    .filter-row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+    .filter-row + .filter-row { margin-top: var(--space-3); }
+    .filter-label { width: 36px; flex-shrink: 0; margin: 0; font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 600; letter-spacing: 0; color: var(--color-text-sub); white-space: nowrap; }
+    .filter-row .chip-row { flex: 1; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: calc(var(--space-4) * -1); padding-right: var(--space-4); }
+    .filter-row .chip-row::-webkit-scrollbar { display: none; }
+    .hospital-row { margin-top: var(--space-4); border: 0; border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+    .hospital-row .cell-sub { white-space: normal; }
+
+    /* 시간순 통합 기록 — 좌측 레일(아이콘 점 + 세로선) + 우측 카드 */
+    .tl-list { position: relative; display: flex; flex-direction: column; gap: var(--space-3); }
+    .tl-list .tl-item {
+      position: relative; display: flex; align-items: flex-start; gap: var(--space-3);
+      min-height: 0; padding: 0; border: 0; background: transparent; color: var(--color-text);
+    }
+    .tl-list a.tl-item:hover { background: transparent; text-decoration: none; }
+    .tl-item::before { content: ""; position: absolute; left: 15px; top: 44px; bottom: calc(var(--space-3) * -1 - 12px); width: 2px; border-radius: 2px; background: var(--color-border); }
+    .tl-item.is-last::before { display: none; }
+    .tl-item > .ico-wrap { position: relative; z-index: 1; margin-top: 12px; }
+    .tl-card {
+      flex: 1; min-width: 0; padding: var(--space-3) var(--space-4) var(--space-4);
+      border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm);
+      transition: transform var(--duration-fast) var(--ease-soft);
+    }
+    a.tl-item:active .tl-card { transform: scale(0.985); }
+    .tl-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: 24px; }
+    .tl-card-head .meta { flex: 1; }
+    .tl-card .tl-title { margin-top: 6px; font-size: var(--fs-body); line-height: 1.45; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+    .tl-card p { margin-top: 2px; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더 -->
+        <header class="m-header no-line">
+          <span class="m-title">추억 타임라인</span>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 인사 영역 -->
+          <section class="tl-hero">
+            <span class="avatar"><i data-lucide="dog"></i></span>
+            <div class="grow">
+              <div class="cell-title"><span data-pet-name>보리</span>와 함께한 순간들</div>
+              <p class="cell-sub">다이어리·버킷리스트·소리·발도장·편지가 시간순으로 모여요</p>
+            </div>
+          </section>
+
+          <!-- 필터: 연도 · 기록 유형 (F13) -->
+          <section class="m-section">
+            <div class="filter-row">
+            <h2 class="filter-label">연도</h2>
+            <div class="chip-row" id="yearChips">
+              <button class="chip active" data-year="all">전체</button>
+              <button class="chip" data-year="2026">2026</button>
+              <button class="chip" data-year="2025">2025</button>
+              <button class="chip" data-year="2024">2024</button>
+            </div>
+            </div>
+
+            <div class="filter-row">
+            <h2 class="filter-label">유형</h2>
+            <div class="chip-row" id="typeChips">
+              <button class="chip active" data-type="all">전체</button>
+              <button class="chip" data-type="diary"><i data-lucide="notebook-pen"></i> 다이어리</button>
+              <button class="chip" data-type="bucket"><i data-lucide="list-checks"></i> 버킷리스트</button>
+              <button class="chip" data-type="sound"><i data-lucide="mic"></i> 소리·발도장</button>
+              <button class="chip" data-type="letter"><i data-lucide="mail"></i> 편지</button>
+            </div>
+            </div>
+
+            <div class="list-item hospital-row">
+              <span class="ico-wrap sm mint"><i data-lucide="heart-pulse"></i></span>
+              <div class="grow">
+                <div class="cell-title">병원 방문 기록도 보기</div>
+                <p class="cell-sub">추억 중심 구성을 위해 기본적으로 숨겨뒀어요</p>
+              </div>
+              <label class="switch" aria-label="병원 방문 기록 표시">
+                <input type="checkbox" id="hospitalToggle">
+                <span class="track"></span>
+              </label>
+            </div>
+          </section>
+
+          <!-- 시간순 통합 기록 (F13) -->
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">전체 기록</h2>
+              <span class="sec-sub"><span class="num" id="tlCount">12</span>개</span>
+            </div>
+
+            <div class="tl-list" id="tlList">
+
+              <a class="list-item tl-item" href="diary-write.html" data-year="2026" data-type="diary">
+                <span class="ico-wrap sm"><i data-lucide="notebook-pen"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.09.23 (수)</span>
+                    <span class="tag tag-mint"><i data-lucide="notebook-pen"></i> 다이어리</span>
+                  </div>
+                  <div class="tl-title">창가에서의 낮잠</div>
+                  <p class="t-body-s t-sub clamp-2">창가 햇살 아래서 한참 낮잠을 잤어요. 코 고는 소리가 작게 들렸어요.</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="diary-write.html" data-year="2026" data-type="diary">
+                <span class="ico-wrap sm"><i data-lucide="notebook-pen"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.09.22 (화)</span>
+                    <span class="tag tag-mint"><i data-lucide="notebook-pen"></i> 다이어리</span>
+                  </div>
+                  <div class="tl-title">고구마 간식 타임</div>
+                  <p class="t-body-s t-sub clamp-2">고구마 간식 두 조각을 다 먹고 꼬리를 흔들었어요.</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="pre-letter.html" data-year="2026" data-type="letter">
+                <span class="ico-wrap sm sky"><i data-lucide="mail"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.09.20 (일)</span>
+                    <span class="tag tag-primary"><i data-lucide="mail"></i> 편지</span>
+                  </div>
+                  <div class="tl-title">고마웠어</div>
+                  <p class="t-body-s t-sub clamp-2">이별 준비 모드에서 미리 남겨둔 편지예요. 매일 아침 네 발끝부터 확인했던 거 알아?</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="bucket-list.html" data-year="2026" data-type="bucket">
+                <span class="ico-wrap sm butter"><i data-lucide="list-checks"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.09.10 (목)</span>
+                    <span class="tag tag-butter"><i data-lucide="list-checks"></i> 버킷리스트</span>
+                  </div>
+                  <div class="tl-title">좋아하는 간식 마음껏 먹기 완료</div>
+                  <p class="t-body-s t-sub clamp-2">작은 간식 파티를 했어요. 신나서 발을 동동 굴렀어요.</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="health-record.html" data-year="2026" data-type="hospital">
+                <span class="ico-wrap sm mint"><i data-lucide="heart-pulse"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.09.09 (수)</span>
+                    <span class="tag tag-line"><i data-lucide="heart-pulse"></i> 병원 방문</span>
+                  </div>
+                  <div class="tl-title">해피동물병원 정기검진</div>
+                  <p class="t-body-s t-sub clamp-2">지난주 절었던 뒷다리를 검사했어요 · 슬개골 탈구 2단계 진단</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="bucket-list.html" data-year="2026" data-type="bucket">
+                <span class="ico-wrap sm butter"><i data-lucide="list-checks"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.09.03 (목)</span>
+                    <span class="tag tag-butter"><i data-lucide="list-checks"></i> 버킷리스트</span>
+                  </div>
+                  <div class="tl-title">담요 덮고 낮잠 자기 완료</div>
+                  <p class="t-body-s t-sub clamp-2">꼭 안고 낮잠을 잤어요. 숨소리가 참 편안했어요.</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="sound-pawprint.html" data-year="2026" data-type="sound">
+                <span class="ico-wrap sm soft"><i data-lucide="mic"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.08.30 (일)</span>
+                    <span class="tag tag-sky"><i data-lucide="mic"></i> 소리·발도장</span>
+                  </div>
+                  <div class="tl-title">짖는 소리 녹음</div>
+                  <p class="t-body-s t-sub clamp-2">산책 나가자고 조를 때 소리예요 · 1분 12초</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="bucket-list.html" data-year="2026" data-type="bucket">
+                <span class="ico-wrap sm butter"><i data-lucide="list-checks"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.08.17 (월)</span>
+                    <span class="tag tag-butter"><i data-lucide="list-checks"></i> 버킷리스트</span>
+                  </div>
+                  <div class="tl-title">바다 보기 완료</div>
+                  <p class="t-body-s t-sub clamp-2">을왕리에서 함께했어요. 파도를 보고 신나게 뛰어다녔어요.</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="diary-write.html" data-year="2026" data-type="diary">
+                <span class="ico-wrap sm"><i data-lucide="notebook-pen"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2026.06.02 (화)</span>
+                    <span class="tag tag-mint"><i data-lucide="notebook-pen"></i> 다이어리</span>
+                  </div>
+                  <div class="tl-title">14번째 생일</div>
+                  <p class="t-body-s t-sub clamp-2">보리의 14번째 생일! 좋아하는 호박전을 조금 나눠 먹었어요.</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="health-record.html" data-year="2025" data-type="hospital">
+                <span class="ico-wrap sm mint"><i data-lucide="heart-pulse"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2025.11.05 (수)</span>
+                    <span class="tag tag-line"><i data-lucide="heart-pulse"></i> 병원 방문</span>
+                  </div>
+                  <div class="tl-title">무릎 관절 검사</div>
+                  <p class="t-body-s t-sub clamp-2">슬개골 상태를 추적 관찰했어요 · 통원 치료 시작</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="sound-pawprint.html" data-year="2025" data-type="sound">
+                <span class="ico-wrap sm soft"><i data-lucide="mic"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2025.05.20 (화)</span>
+                    <span class="tag tag-sky"><i data-lucide="mic"></i> 소리·발도장</span>
+                  </div>
+                  <div class="tl-title">발도장 사진 등록</div>
+                  <p class="t-body-s t-sub clamp-2">산책 후 찍은 앞발 도장 사진이에요.</p>
+                </div>
+              </a>
+
+              <a class="list-item tl-item" href="diary-write.html" data-year="2024" data-type="diary">
+                <span class="ico-wrap sm"><i data-lucide="notebook-pen"></i></span>
+                <div class="tl-card">
+                  <div class="tl-card-head">
+                    <span class="meta num">2024.06.02 (일)</span>
+                    <span class="tag tag-mint"><i data-lucide="notebook-pen"></i> 다이어리</span>
+                  </div>
+                  <div class="tl-title">입양 기념일</div>
+                  <p class="t-body-s t-sub clamp-2">우리 집에 온 지 12년째 되는 날이에요. 그때 그 작은 발이 아직 눈에 선해요.</p>
+                </div>
+              </a>
+
+            </div>
+
+            <div class="empty" id="tlEmpty" hidden>
+              <div class="empty-art"><i data-lucide="search-x"></i></div>
+              <p class="t-body-s t-sub">이 조건에 맞는 기록이 아직 없어요</p>
+              <button class="btn btn-ghost btn-sm" id="resetFilterBtn">필터 초기화</button>
+            </div>
+          </section>
+
+          <!-- 더 살펴보기 — 다이어리 전체(P9), 하늘로 보내는 편지(P20) -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">더 살펴보기</h2></div>
+            <div class="list">
+              <a class="list-item" href="diary-list.html">
+                <span class="ico-wrap sm"><i data-lucide="book-open"></i></span>
+                <div class="grow"><div class="cell-title">다이어리 전체 보기</div><div class="cell-sub">목록형·캘린더형으로 모아봐요</div></div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+              <a class="list-item" href="letter-to-sky.html">
+                <span class="ico-wrap sm sky"><i data-lucide="send"></i></span>
+                <div class="grow"><div class="cell-title">하늘로 보내는 편지</div><div class="cell-sub wrap">이별 후에 쓰는 편지도 이 안에서 함께 이어져요</div></div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <!-- 하단 탭바 (02_PAGE.md: 홈 · 기록 · 함께하기 · 마음 돌봄 · 마이) -->
+        <nav class="m-tabbar" aria-label="하단 메뉴">
+          <a class="m-tab" href="home.html"><span class="m-tab-ico"><i data-lucide="house"></i></span>홈</a>
+          <a class="m-tab" href="diary-list.html"><span class="m-tab-ico"><i data-lucide="notebook-pen"></i></span>기록</a>
+          <a class="m-tab active" href="timeline.html"><span class="m-tab-ico"><i data-lucide="footprints"></i></span>함께하기</a>
+          <a class="m-tab" href="care-content.html"><span class="m-tab-ico"><i data-lucide="hand-heart"></i></span>마음 돌봄</a>
+          <a class="m-tab" href="mypage.html"><span class="m-tab-ico"><i data-lucide="user-round"></i></span>마이</a>
+        </nav>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    var yearChips = document.querySelectorAll('#yearChips .chip');
+    var typeChips = document.querySelectorAll('#typeChips .chip');
+    var hospitalToggle = document.getElementById('hospitalToggle');
+    var items = document.querySelectorAll('#tlList .list-item');
+    var tlEmpty = document.getElementById('tlEmpty');
+    var tlCount = document.getElementById('tlCount');
+
+    var yearFilter = 'all';
+    var typeFilter = 'all';
+
+    function applyFilters() {
+      var visible = 0;
+      items.forEach(function (item) {
+        var yearOk = yearFilter === 'all' || item.dataset.year === yearFilter;
+        var type = item.dataset.type;
+        var typeOk;
+        if (type === 'hospital') {
+          // F13: 건강 기록은 기본 숨김, 병원 방문만 사용자가 선택 시(스위치 ON) + 유형 필터가 전체일 때만 노출
+          typeOk = hospitalToggle.checked && typeFilter === 'all';
+        } else {
+          typeOk = typeFilter === 'all' || typeFilter === type;
+        }
+        var show = yearOk && typeOk;
+        item.hidden = !show;
+        if (show) visible++;
+      });
+      // 레일 세로선은 마지막으로 보이는 기록에서 끊는다
+      var lastShown = null;
+      items.forEach(function (item) { item.classList.remove('is-last'); if (!item.hidden) lastShown = item; });
+      if (lastShown) lastShown.classList.add('is-last');
+      tlCount.textContent = visible;
+      tlEmpty.hidden = visible !== 0;
+    }
+
+    yearChips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        yearChips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        yearFilter = chip.dataset.year;
+        applyFilters();
+      });
+    });
+
+    typeChips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        typeChips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        typeFilter = chip.dataset.type;
+        applyFilters();
+      });
+    });
+
+    hospitalToggle.addEventListener('change', function () {
+      applyFilters();
+      showToast(hospitalToggle.checked ? '병원 방문 기록도 함께 보여드려요' : '병원 방문 기록을 다시 숨겼어요');
+    });
+
+    document.getElementById('resetFilterBtn').addEventListener('click', function () {
+      yearChips.forEach(function (c) { c.classList.toggle('active', c.dataset.year === 'all'); });
+      typeChips.forEach(function (c) { c.classList.toggle('active', c.dataset.type === 'all'); });
+      yearFilter = 'all';
+      typeFilter = 'all';
+      hospitalToggle.checked = false;
+      applyFilters();
+      showToast('필터를 초기화했어요');
+    });
+
+    applyFilters();
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/timeline.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

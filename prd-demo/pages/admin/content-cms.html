@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P31 콘텐츠 관리(CMS) · 무지개 일기 관리자</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P31 전용 — 공통 레이아웃(.admin-*)은 common.css 그대로 쓴다 */
+    .nav-count { margin-left: auto; font-size: var(--fs-caption); color: var(--color-text-sub); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    /* 탭 + 검색 한 줄 바 */
+    .list-bar { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: 0 var(--space-5) 0 var(--space-3); border-bottom: 1px solid var(--color-border); }
+    .list-bar .tabs { flex: 1; min-width: 0; align-self: stretch; align-items: stretch; padding: 0; border-bottom: 0; overflow: visible; }
+    .list-bar .tab { height: auto; font-size: var(--fs-body-s); display: inline-flex; align-items: center; }
+    .list-bar .tab.active::after { bottom: 0; }
+    .list-bar .search { width: 260px; flex-shrink: 0; }
+    .list-bar .search .input { height: 40px; font-size: var(--fs-body-s); }
+    .list-bar .count { font-size: var(--fs-caption); color: var(--color-text-sub); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; }
+    .type-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: var(--radius-full); background: var(--color-surface-soft); color: var(--color-text-sub); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .tab.active .type-count { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+    /* 감정 배려 안내 배너 — 목록 위 얇은 띠 */
+    .care-banner { display: flex; align-items: center; gap: var(--space-2); padding: 10px var(--space-5); background: var(--theme-header-bg); border-bottom: 1px solid var(--color-border); font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); }
+    .care-banner [data-lucide], .care-banner svg { width: 16px; height: 16px; margin-top: 0; flex-shrink: 0; color: var(--color-primary-strong); }
+    /* 표 */
+    .td-title { width: 100%; max-width: 0; }
+    .td-title .cell-title { font-size: var(--fs-body-s); }
+    .col-type { width: 132px; }
+    .col-pub { width: 96px; }
+    .col-law { width: 128px; }
+    .col-upd { width: 88px; }
+    .td-switch .switch { vertical-align: middle; }
+    .law-date { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .law-date.overdue { color: var(--color-error-text); font-weight: 600; }
+    .law-date svg { width: 15px; height: 15px; }
+    .dim { color: var(--color-text-disabled); }
+    /* 편집 모달 */
+    .modal-lg { max-width: 600px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .modal-lg .modal-head { padding: var(--space-6) var(--space-6) var(--space-4); border-bottom: 1px solid var(--color-border); }
+    .modal-lg .modal-head .modal-title { margin-bottom: 2px; }
+    .modal-lg .modal-head .modal-desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .modal-lg .modal-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-5) var(--space-6) var(--space-1); }
+    .modal-lg .modal-actions { margin-top: 0; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--color-border); }
+    .modal-lg .modal-actions .btn { flex: 0 0 auto; min-width: 112px; }
+    .modal-lg .modal-actions .spacer { flex: 1; }
+    .modal-lg .field { margin-bottom: var(--space-4); }
+    .modal-lg .textarea { min-height: 140px; }
+    .type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); column-gap: var(--space-3); }
+    .cell-sub .burden { color: var(--color-text); font-weight: 600; }
+    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-4); margin-bottom: var(--space-4); border-radius: var(--radius-md); background: var(--color-bg); }
+    .switch-row .t { font-size: var(--fs-body-s); font-weight: 600; }
+    .switch-row .t-caption { margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="admin">
+
+    <!-- 사이드바 (P28~P33) — 다른 관리자 페이지는 이 블록을 그대로 복사하고 active만 옮긴다 -->
+    <aside class="admin-side">
+      <div class="admin-brand">
+        <span class="ico-wrap"><i data-lucide="rainbow" class="ico-18"></i></span>
+        <div>
+          <div class="admin-brand-name">무지개 일기</div>
+          <div class="admin-brand-sub">운영 관리자</div>
+        </div>
+      </div>
+
+      <div class="admin-nav-label">통계</div>
+      <nav class="admin-nav">
+        <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> 대시보드</a>
+      </nav>
+
+      <div class="admin-nav-label">운영</div>
+      <nav class="admin-nav">
+        <a href="members.html"><i data-lucide="users"></i> 회원·반려견</a>
+        <a href="inquiries.html"><i data-lucide="message-circle-question"></i> 1:1 문의 <span class="nav-count">대기 7</span></a>
+        <a href="content-cms.html" class="active"><i data-lucide="file-pen-line"></i> 콘텐츠(CMS)</a>
+        <a href="reports.html"><i data-lucide="flag"></i> 신고·모더레이션 <span class="nav-count">5</span></a>
+        <a href="partners.html"><i data-lucide="handshake"></i> 제휴 업체</a>
+      </nav>
+
+      <div class="admin-side-foot">
+        <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+        <div class="grow">
+          <div class="t-body-s t-strong">김하늘</div>
+          <div class="t-caption t-sub">운영 매니저</div>
+        </div>
+        <a class="icon-btn" href="login.html" aria-label="로그아웃" title="로그아웃"><i data-lucide="log-out" class="ico-18"></i></a>
+      </div>
+    </aside>
+
+    <!-- 메인 -->
+    <div class="admin-main">
+      <header class="admin-top">
+        <div class="admin-top-title">콘텐츠 관리(CMS)</div>
+        <span class="crumb">운영 · 체크리스트·가이드·아티클·버킷리스트 추천·삶의 질 문항·행정 안내</span>
+        <div class="admin-top-actions">
+          <button class="btn btn-primary btn-sm" id="createBtn"><i data-lucide="plus"></i> 새 콘텐츠 등록</button>
+        </div>
+      </header>
+
+      <main class="admin-body">
+
+        <section class="panel">
+          <div class="list-bar">
+          <div class="tabs" role="tablist" aria-label="콘텐츠 유형">
+            <button class="tab active" data-type="all">전체 <span class="type-count">12</span></button>
+            <button class="tab" data-type="checklist">체크리스트 <span class="type-count">1</span></button>
+            <button class="tab" data-type="guide">가이드 <span class="type-count">3</span></button>
+            <button class="tab" data-type="article">아티클 <span class="type-count">2</span></button>
+            <button class="tab" data-type="bucket">버킷리스트 추천 <span class="type-count">3</span></button>
+            <button class="tab" data-type="qol">삶의 질 문항 <span class="type-count">1</span></button>
+            <button class="tab" data-type="admin">행정 안내 <span class="type-count">2</span></button>
+          </div>
+            <div class="input-wrap search">
+              <i data-lucide="search" class="ico-16"></i>
+              <input class="input" id="searchInput" placeholder="제목으로 검색">
+            </div>
+            <span class="count" id="listCount">12건</span>
+          </div>
+
+          <p class="care-banner disclaimer"><i data-lucide="heart-handshake"></i> 모든 문구는 감정 배려 검수를 거쳐 게시해요. 저장 전 어투를 다시 한번 확인해 주세요.</p>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>제목</th>
+                  <th class="col-type">유형</th>
+                  <th class="col-pub">게시 여부</th>
+                  <th class="col-law">법령 점검일</th>
+                  <th class="col-upd">수정일</th>
+                  <th class="td-actions"><span class="sr-only">관리</span></th>
+                </tr>
+              </thead>
+              <tbody id="cmsBody"></tbody>
+            </table>
+          </div>
+
+          <div class="pagination">
+            <button class="page-btn" data-page="prev" aria-label="이전"><i data-lucide="chevron-left" class="ico-16"></i></button>
+            <button class="page-btn active" data-page="1">1</button>
+            <button class="page-btn" data-page="next" aria-label="다음"><i data-lucide="chevron-right" class="ico-16"></i></button>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- 편집 모달 -->
+    <div class="modal-dim" id="editDim">
+      <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-head">
+          <div class="modal-title" id="modalTitle">콘텐츠 편집</div>
+          <div class="modal-desc" id="modalSub">발도장·털 보관 방법 가이드</div>
+        </div>
+        <div class="modal-scroll">
+
+        <div class="field">
+          <label class="field-label">제목<span class="req">*</span></label>
+          <input class="input" id="fTitle" placeholder="콘텐츠 제목">
+        </div>
+
+        <div class="type-grid">
+        <div class="field">
+          <label class="field-label">분류</label>
+          <select class="select" id="fType">
+            <option value="checklist">체크리스트</option>
+            <option value="guide">가이드</option>
+            <option value="article">아티클</option>
+            <option value="bucket">버킷리스트 추천</option>
+            <option value="qol">삶의 질 문항</option>
+            <option value="admin">행정 안내</option>
+          </select>
+        </div>
+
+        <div class="field" id="fBurdenField" hidden>
+          <label class="field-label">체력 부담</label>
+          <select class="select" id="fBurden">
+            <option value="낮음">낮음</option>
+            <option value="보통">보통</option>
+            <option value="높음">높음</option>
+          </select>
+        </div>
+
+        <div class="field" id="fLawField" hidden>
+          <label class="field-label">법령 점검일</label>
+          <input class="input" type="date" id="fLawDate">
+        </div>
+        </div>
+        <div class="field-help" id="fLawHelp" hidden style="margin: calc(-1 * var(--space-2)) 0 var(--space-4);">관련 법령·행정 절차 개정 여부를 점검한 날짜예요. 90일이 지나면 대시보드 처리할 일에 표시돼요.</div>
+
+        <div class="field">
+          <label class="field-label">본문</label>
+          <textarea class="textarea" id="fBody" placeholder="본문을 입력하세요"></textarea>
+        </div>
+
+        <div class="switch-row">
+          <div>
+            <div class="t">게시 여부</div>
+            <div class="t-caption t-sub">숨기면 사용자 화면에서 즉시 보이지 않아요</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="fPublish" checked><span class="track"></span></label>
+        </div>
+        </div>
+
+        <div class="modal-actions">
+          <span class="spacer"></span>
+          <button class="btn btn-secondary" id="cancelBtn">취소</button>
+          <button class="btn btn-primary" id="saveBtn">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check"></i><span id="toastMsg"></span></div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    var TYPE_LABEL = {
+      checklist: '체크리스트', guide: '가이드', article: '아티클',
+      bucket: '버킷리스트 추천', qol: '삶의 질 문항', admin: '행정 안내'
+    };
+    var TYPE_TAG = {
+      checklist: 'tag-line', guide: 'tag-sky', article: 'tag-butter',
+      bucket: 'tag-theme', qol: 'tag-mint', admin: 'tag-primary'
+    };
+
+    // F41 더미 콘텐츠 12건
+    var CONTENT = [
+      { id: 1, title: '임종 전 준비물 체크리스트', body: '체온 유지, 배변 패드, 편안한 담요 등 마지막 순간을 함께 준비할 때 필요한 물품을 정리했어요.', type: 'checklist', published: true, law: null, burden: null, updated: '09.20' },
+      { id: 2, title: '발도장·털 보관 방법 가이드', body: '석고 발도장 뜨는 법, 털을 위생적으로 오래 보관하는 방법을 단계별로 안내해요.', type: 'guide', published: true, law: null, burden: null, updated: '09.15' },
+      { id: 3, title: '화장 vs 수목장, 어떤 방식이 맞을까요', body: '두 방식의 절차와 비용 범위를 비교해 보호자의 선택을 돕는 안내예요.', type: 'guide', published: true, law: null, burden: null, updated: '09.10' },
+      { id: 4, title: '장례식 당일 준비물 가이드', body: '장례 당일 챙기면 좋은 물품과 마음가짐을 정리했어요.', type: 'guide', published: false, law: null, burden: null, updated: '08.12' },
+      { id: 5, title: '펫로스, 슬픔은 충분히 느껴도 괜찮아요', body: '반려동물을 떠나보낸 슬픔은 자연스러운 감정이라는 것을 전하는 글이에요.', type: 'article', published: true, law: null, burden: null, updated: '09.18' },
+      { id: 6, title: '무지개다리를 건넌 후 찾아오는 감정들', body: '죄책감, 그리움 등 시기별로 찾아오는 감정의 변화를 다룬 아티클이에요.', type: 'article', published: false, law: null, burden: null, updated: '08.30' },
+      { id: 7, title: '좋아하는 간식 마음껏 먹기', body: '평소 아끼던 간식을 함께 나누며 추억을 쌓는 버킷리스트 항목이에요.', type: 'bucket', published: true, law: null, burden: '낮음', updated: '09.05' },
+      { id: 8, title: '단골 산책로 다시 걷기', body: '자주 걷던 산책길을 천천히 다시 걸어보는 항목이에요.', type: 'bucket', published: true, law: null, burden: '보통', updated: '09.05' },
+      { id: 9, title: '바다·계곡으로 나들이 가기', body: '컨디션을 살피며 짧게라도 다녀오는 나들이 항목이에요.', type: 'bucket', published: false, law: null, burden: '높음', updated: '08.20' },
+      { id: 10, title: '식욕은 평소와 비슷한가요?', body: '삶의 질 체크(F11) 문항 — 식욕 항목. 자문 확정 문구를 반영해요.', type: 'qol', published: true, law: null, burden: null, updated: '07.01' },
+      { id: 11, title: '반려동물 등록 말소 신청 방법', body: '동물등록 말소 신청서, 구비 서류, 접수 기관 안내예요.', type: 'admin', published: true, law: '2026-06-20', burden: null, updated: '09.22' },
+      { id: 12, title: '사망신고 후 처리해야 할 행정 절차', body: '이별 후 처리하면 좋은 행정 절차를 정리했어요.', type: 'admin', published: true, law: '2026-05-15', burden: null, updated: '08.01' }
+    ];
+
+    var TODAY = new Date('2026-09-29');
+    function isOverdue(dateStr) {
+      if (!dateStr) return false;
+      var d = new Date(dateStr);
+      var diffDays = Math.floor((TODAY - d) / 86400000);
+      return diffDays >= 90;
+    }
+    function fmtLawDate(dateStr) {
+      if (!dateStr) return '<span class="dim">—</span>';
+      var d = new Date(dateStr);
+      var label = d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
+      var overdue = isOverdue(dateStr);
+      return '<span class="law-date' + (overdue ? ' overdue' : '') + '">' + (overdue ? '<i data-lucide="triangle-alert" class="ico-16"></i>' : '') + label + '</span>';
+    }
+
+    var currentType = 'all';
+    var currentQuery = '';
+
+    function renderList() {
+      var rows = CONTENT.filter(function (c) {
+        var matchType = currentType === 'all' || c.type === currentType;
+        var matchQuery = !currentQuery || c.title.indexOf(currentQuery) > -1;
+        return matchType && matchQuery;
+      });
+      document.getElementById('listCount').textContent = rows.length + '건';
+      document.getElementById('cmsBody').innerHTML = rows.map(function (c) {
+        var burdenNote = c.burden ? '<span class="meta-sep">·</span><span class="burden">체력 부담 ' + c.burden + '</span>' : '';
+        return '' +
+          '<tr>' +
+          '<td class="td-title"><div class="cell-title" title="' + c.title + '">' + c.title + '</div><div class="cell-sub">' + c.body.slice(0, 28) + '…' + burdenNote + '</div></td>' +
+          '<td><span class="tag ' + TYPE_TAG[c.type] + '">' + TYPE_LABEL[c.type] + '</span></td>' +
+          '<td class="td-switch"><label class="switch"><input type="checkbox" data-toggle="' + c.id + '"' + (c.published ? ' checked' : '') + ' aria-label="게시 여부"><span class="track"></span></label></td>' +
+          '<td class="td-date">' + fmtLawDate(c.law) + '</td>' +
+          '<td class="td-date">' + c.updated + '</td>' +
+          '<td class="td-actions"><button class="btn btn-ghost btn-sm" data-edit="' + c.id + '"><i data-lucide="pencil"></i> 편집</button></td>' +
+          '</tr>';
+      }).join('') || '<tr><td colspan="6"><div class="empty"><div class="empty-art"><i data-lucide="search-x"></i></div><p class="t-body-s t-sub">조건에 맞는 콘텐츠가 없어요</p></div></td></tr>';
+      lucide.createIcons();
+      bindRowEvents();
+    }
+
+    function bindRowEvents() {
+      document.querySelectorAll('[data-toggle]').forEach(function (input) {
+        input.addEventListener('change', function () {
+          var id = Number(input.dataset.toggle);
+          var item = CONTENT.filter(function (c) { return c.id === id; })[0];
+          item.published = input.checked;
+          showToast(item.title + (item.published ? ' 콘텐츠를 게시했어요' : ' 콘텐츠를 숨겼어요'));
+        });
+      });
+      document.querySelectorAll('[data-edit]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          openEdit(Number(btn.dataset.edit));
+        });
+      });
+    }
+
+    // 유형 탭
+    document.querySelectorAll('[data-type]').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('[data-type]').forEach(function (t) { t.classList.toggle('active', t === tab); });
+        currentType = tab.dataset.type;
+        renderList();
+      });
+    });
+
+    // 검색
+    document.getElementById('searchInput').addEventListener('input', function (e) {
+      currentQuery = e.target.value.trim();
+      renderList();
+    });
+
+    // 페이지네이션 (시각 피드백)
+    document.querySelectorAll('[data-page]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('[data-page]').forEach(function (b) { if (/^\d+$/.test(b.dataset.page) || b === btn) b.classList.remove('active'); });
+        if (/^\d+$/.test(btn.dataset.page)) btn.classList.add('active');
+      });
+    });
+
+    // 편집/등록 모달
+    var editingId = null;
+    function applyTypeFields(type) {
+      document.getElementById('fBurdenField').hidden = type !== 'bucket';
+      document.getElementById('fLawField').hidden = type !== 'admin';
+      document.getElementById('fLawHelp').hidden = type !== 'admin';
+    }
+    document.getElementById('fType').addEventListener('change', function (e) {
+      applyTypeFields(e.target.value);
+    });
+
+    function openEdit(id) {
+      var item = CONTENT.filter(function (c) { return c.id === id; })[0];
+      editingId = id;
+      document.getElementById('modalTitle').textContent = '콘텐츠 편집';
+      document.getElementById('modalSub').textContent = item.title;
+      document.getElementById('fTitle').value = item.title;
+      document.getElementById('fType').value = item.type;
+      document.getElementById('fBody').value = item.body;
+      document.getElementById('fPublish').checked = item.published;
+      document.getElementById('fBurden').value = item.burden || '낮음';
+      document.getElementById('fLawDate').value = item.law || '';
+      applyTypeFields(item.type);
+      document.getElementById('editDim').classList.add('open');
+    }
+
+    function openCreate() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = '새 콘텐츠 등록';
+      document.getElementById('modalSub').textContent = '카테고리를 선택하고 본문을 작성하세요';
+      document.getElementById('fTitle').value = '';
+      document.getElementById('fType').value = 'guide';
+      document.getElementById('fBody').value = '';
+      document.getElementById('fPublish').checked = false;
+      document.getElementById('fBurden').value = '낮음';
+      document.getElementById('fLawDate').value = '';
+      applyTypeFields('guide');
+      document.getElementById('editDim').classList.add('open');
+    }
+
+    function closeEdit() { document.getElementById('editDim').classList.remove('open'); }
+
+    document.getElementById('createBtn').addEventListener('click', openCreate);
+    document.getElementById('cancelBtn').addEventListener('click', closeEdit);
+    document.getElementById('editDim').addEventListener('click', function (e) { if (e.target === e.currentTarget) closeEdit(); });
+
+    document.getElementById('saveBtn').addEventListener('click', function () {
+      var title = document.getElementById('fTitle').value.trim();
+      if (!title) {
+        showToast('제목을 입력해 주세요');
+        return;
+      }
+      var type = document.getElementById('fType').value;
+      var body = document.getElementById('fBody').value.trim();
+      var published = document.getElementById('fPublish').checked;
+      var burden = type === 'bucket' ? document.getElementById('fBurden').value : null;
+      var law = type === 'admin' ? document.getElementById('fLawDate').value || null : null;
+      var todayLabel = '09.29';
+
+      var saveBtn = document.getElementById('saveBtn');
+      var original = saveBtn.textContent;
+      saveBtn.textContent = '저장 중…';
+      saveBtn.disabled = true;
+
+      setTimeout(function () {
+        if (editingId) {
+          var item = CONTENT.filter(function (c) { return c.id === editingId; })[0];
+          item.title = title; item.type = type; item.body = body || item.body;
+          item.published = published; item.burden = burden; item.law = law; item.updated = todayLabel;
+        } else {
+          var maxId = Math.max.apply(null, CONTENT.map(function (c) { return c.id; }));
+          CONTENT.unshift({ id: maxId + 1, title: title, body: body || '내용을 입력해 주세요.', type: type, published: published, law: law, burden: burden, updated: todayLabel });
+        }
+        saveBtn.textContent = original;
+        saveBtn.disabled = false;
+        closeEdit();
+        renderList();
+        showToast(editingId ? '콘텐츠를 저장했어요' : '새 콘텐츠를 등록했어요');
+      }, 400);
+    });
+
+    renderList();
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/admin/content-cms.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

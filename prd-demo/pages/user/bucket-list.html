@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P14 버킷리스트 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P14 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 상단 안내 + 필터 한 블록 */
+    .bucket-intro p { margin-bottom: var(--space-4); }
+    #filterSeg { display: flex; }
+    #filterSeg .seg-btn { flex: 1; }
+    /* 추천 칩 — 화면 끝까지 흘러가는 가로 스크롤(좌우 16px 여백 유지) */
+    .reco-scroll { margin: 0 calc(var(--space-4) * -1); padding: 0 var(--space-4); scroll-padding: 0 var(--space-4); }
+    .reco-scroll .chip { height: 36px; padding: 0 var(--space-3) 0 10px; }
+    .reco-scroll .chip:disabled { cursor: default; }
+    /* 버킷 카드 — 스탬프 · 제목/메타 한 줄씩 */
+    .card-bucket { min-height: 68px; padding: var(--space-3) var(--space-4); }
+    .card-bucket .grow { min-width: 0; }
+    .card-bucket.is-done .cell-sub { color: var(--color-text-sub); }
+    /* 완료 인증 사진 자리 */
+    .bucket-photo { border: 0; cursor: pointer; gap: 6px; margin-bottom: var(--space-5); font-size: var(--fs-body-s); font-weight: 600; }
+    .bucket-photo[data-picked="1"] { --photo-bg: var(--theme-accent-soft); color: var(--color-text); }
+    .bucket-photo[data-picked="1"] svg { opacity: 1; width: 18px; height: 18px; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기 + 제목 -->
+        <header class="m-header">
+          <a class="icon-btn" href="timeline.html" aria-label="뒤로 가기"><i data-lucide="arrow-left"></i></a>
+          <span class="m-title is-center">버킷리스트</span>
+          <div class="m-header-actions">
+            <button class="icon-btn" id="addBtn" aria-label="새 항목 직접 추가"><i data-lucide="plus"></i></button>
+          </div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <section class="m-section bucket-intro">
+            <p class="t-body-s t-sub"><span data-pet-name>보리</span>와 함께 하고 싶은 일들을 천천히 채워보세요. 서두르지 않아도 괜찮아요.</p>
+
+            <!-- 상태 필터 -->
+            <div class="segment" role="tablist" id="filterSeg">
+              <button class="seg-btn active" data-filter="all">전체</button>
+              <button class="seg-btn" data-filter="todo">진행 중</button>
+              <button class="seg-btn" data-filter="done">완료</button>
+            </div>
+          </section>
+
+          <!-- 추천 항목 (CMS) -->
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">추천 항목</h2>
+              <span class="sec-sub">눌러서 담아보세요</span>
+            </div>
+            <div class="chip-row scroll reco-scroll" id="recoChips">
+              <button class="chip" data-add="좋아하는 담요 선물하기" data-caution="0">
+                <i data-lucide="plus"></i>좋아하는 담요 선물하기<i data-lucide="check" class="chip-check"></i>
+              </button>
+              <button class="chip" data-add="편안한 마사지 받아보기" data-caution="0">
+                <i data-lucide="plus"></i>편안한 마사지 받아보기<i data-lucide="check" class="chip-check"></i>
+              </button>
+              <button class="chip" data-add="좋아하는 사진관에서 촬영하기" data-caution="0">
+                <i data-lucide="plus"></i>좋아하는 사진관에서 촬영하기<i data-lucide="check" class="chip-check"></i>
+              </button>
+              <button class="chip" data-add="단골 가게에 마지막으로 들르기" data-caution="1">
+                <i data-lucide="plus"></i>단골 가게에 마지막으로 들르기<i data-lucide="check" class="chip-check"></i>
+              </button>
+            </div>
+          </section>
+
+          <!-- 내가 담은 일 -->
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">내가 담은 일</h2>
+              <span class="sec-sub num"><span id="bucketCount">9</span>개</span>
+            </div>
+            <div class="stack-2" id="bucketList">
+
+              <div class="card card-sm card-bucket is-done" data-bucket data-status="done" data-caution="0">
+                <span class="stamp" role="button" tabindex="0" aria-label="바다 보기 완료 취소하기"><i data-lucide="check" class="ico-18"></i></span>
+                <div class="grow"><div class="t-strong cell-title">바다 보기</div><div class="cell-sub" data-bucket-meta>8월 17일 · 을왕리에서 함께했어요</div></div>
+              </div>
+
+              <div class="card card-sm card-bucket is-done" data-bucket data-status="done" data-caution="0">
+                <span class="stamp" role="button" tabindex="0" aria-label="좋아하는 간식 마음껏 먹기 완료 취소하기"><i data-lucide="check" class="ico-18"></i></span>
+                <div class="grow"><div class="t-strong cell-title">좋아하는 간식 마음껏 먹기</div><div class="cell-sub" data-bucket-meta>9월 10일 · 작은 간식 파티를 했어요</div></div>
+              </div>
+
+              <div class="card card-sm card-bucket is-done" data-bucket data-status="done" data-caution="0">
+                <span class="stamp" role="button" tabindex="0" aria-label="담요 덮고 낮잠 자기 완료 취소하기"><i data-lucide="check" class="ico-18"></i></span>
+                <div class="grow"><div class="t-strong cell-title">담요 덮고 낮잠 자기</div><div class="cell-sub" data-bucket-meta>9월 3일 · 꼭 안고 낮잠을 잤어요</div></div>
+              </div>
+
+              <div class="card card-sm card-bucket" data-bucket data-status="todo" data-caution="0" data-item="가족사진 찍기">
+                <button class="stamp" aria-label="가족사진 찍기 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>
+                <div class="grow"><div class="t-strong cell-title">가족사진 찍기</div><div class="cell-sub" data-bucket-meta>추천 항목</div></div>
+              </div>
+
+              <div class="card card-sm card-bucket" data-bucket data-status="todo" data-caution="0" data-item="드라이브 가기">
+                <button class="stamp" aria-label="드라이브 가기 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>
+                <div class="grow"><div class="t-strong cell-title">드라이브 가기</div><div class="cell-sub" data-bucket-meta>추천 항목</div></div>
+              </div>
+
+              <div class="card card-sm card-bucket" data-bucket data-status="todo" data-caution="1" data-item="강아지 카페 가기">
+                <button class="stamp" aria-label="강아지 카페 가기 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>
+                <div class="grow"><div class="t-strong cell-title">강아지 카페 가기</div><div class="cell-sub" data-bucket-meta>컨디션을 먼저 확인하세요</div></div>
+              </div>
+
+              <div class="card card-sm card-bucket" data-bucket data-status="todo" data-caution="1" data-item="첫 산책길 다시 걷기">
+                <button class="stamp" aria-label="첫 산책길 다시 걷기 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>
+                <div class="grow"><div class="t-strong cell-title">첫 산책길 다시 걷기</div><div class="cell-sub" data-bucket-meta>컨디션을 먼저 확인하세요</div></div>
+              </div>
+
+              <div class="card card-sm card-bucket" data-bucket data-status="todo" data-caution="0" data-item="좋아하는 노래 들려주기">
+                <button class="stamp" aria-label="좋아하는 노래 들려주기 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>
+                <div class="grow"><div class="t-strong cell-title">좋아하는 노래 들려주기</div><div class="cell-sub" data-bucket-meta>직접 추가한 항목</div></div>
+              </div>
+
+              <div class="card card-sm card-bucket" data-bucket data-status="todo" data-caution="0" data-item="온 가족이 모이는 날 함께 있기">
+                <button class="stamp" aria-label="온 가족이 모이는 날 함께 있기 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>
+                <div class="grow"><div class="t-strong cell-title">온 가족이 모이는 날 함께 있기</div><div class="cell-sub" data-bucket-meta>직접 추가한 항목</div></div>
+              </div>
+
+            </div>
+
+            <div class="empty" id="emptyState" hidden>
+              <div class="empty-art"><i data-lucide="list-plus"></i></div>
+              <p class="t-body-s t-sub">아직 담긴 일이 없어요</p>
+            </div>
+          </section>
+
+        </main>
+
+        <!-- 하단 탭바 (02_PAGE.md: 홈 · 기록 · 함께하기 · 마음 돌봄 · 마이) -->
+        <nav class="m-tabbar" aria-label="하단 메뉴">
+          <a class="m-tab" href="home.html"><span class="m-tab-ico"><i data-lucide="house"></i></span>홈</a>
+          <a class="m-tab" href="diary-list.html"><span class="m-tab-ico"><i data-lucide="notebook-pen"></i></span>기록</a>
+          <a class="m-tab active" href="timeline.html"><span class="m-tab-ico"><i data-lucide="footprints"></i></span>함께하기</a>
+          <a class="m-tab" href="care-content.html"><span class="m-tab-ico"><i data-lucide="hand-heart"></i></span>마음 돌봄</a>
+          <a class="m-tab" href="mypage.html"><span class="m-tab-ico"><i data-lucide="user-round"></i></span>마이</a>
+        </nav>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 공용 딤 -->
+        <div class="sheet-dim" id="sheetDim"></div>
+
+        <!-- 직접 추가 바텀시트 -->
+        <div class="sheet" id="addSheet" role="dialog" aria-label="버킷리스트 직접 추가">
+          <div class="sheet-grip"></div>
+          <div class="sheet-title">어떤 일을 함께 하고 싶나요?</div>
+          <div class="field" id="addField">
+            <label class="field-label" for="addInput">하고 싶은 일<span class="req">*</span></label>
+            <input class="input" id="addInput" type="text" placeholder="예: 좋아하는 공원 산책하기" maxlength="30">
+            <p class="field-error">하고 싶은 일을 적어주세요</p>
+          </div>
+          <div class="sheet-actions">
+            <button class="btn btn-secondary btn-lg" id="addCancelBtn">취소</button>
+            <button class="btn btn-primary btn-lg" id="addSaveBtn"><i data-lucide="plus"></i> 목록에 담기</button>
+          </div>
+        </div>
+
+        <!-- 완료 인증 바텀시트 (F14: 사진·메모 첨부 → 타임라인 등록) -->
+        <div class="sheet" id="doneSheet" role="dialog" aria-label="버킷리스트 완료 기록">
+          <div class="sheet-grip"></div>
+          <div class="sheet-title"><span id="doneItemName">가족사진 찍기</span>, 함께 해냈어요</div>
+          <button class="photo r-169 rounded bucket-photo" id="donePhotoBtn" type="button" aria-label="완료 사진 첨부">
+            <i data-lucide="image-plus"></i>
+          </button>
+          <div class="field">
+            <label class="field-label" for="doneMemo">오늘의 메모</label>
+            <textarea class="textarea" id="doneMemo" placeholder="어떤 순간이었는지 짧게 남겨주세요"></textarea>
+          </div>
+          <div class="sheet-actions">
+            <button class="btn btn-secondary btn-lg" id="doneCancelBtn">취소</button>
+            <button class="btn btn-primary btn-lg" id="doneSaveBtn"><i data-lucide="check"></i> 타임라인에 담기</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // ---- 바텀시트 공용 열고/닫기 ----
+    var dim = document.getElementById('sheetDim');
+    var openSheetEl = null;
+    function openSheet(el) { openSheetEl = el; el.classList.add('open'); dim.classList.add('open'); }
+    function closeSheet() { if (openSheetEl) openSheetEl.classList.remove('open'); dim.classList.remove('open'); openSheetEl = null; }
+    dim.addEventListener('click', closeSheet);
+
+    var list = document.getElementById('bucketList');
+    var countEl = document.getElementById('bucketCount');
+    var emptyState = document.getElementById('emptyState');
+
+    function refreshCount() {
+      var n = list.querySelectorAll('[data-bucket]').length;
+      countEl.textContent = n;
+      emptyState.hidden = n > 0;
+      applyFilter();
+    }
+
+    var currentFilter = 'all';
+    function applyFilter() {
+      list.querySelectorAll('[data-bucket]').forEach(function (card) {
+        card.hidden = currentFilter !== 'all' && card.dataset.status !== currentFilter;
+      });
+    }
+    document.getElementById('filterSeg').querySelectorAll('.seg-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.getElementById('filterSeg').querySelectorAll('.seg-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        currentFilter = btn.dataset.filter;
+        applyFilter();
+      });
+    });
+
+    // ---- 완료 처리 (사진·메모 → 타임라인 등록) ----
+    var doneSheet = document.getElementById('doneSheet');
+    var doneItemName = document.getElementById('doneItemName');
+    var doneMemo = document.getElementById('doneMemo');
+    var donePhotoBtn = document.getElementById('donePhotoBtn');
+    var currentCard = null;
+
+    function openDoneSheet(card) {
+      currentCard = card;
+      doneItemName.textContent = card.querySelector('.t-strong').textContent;
+      doneMemo.value = '';
+      donePhotoBtn.dataset.picked = '0';
+      donePhotoBtn.innerHTML = '<i data-lucide="image-plus"></i>';
+      lucide.createIcons();
+      openSheet(doneSheet);
+    }
+
+    donePhotoBtn.addEventListener('click', function () {
+      var picked = donePhotoBtn.dataset.picked === '1';
+      donePhotoBtn.dataset.picked = picked ? '0' : '1';
+      donePhotoBtn.innerHTML = picked
+        ? '<i data-lucide="image-plus"></i>'
+        : '<i data-lucide="check"></i> 사진 담았어요';
+      lucide.createIcons();
+    });
+
+    document.getElementById('doneCancelBtn').addEventListener('click', closeSheet);
+
+    document.getElementById('doneSaveBtn').addEventListener('click', function () {
+      if (!currentCard) return;
+      var meta = currentCard.querySelector('[data-bucket-meta]');
+      var stamp = currentCard.querySelector('.stamp');
+      var memo = doneMemo.value.trim();
+      var today = '9월 29일';
+      currentCard.classList.add('is-done');
+      currentCard.dataset.status = 'done';
+      if (!currentCard.dataset.origMeta) currentCard.dataset.origMeta = meta.textContent;
+      meta.textContent = today + ' · ' + (memo || '함께한 일로 남겨뒀어요');
+      stamp.classList.remove('is-stamped'); void stamp.offsetWidth; stamp.classList.add('is-stamped');
+      closeSheet();
+      refreshCount();
+      showToast('타임라인에 담아뒀어요');
+    });
+
+    // 완료·완료취소 스탬프 클릭 위임
+    list.addEventListener('click', function (e) {
+      var stamp = e.target.closest('.stamp');
+      if (!stamp) return;
+      var card = stamp.closest('[data-bucket]');
+      if (card.classList.contains('is-done')) {
+        // 완료 취소 — 즉시 되돌리기
+        card.classList.remove('is-done');
+        card.dataset.status = 'todo';
+        var meta = card.querySelector('[data-bucket-meta]');
+        meta.textContent = card.dataset.origMeta || (card.dataset.caution === '1' ? '컨디션을 먼저 확인하세요' : '추천 항목');
+        refreshCount();
+      } else {
+        openDoneSheet(card);
+      }
+    });
+
+    // ---- 추천 항목 담기 ----
+    function addBucketCard(name, caution, sourceLabel) {
+      var card = document.createElement('div');
+      card.className = 'card card-sm card-bucket';
+      card.setAttribute('data-bucket', '');
+      card.dataset.status = 'todo';
+      card.dataset.caution = caution ? '1' : '0';
+      card.dataset.item = name;
+      card.innerHTML =
+        '<button class="stamp" aria-label="' + name + ' 완료로 표시"><i data-lucide="check" class="ico-18"></i></button>' +
+        '<div class="grow"><div class="t-strong cell-title">' + name + '</div><div class="cell-sub" data-bucket-meta>' +
+        (caution ? '컨디션을 먼저 확인하세요' : sourceLabel) + '</div></div>';
+      list.insertBefore(card, list.firstChild);
+      lucide.createIcons();
+      refreshCount();
+    }
+
+    document.getElementById('recoChips').querySelectorAll('.chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        if (chip.classList.contains('active')) return;
+        chip.classList.add('active');
+        chip.disabled = true;
+        addBucketCard(chip.dataset.add, chip.dataset.caution === '1', '추천 항목');
+        showToast('목록에 담았어요');
+      });
+    });
+
+    // ---- 직접 추가 ----
+    var addSheet = document.getElementById('addSheet');
+    var addField = document.getElementById('addField');
+    var addInput = document.getElementById('addInput');
+    document.getElementById('addBtn').addEventListener('click', function () {
+      addInput.value = '';
+      addField.classList.remove('is-error');
+      openSheet(addSheet);
+    });
+    document.getElementById('addCancelBtn').addEventListener('click', closeSheet);
+    document.getElementById('addSaveBtn').addEventListener('click', function () {
+      var name = addInput.value.trim();
+      if (!name) { addField.classList.add('is-error'); return; }
+      addBucketCard(name, false, '직접 추가한 항목');
+      closeSheet();
+      showToast('목록에 담았어요');
+    });
+
+    refreshCount();
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/bucket-list.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

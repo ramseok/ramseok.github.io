@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P10 다이어리 작성·수정 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P10 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 헤더 — 타이틀은 좌우 액션 폭과 무관하게 화면 정중앙 */
+    .dw-header { position: relative; }
+    .dw-header .m-title.is-center { position: absolute; left: 88px; right: 88px; padding: 0; pointer-events: none; }
+    .dw-header .m-header-actions .btn-ghost { color: var(--color-error-text); }
+
+    /* 라벨 옆 보조 문구 */
+    .field-label .label-hint { font-size: var(--fs-caption); font-weight: 500; color: var(--color-text-sub); }
+
+    /* 날짜 — 네이티브 달력 아이콘은 숨기고 필드 전체를 눌러 달력을 연다 */
+    .date-wrap .input { position: relative; font-variant-numeric: tabular-nums; }
+    .date-wrap .input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: auto; height: auto; opacity: 0; cursor: pointer; }
+    .date-wrap .date-chev { position: absolute; left: auto; right: 14px; top: 50%; transform: translateY(-50%); color: var(--color-text-sub); pointer-events: none; }
+
+    /* 사진·영상 — 같은 4열 타일 크기 */
+    .upload-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+    .upload-tile {
+      position: relative; aspect-ratio: 1 / 1; border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--theme-accent-soft) 45%, var(--color-surface-soft)); color: var(--color-text-sub);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .upload-tile > [data-lucide], .upload-tile > svg { width: 24px; height: 24px; opacity: 0.5; }
+    .upload-tile.add > [data-lucide], .upload-tile.add > svg { width: 22px; height: 22px; opacity: 1; }
+    .upload-tile.add {
+      flex-direction: column; gap: 4px; background: transparent; color: var(--color-text-sub);
+      border: 1.5px dashed var(--color-text-disabled); font-size: var(--fs-caption); line-height: 1; font-weight: 600; white-space: nowrap;
+      transition: background-color var(--duration-fast) var(--ease-soft);
+    }
+    .upload-tile.add:hover { background: var(--color-surface-soft); }
+    .upload-tile.add:disabled { opacity: 0.45; }
+    .upload-tile .remove-btn {
+      position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border: 0;
+      border-radius: var(--radius-full); background: rgba(74, 63, 56, 0.55); color: #FFF9F2;
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* 터치 영역 44px — 타일 overflow:hidden 에 잘리지 않도록 타일 안쪽 방향으로 확장 */
+    .upload-tile .remove-btn::after { content: ''; position: absolute; top: -4px; right: -4px; width: 44px; height: 44px; }
+    .upload-tile .remove-btn [data-lucide], .upload-tile .remove-btn svg { width: 13px; height: 13px; color: #FFF9F2; }
+    .upload-tile .dur-badge {
+      position: absolute; left: 4px; bottom: 4px; padding: 1px 6px; border-radius: var(--radius-sm);
+      background: rgba(74, 63, 56, 0.55); color: #FFF9F2; font-size: 13px; font-weight: 600;
+    }
+    .upload-tile .dur-badge { line-height: 18px; font-variant-numeric: tabular-nums; }
+
+    /* 기분 — 4열 타일(아이콘 위 · 라벨 아래), 선택 시 테마 면 + 테두리 */
+    .mood-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+    .mood-grid .chip {
+      height: 64px; padding: 0 4px; flex-direction: column; justify-content: center; gap: 4px;
+      border-radius: var(--radius-md); border: 1.5px solid transparent; font-size: var(--fs-caption); line-height: 1.2; font-weight: 600;
+    }
+    .mood-grid .chip > [data-lucide], .mood-grid .chip > svg { width: 20px; height: 20px; }
+    .mood-grid .chip .chip-check { display: none !important; }
+    .mood-grid .chip.active { background: var(--theme-accent-soft); border-color: var(--theme-accent); }
+
+    .textarea.diary-text { min-height: 168px; resize: none; }
+    .dw-notice { margin-top: var(--space-2); }
+    .date-wrap > svg:first-child, .date-wrap > i:first-child { z-index: 1; pointer-events: none; }
+    .dw-notice + .notice { margin-top: var(--space-3); }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더 -->
+        <header class="m-header dw-header">
+          <button class="icon-btn" id="closeBtn" aria-label="닫기"><i data-lucide="x"></i></button>
+          <div class="m-title is-center" id="pageTitle">다이어리 쓰기</div>
+          <div class="m-header-actions">
+            <button class="btn btn-ghost btn-sm" id="deleteBtn" hidden><i data-lucide="trash-2"></i> 삭제</button>
+          </div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+          <div class="m-pad">
+
+            <!-- 날짜 (F9 — 기본값 오늘) -->
+            <div class="field">
+              <label class="field-label" for="dateInput">날짜</label>
+              <div class="input-wrap date-wrap">
+                <i data-lucide="calendar"></i>
+                <input type="date" class="input" id="dateInput">
+                <i data-lucide="chevron-down" class="date-chev ico-18"></i>
+              </div>
+            </div>
+
+            <!-- 사진 (F9 — 최대 10장, F36 원본 별도 보관) -->
+            <div class="field">
+              <span class="field-label">사진 <span class="label-hint">(선택, 최대 10장)</span><span class="field-count" id="photoCount">0 / 10</span></span>
+              <div class="upload-grid" id="photoGrid">
+                <button type="button" class="upload-tile add" id="addPhotoBtn"><i data-lucide="image-plus"></i><span>추가</span></button>
+              </div>
+            </div>
+
+            <!-- 영상 (F9·F36 — 1개, 무료 1분 / 프리미엄 5분) -->
+            <div class="field">
+              <span class="field-label">영상 <span class="label-hint">(선택, 1개)</span></span>
+              <div class="upload-grid" id="videoGrid">
+                <button type="button" class="upload-tile add" id="addVideoBtn"><i data-lucide="video"></i><span>추가</span></button>
+              </div>
+              <p class="field-help">무료 회원은 최대 1분,<br>프리미엄 회원은 최대 5분까지 올릴 수 있어요.</p>
+            </div>
+
+            <!-- 기분 태그 -->
+            <div class="field">
+              <span class="field-label">오늘 기분</span>
+              <div class="mood-grid" id="moodRow" role="radiogroup" aria-label="오늘 기분">
+                <button type="button" class="chip" data-mood="행복"><i data-lucide="smile"></i>행복<i data-lucide="check" class="chip-check"></i></button>
+                <button type="button" class="chip" data-mood="평온"><i data-lucide="leaf"></i>평온<i data-lucide="check" class="chip-check"></i></button>
+                <button type="button" class="chip" data-mood="아픔"><i data-lucide="thermometer"></i>아픔<i data-lucide="check" class="chip-check"></i></button>
+                <button type="button" class="chip" data-mood="특별한 날"><i data-lucide="sparkles"></i>특별한 날<i data-lucide="check" class="chip-check"></i></button>
+              </div>
+            </div>
+
+            <!-- 텍스트 -->
+            <div class="field">
+              <label class="field-label" for="diaryText">오늘의 이야기<span class="field-count" id="textCount">0 / 1000자</span></label>
+              <textarea class="textarea diary-text" id="diaryText" maxlength="1000" placeholder="오늘 보리는 어떤 하루를 보냈나요? 작은 순간도 괜찮아요."></textarea>
+            </div>
+
+            <!-- 원본 보관 안내 (F36) -->
+            <div class="notice notice-info dw-notice">
+              <i data-lucide="shield-check"></i>
+              <div class="grow">올려주신 사진·영상은 원본을 따로 안전하게 보관해요. 나중에 추모관을 만들 때도 고화질 그대로 쓸 수 있어요.</div>
+            </div>
+
+            <!-- 용량 한도 초과 안내 (F38, 평소엔 숨김) -->
+            <div class="notice notice-warn" id="capNotice" hidden>
+              <i data-lucide="triangle-alert"></i>
+              <div class="grow">사진은 한 번에 최대 10장까지 담을 수 있어요. 소중한 순간을 골라 다시 시도해주세요.</div>
+            </div>
+
+          </div>
+        </main>
+
+        <!-- 하단 고정 CTA (플로우 페이지 — 탭바 생략) -->
+        <div class="m-bottom-cta">
+          <div class="btn-row">
+            <button class="btn btn-secondary btn-lg" id="cancelBtn">취소</button>
+            <button class="btn btn-primary btn-lg" id="saveBtn"><i data-lucide="check"></i> 저장</button>
+          </div>
+        </div>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print"></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var LIST_PAGE = 'diary-list.html';
+    var MAX_PHOTOS = 10;
+    var photoGrid = document.getElementById('photoGrid');
+    var addPhotoBtn = document.getElementById('addPhotoBtn');
+    var photoCount = document.getElementById('photoCount');
+    var capNotice = document.getElementById('capNotice');
+    var videoGrid = document.getElementById('videoGrid');
+    var addVideoBtn = document.getElementById('addVideoBtn');
+
+    // 토스트 — 3초 (DESIGN.md 6.7)
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 날짜 기본값 오늘 (F9)
+    (function () {
+      var d = new Date();
+      var iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      document.getElementById('dateInput').value = iso;
+    })();
+
+    // 편집 모드 — 타임라인(P13)·최근 다이어리 카드에서 ?id= 로 진입 시 기존 기록을 채워 보여준다
+    (function () {
+      var id = new URLSearchParams(location.search).get('id');
+      if (!id) return;
+      document.getElementById('pageTitle').textContent = '다이어리 수정';
+      document.getElementById('deleteBtn').hidden = false;
+      document.getElementById('dateInput').value = '2026-09-26';
+      document.getElementById('diaryText').value = '고구마 간식 두 조각을 다 먹고 꼬리를 흔들었어요. 산책은 짧게 다녀왔지만 표정이 참 밝았어요.';
+      document.getElementById('diaryText').dispatchEvent(new Event('input'));
+      var moodBtn = document.querySelector('.chip[data-mood="행복"]');
+      if (moodBtn) moodBtn.classList.add('active');
+      addPhotoTile(); addPhotoTile();
+    })();
+
+    // 사진 추가/삭제 (F9 최대 10장, F38 한도 초과 안내)
+    function updatePhotoCount() {
+      var n = photoGrid.querySelectorAll('.upload-tile:not(.add)').length;
+      photoCount.textContent = n + ' / ' + MAX_PHOTOS;
+      addPhotoBtn.disabled = n >= MAX_PHOTOS;
+      capNotice.hidden = n < MAX_PHOTOS;
+    }
+    function addPhotoTile() {
+      var n = photoGrid.querySelectorAll('.upload-tile:not(.add)').length;
+      if (n >= MAX_PHOTOS) { capNotice.hidden = false; return; }
+      var tile = document.createElement('div');
+      tile.className = 'upload-tile';
+      tile.innerHTML = '<i data-lucide="image"></i><button type="button" class="remove-btn" aria-label="사진 삭제"><i data-lucide="x"></i></button>';
+      photoGrid.insertBefore(tile, addPhotoBtn);
+      tile.querySelector('.remove-btn').addEventListener('click', function () { tile.remove(); updatePhotoCount(); });
+      lucide.createIcons();
+      updatePhotoCount();
+    }
+    addPhotoBtn.addEventListener('click', addPhotoTile);
+    updatePhotoCount();
+
+    // 영상 추가/삭제 (F9·F36 — 1개, 무료 1분/프리미엄 5분)
+    function updateVideoState() {
+      var has = videoGrid.querySelectorAll('.upload-tile:not(.add)').length > 0;
+      addVideoBtn.hidden = has;
+    }
+    addVideoBtn.addEventListener('click', function () {
+      var tile = document.createElement('div');
+      tile.className = 'upload-tile';
+      tile.innerHTML = '<i data-lucide="film"></i><span class="dur-badge">0:42</span><button type="button" class="remove-btn" aria-label="영상 삭제"><i data-lucide="x"></i></button>';
+      videoGrid.insertBefore(tile, addVideoBtn);
+      tile.querySelector('.remove-btn').addEventListener('click', function () { tile.remove(); updateVideoState(); });
+      lucide.createIcons();
+      updateVideoState();
+      showToast('영상은 무료 회원 1분까지 담을 수 있어요');
+    });
+
+    // 기분 태그 — 단일 선택
+    document.querySelectorAll('#moodRow .chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        document.querySelectorAll('#moodRow .chip').forEach(function (c) { c.classList.toggle('active', c === chip); });
+      });
+    });
+
+    // 본문 글자 수
+    var diaryText = document.getElementById('diaryText');
+    diaryText.addEventListener('input', function () {
+      document.getElementById('textCount').textContent = diaryText.value.length + ' / 1000자';
+    });
+    diaryText.dispatchEvent(new Event('input'));
+
+    // 나가기 (헤더 닫기 · 취소)
+    document.getElementById('closeBtn').addEventListener('click', function () { location.href = LIST_PAGE; });
+    document.getElementById('cancelBtn').addEventListener('click', function () { location.href = LIST_PAGE; });
+
+    // 삭제 (수정 모드에서만 노출)
+    document.getElementById('deleteBtn').addEventListener('click', function () {
+      showToast('다이어리를 지웠어요');
+      setTimeout(function () { location.href = LIST_PAGE; }, 700);
+    });
+
+    // 저장 → 다이어리 목록(P9)으로 이동
+    document.getElementById('saveBtn').addEventListener('click', function () {
+      showToast('소중한 하루가 저장됐어요');
+      setTimeout(function () { location.href = LIST_PAGE; }, 700);
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/diary-write.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

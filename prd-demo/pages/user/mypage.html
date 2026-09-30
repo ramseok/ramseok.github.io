@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P26 마이페이지 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P26 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 프로필 카드 — 상단: 아바타 + 이름·태그 / 이메일, 우측 수정 버튼 · 하단 풋: 함께하는 반려견 */
+    .profile-card { padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5); }
+    .profile-main { display: flex; align-items: center; gap: var(--space-3); }
+    .profile-main .avatar { width: 56px; height: 56px; background: var(--theme-header-bg); }
+    .profile-main .avatar svg { width: 26px; height: 26px; }
+    .profile-name { font-size: var(--fs-h3); line-height: var(--lh-h3); font-weight: 700; letter-spacing: -0.015em; }
+    .profile-main .meta { margin-top: 1px; }
+    .profile-main .icon-btn { margin-right: calc(var(--space-2) * -1); color: var(--color-text-sub); }
+    .profile-card .card-foot { justify-content: flex-start; gap: var(--space-2); min-height: 48px; margin-left: calc(var(--space-5) * -1); margin-right: calc(var(--space-4) * -1); margin-bottom: calc(var(--space-4) * -1); padding-left: var(--space-5); font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--color-text-sub); }
+    .profile-card .card-foot svg { width: 16px; height: 16px; color: var(--color-primary-strong); }
+
+    /* 메뉴 그룹 라벨 — 리스트 안쪽 여백(16)과 좌측 정렬을 맞춘다 */
+    .m-section.menu-group { padding-top: var(--space-5); }
+    .menu-group-label { padding: 0 var(--space-1) var(--space-2); font-size: var(--fs-caption); line-height: var(--lh-caption); font-weight: 700; color: var(--color-text-sub); }
+    .list-item .ico-wrap { width: 36px; height: 36px; }
+    .list-item .ico-wrap svg { width: 18px; height: 18px; }
+    /* 사용 용량 — 한 줄 메타 대신 막대 + 수치로 나눠 줄바꿈 없이 */
+    .usage-row { display: flex; align-items: center; gap: var(--space-2); margin-top: 6px; }
+    .usage-row .progress { flex: 1; height: 6px; max-width: 120px; }
+    .usage-row .num { font-size: var(--fs-caption); line-height: 1; color: var(--color-text-sub); white-space: nowrap; }
+
+    .account-area { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); padding-top: var(--space-6); }
+    .account-row { display: flex; align-items: center; justify-content: center; gap: var(--space-2); }
+    .account-row .sep { width: 1px; height: 12px; background: var(--color-border); }
+    .account-row .btn-ghost { color: var(--color-text-sub); font-size: var(--fs-body-s); height: 40px; }
+    .withdraw-link { color: var(--color-text-disabled); font-size: var(--fs-caption); text-decoration: underline; text-underline-offset: 3px; background: transparent; border: 0; height: 40px; padding: 0 var(--space-3); white-space: nowrap; }
+    .app-version { text-align: center; color: var(--color-text-disabled); white-space: nowrap; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더 -->
+        <header class="m-header no-line">
+          <span class="m-title">마이페이지</span>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- ===== 프로필 (F1) ===== -->
+          <section class="m-section">
+            <div class="card profile-card">
+              <div class="profile-main">
+                <span class="avatar"><i data-lucide="user-round"></i></span>
+                <div class="grow">
+                  <div class="row">
+                    <span class="profile-name clamp-1" id="profileName">김서연 님</span>
+                    <span class="tag tag-primary">무료 플랜</span>
+                  </div>
+                  <span class="meta" id="profileEmail">boribori0602@example.com</span>
+                </div>
+                <button class="icon-btn" id="editProfileBtn" aria-label="프로필 정보 수정"><i data-lucide="pencil"></i></button>
+              </div>
+              <div class="card-foot">
+                <i data-lucide="paw-print"></i>
+                <span class="clamp-1">보리 · 콩이와 함께하고 있어요</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 반려견·가족 ===== -->
+          <section class="m-section menu-group">
+            <div class="menu-group-label">반려견·가족</div>
+            <div class="list">
+              <a class="list-item" href="pet-manage.html">
+                <span class="ico-wrap"><i data-lucide="dog"></i></span>
+                <div class="grow">
+                  <div class="cell-title">반려견 관리</div>
+                  <div class="cell-sub">보리 · 콩이 · 2마리 등록</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+              <a class="list-item" href="family-share.html">
+                <span class="ico-wrap sky"><i data-lucide="users"></i></span>
+                <div class="grow">
+                  <div class="cell-title">가족 공유</div>
+                  <div class="cell-sub">가족 구성원 3명</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== 설정 ===== -->
+          <section class="m-section menu-group">
+            <div class="menu-group-label">설정</div>
+            <div class="list">
+              <a class="list-item" href="notification-settings.html">
+                <span class="ico-wrap butter"><i data-lucide="bell"></i></span>
+                <div class="grow">
+                  <div class="cell-title">알림·표시 설정</div>
+                  <div class="cell-sub">알림 4종 켜짐 · 글자 크기 보통</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== 구독·데이터 (F31, F32, F38) ===== -->
+          <section class="m-section menu-group">
+            <div class="menu-group-label">구독·데이터</div>
+            <div class="list">
+              <a class="list-item" href="account-billing.html">
+                <span class="ico-wrap soft"><i data-lucide="credit-card"></i></span>
+                <div class="grow">
+                  <div class="cell-title">구독·결제</div>
+                  <div class="cell-sub">무료 플랜 이용 중</div>
+                  <div class="usage-row"><div class="progress" aria-hidden="true"><span style="width:60%"></span></div><span class="num">사용 용량 1.2GB / 2GB</span></div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+              <a class="list-item" href="account-billing.html">
+                <span class="ico-wrap mint"><i data-lucide="download"></i></span>
+                <div class="grow">
+                  <div class="cell-title">데이터 내보내기</div>
+                  <div class="cell-sub">사진·영상·기록 전체를 ZIP으로 받아요</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== 고객 지원 (F33) ===== -->
+          <section class="m-section menu-group">
+            <div class="menu-group-label">고객 지원</div>
+            <div class="list">
+              <a class="list-item" href="inquiry.html">
+                <span class="ico-wrap"><i data-lucide="message-circle-question"></i></span>
+                <div class="grow">
+                  <div class="cell-title">1:1 문의</div>
+                  <div class="cell-sub">답변 대기 1건</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== 계정 (로그아웃·탈퇴) ===== -->
+          <section class="m-section account-area">
+            <div class="account-row">
+              <button class="btn btn-ghost" id="logoutBtn"><i data-lucide="log-out"></i> 로그아웃</button>
+              <span class="sep" aria-hidden="true"></span>
+              <button class="withdraw-link" id="openWithdrawBtn">회원 탈퇴</button>
+            </div>
+            <p class="t-caption app-version">무지개 일기(가칭) v0.1.0</p>
+          </section>
+        </main>
+
+        <!-- 하단 탭바 (02_PAGE.md: 홈 · 기록 · 함께하기 · 마음 돌봄 · 마이) -->
+        <nav class="m-tabbar" aria-label="하단 메뉴">
+          <a class="m-tab" href="home.html"><span class="m-tab-ico"><i data-lucide="house"></i></span>홈</a>
+          <a class="m-tab" href="diary-list.html"><span class="m-tab-ico"><i data-lucide="notebook-pen"></i></span>기록</a>
+          <a class="m-tab" href="timeline.html"><span class="m-tab-ico"><i data-lucide="footprints"></i></span>함께하기</a>
+          <a class="m-tab" href="care-content.html"><span class="m-tab-ico"><i data-lucide="hand-heart"></i></span>마음 돌봄</a>
+          <a class="m-tab active" href="mypage.html"><span class="m-tab-ico"><i data-lucide="user-round"></i></span>마이</a>
+        </nav>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 프로필 정보 수정 바텀시트 -->
+        <div class="sheet-dim" id="profileDim"></div>
+        <div class="sheet" id="profileSheet" role="dialog" aria-label="프로필 정보 수정">
+          <div class="sheet-grip"></div>
+          <div class="sheet-title">프로필 정보 수정</div>
+          <div class="field">
+            <label class="field-label" for="profileNameInput">이름</label>
+            <input class="input" type="text" id="profileNameInput" value="김서연">
+          </div>
+          <div class="field">
+            <label class="field-label" for="profileEmailInput">이메일</label>
+            <input class="input" type="email" id="profileEmailInput" value="boribori0602@example.com">
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" id="profileSaveBtn">저장하기</button>
+        </div>
+
+        <!-- 회원 탈퇴 확인 모달 -->
+        <div class="modal-dim" id="withdrawDim">
+          <div class="modal">
+            <div class="modal-title">정말 떠나시겠어요?</div>
+            <p class="modal-desc">탈퇴하면 보리·콩이의 기록, 사진, 편지, 추모관이 모두 사라지고 되돌릴 수 없어요. 먼저 <a href="account-billing.html">데이터 내보내기</a>로 소중한 기록을 남겨두는 걸 권해드려요.</p>
+            <label class="check mt-4">
+              <input type="checkbox" id="withdrawAgree">
+              <span class="box"><i data-lucide="check"></i></span>
+              <span class="t-body-s">기록이 모두 사라진다는 것을 알고 있어요</span>
+            </label>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" id="withdrawCancelBtn">잠시 후에 할게요</button>
+              <button class="btn btn-danger" id="withdrawConfirmBtn" disabled>탈퇴할게요</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    /* ---------- 프로필 정보 수정 바텀시트 ---------- */
+    var profileSheet = document.getElementById('profileSheet');
+    var profileDim = document.getElementById('profileDim');
+    function openProfileSheet() { profileSheet.classList.add('open'); profileDim.classList.add('open'); }
+    function closeProfileSheet() { profileSheet.classList.remove('open'); profileDim.classList.remove('open'); }
+    document.getElementById('editProfileBtn').addEventListener('click', openProfileSheet);
+    profileDim.addEventListener('click', closeProfileSheet);
+    document.getElementById('profileSaveBtn').addEventListener('click', function () {
+      var name = document.getElementById('profileNameInput').value.trim() || '김서연';
+      var email = document.getElementById('profileEmailInput').value.trim() || 'boribori0602@example.com';
+      document.getElementById('profileName').textContent = name + ' 님';
+      document.getElementById('profileEmail').textContent = email;
+      closeProfileSheet();
+      showToast('프로필 정보를 저장했어요');
+    });
+
+    /* ---------- 로그아웃 — F1, 다음 페이지 P2(로그인) ---------- */
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      showToast('로그아웃하고 있어요');
+      setTimeout(function () { location.href = 'login.html'; }, 400);
+    });
+
+    /* ---------- 회원 탈퇴 — 동의 체크해야 탈퇴 버튼 활성화 ---------- */
+    var withdrawDim = document.getElementById('withdrawDim');
+    var withdrawAgree = document.getElementById('withdrawAgree');
+    var withdrawConfirmBtn = document.getElementById('withdrawConfirmBtn');
+    function openWithdraw() { withdrawDim.classList.add('open'); }
+    function closeWithdraw() { withdrawDim.classList.remove('open'); withdrawAgree.checked = false; withdrawConfirmBtn.disabled = true; }
+    document.getElementById('openWithdrawBtn').addEventListener('click', openWithdraw);
+    document.getElementById('withdrawCancelBtn').addEventListener('click', closeWithdraw);
+    withdrawAgree.addEventListener('change', function () { withdrawConfirmBtn.disabled = !withdrawAgree.checked; });
+    withdrawConfirmBtn.addEventListener('click', function () {
+      if (withdrawConfirmBtn.disabled) return;
+      showToast('탈퇴 처리를 하고 있어요');
+      setTimeout(function () { location.href = 'login.html'; }, 400);
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/mypage.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

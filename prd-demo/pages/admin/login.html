@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P27 관리자 로그인 · 무지개 일기 관리자</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P27 전용 — 공통 레이아웃(.admin-*)은 common.css 그대로 쓴다. 사이드바가 없는 단독 진입 화면 */
+    html, body { height: 100%; }
+    .admin-login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-bg);
+      padding: var(--space-6);
+    }
+    .admin-login-card { width: 100%; max-width: 420px; margin-top: calc(-1 * var(--space-8)); }
+    .admin-login-brand { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-2); margin-bottom: var(--space-6); }
+    .admin-login-brand .ico-wrap { width: 56px; height: 56px; margin-bottom: var(--space-2); background: var(--color-primary-soft); }
+    .admin-login-brand .ico-wrap [data-lucide], .admin-login-brand .ico-wrap svg { width: 28px; height: 28px; color: var(--color-primary-strong); }
+    .admin-login-brand h1 { font-family: var(--font-title); font-size: 24px; line-height: 1.3; letter-spacing: -0.01em; }
+    .admin-login-brand p { font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--color-text-sub); }
+    .admin-login-card > .card { padding: var(--space-8); border-radius: var(--radius-xl); }
+    .admin-login-card .field { margin-bottom: var(--space-4); }
+    .admin-login-card .notice { align-items: flex-start; }
+    .pw-field { position: relative; }
+    .pw-field .input { padding-right: 52px; }
+    .pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; }
+    .login-options { display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin: var(--space-1) 0 var(--space-6); }
+    .login-options .check { display: inline-flex; align-items: center; gap: var(--space-2); }
+    .admin-login-foot { margin: var(--space-5) auto 0; text-align: center; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); }
+  </style>
+</head>
+<body>
+  <div class="admin-login-page">
+    <div class="admin-login-card">
+
+      <div class="admin-login-brand">
+        <span class="ico-wrap"><i data-lucide="rainbow"></i></span>
+        <h1>무지개 일기 관리자</h1>
+        <p>운영 계정으로 로그인해 주세요</p>
+      </div>
+
+      <div class="card">
+        <div class="notice notice-warn mb-4" id="errorNotice" hidden>
+          <i data-lucide="alert-circle"></i>
+          <div class="grow">아이디 또는 비밀번호가 올바르지 않아요. 다시 확인해 주세요.</div>
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="field" id="idField">
+            <label class="field-label" for="adminId">관리자 아이디<span class="req">*</span></label>
+            <div class="input-wrap">
+              <i data-lucide="user-round"></i>
+              <input class="input" type="text" id="adminId" placeholder="아이디를 입력해주세요" autocomplete="username">
+            </div>
+            <div class="field-error">아이디를 입력해주세요.</div>
+          </div>
+
+          <div class="field" id="pwField">
+            <label class="field-label" for="adminPw">비밀번호<span class="req">*</span></label>
+            <div class="input-wrap pw-field">
+              <i data-lucide="lock"></i>
+              <input class="input" type="password" id="adminPw" placeholder="비밀번호를 입력해주세요" autocomplete="current-password">
+              <button type="button" class="icon-btn pw-toggle" data-pw-toggle aria-label="비밀번호 표시"><i data-lucide="eye"></i></button>
+            </div>
+            <div class="field-error">비밀번호를 입력해주세요.</div>
+          </div>
+
+          <div class="login-options">
+            <label class="check">
+              <input type="checkbox" id="keepLogin">
+              <span class="box"><i data-lucide="check"></i></span>
+              <span class="t-body-s">로그인 상태 유지</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="loginBtn">로그인</button>
+        </form>
+      </div>
+
+      <p class="admin-login-foot">운영 관리자 전용 페이지예요.<br>계정 문의는 시스템 담당자에게 연락해 주세요.</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check"></i><span id="toastMsg"></span></div>
+
+  <script>
+    lucide.createIcons();
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 데모 계정 — 이 아이디/비밀번호로만 로그인 성공 처리
+    var DEMO_ID = 'admin';
+    var DEMO_PW = 'admin1234';
+
+    // 비밀번호 표시/숨김 토글
+    document.querySelectorAll('[data-pw-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var input = btn.parentElement.querySelector('input');
+        var showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        btn.innerHTML = showing ? '<i data-lucide="eye"></i>' : '<i data-lucide="eye-off"></i>';
+        lucide.createIcons();
+      });
+    });
+
+    var idInput = document.getElementById('adminId');
+    var pwInput = document.getElementById('adminPw');
+    var idField = document.getElementById('idField');
+    var pwField = document.getElementById('pwField');
+    var errorNotice = document.getElementById('errorNotice');
+
+    function clearFieldError(field) { field.classList.remove('is-error'); }
+    [idInput, pwInput].forEach(function (input) {
+      input.addEventListener('input', function () {
+        clearFieldError(input.closest('.field'));
+        errorNotice.hidden = true;
+      });
+    });
+
+    // 입력 검증 + 로그인 — 성공 시 P28(대시보드)로 이동
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      errorNotice.hidden = true;
+
+      var idVal = idInput.value.trim();
+      var pwVal = pwInput.value;
+      var ok = true;
+
+      if (!idVal) { idField.classList.add('is-error'); ok = false; } else { clearFieldError(idField); }
+      if (!pwVal) { pwField.classList.add('is-error'); ok = false; } else { clearFieldError(pwField); }
+      if (!ok) return;
+
+      if (idVal !== DEMO_ID || pwVal !== DEMO_PW) {
+        errorNotice.hidden = false;
+        pwField.classList.add('is-error');
+        showToast('로그인 정보를 다시 확인해주세요');
+        return;
+      }
+
+      showToast('로그인하고 있어요');
+      setTimeout(function () { location.href = 'dashboard.html'; }, 300);
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/admin/login.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P15 준비 체크리스트·마지막 날 플래너 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P15 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .tab-panel[hidden] { display: none; }
+    /* 두 탭 균등 폭 + 스크롤 시 상단 고정 */
+    .prep-tabs { position: sticky; top: 0; z-index: 2; padding: 0 var(--space-2); background: var(--color-bg); }
+    .prep-tabs .tab { flex: 1; }
+
+    /* 진행 상황 카드 — 제목·수치 한 줄, 설명은 아래 전체 폭 */
+    .progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+    .progress-count { font-size: var(--fs-h3); line-height: var(--lh-h3); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+    /* 체크 항목 카드 — 체크박스 · 제목(가운데) · 우측 액션 한 줄, 메모는 제목 열에 맞춰 들여쓰기 */
+    .chk-card { padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); }
+    .chk-card + .chk-card { margin-top: var(--space-2); }
+    .chk-card.is-done { background: var(--theme-accent-soft); box-shadow: none; }
+    .chk-row { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; }
+    .chk-row .check { flex: 1; min-width: 0; }
+    .chk-row .check .t-strong { min-width: 0; line-height: 1.45; }
+    .chk-row > .btn { margin-right: var(--space-2); }
+    .chk-row .memo-btn { color: var(--color-text-sub); }
+    .card-theme .progress { background: var(--color-surface); }
+    .chk-card .check input:checked + .box + .t-strong { text-decoration: line-through; color: var(--color-text-sub); }
+    .memo-preview, .memo-edit { margin-left: 36px; margin-right: var(--space-2); }
+    .memo-preview { white-space: pre-line; margin-top: -4px; padding-bottom: var(--space-2); }
+    .memo-preview:empty { display: none; }
+    .memo-edit { padding-bottom: var(--space-2); }
+    .memo-edit textarea { min-height: 84px; background: var(--color-surface); }
+    .chk-card:not(.is-done) .memo-edit textarea { background: var(--color-surface-soft); }
+    .memo-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
+    .planner-field.field { margin-bottom: var(--space-5); }
+    .planner-field.field:last-child { margin-bottom: 0; }
+    .planner-actions { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-3); }
+    .saved-mark { display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--color-text-sub); font-size: var(--fs-caption); line-height: var(--lh-caption); }
+    .saved-mark { order: 2; }
+    .saved-mark[hidden] { display: none; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="preparing">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기 + 제목 -->
+        <header class="m-header">
+          <a class="icon-btn" href="home.html" aria-label="이전 화면으로"><i data-lucide="arrow-left"></i></a>
+          <span class="m-title is-center">이별 준비</span>
+          <div class="m-header-spacer"></div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 탭: 체크리스트 / 마지막 날 플래너 (02_PAGE.md 비고 — 화면 내 탭 분리) -->
+          <div class="tabs prep-tabs">
+            <button class="tab active" id="tabChecklist" data-tab="checklist">준비 체크리스트</button>
+            <button class="tab" id="tabPlanner" data-tab="planner">마지막 날 플래너</button>
+          </div>
+
+          <!-- ===================== 체크리스트 탭 (F15) ===================== -->
+          <section class="tab-panel" id="panelChecklist" data-panel="checklist">
+
+            <div class="m-section">
+              <div class="card card-theme">
+                <div class="progress-head">
+                  <div class="t-strong">체크리스트 진행 상황</div>
+                  <div class="progress-count" id="progressCount">4 / 9</div>
+                </div>
+                <p class="t-caption t-sub mt-1">순서는 자유예요. 필요한 것부터 천천히 살펴보세요.</p>
+                <div class="progress mt-3"><span id="progressBar" style="width:44%"></span></div>
+              </div>
+            </div>
+
+            <div class="m-section">
+              <div class="sec-head"><h2 class="sec-title">단계별 항목</h2></div>
+
+              <div class="chk-card card card-sm is-done" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox" checked>
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">가족과 이별에 대해 이야기하기</span>
+                  </label>
+                  <button class="icon-btn memo-btn" aria-label="메모 열기"><i data-lucide="message-square-plus"></i></button>
+                </div>
+                <p class="memo-preview t-caption t-sub">메모: 언니, 엄마와 함께 이야기 나눴어요. 모두 마음의 준비가 됐어요.</p>
+                <div class="memo-edit" hidden>
+                  <textarea class="textarea" placeholder="메모를 남겨보세요">언니, 엄마와 함께 이야기 나눴어요. 모두 마음의 준비가 됐어요.</textarea>
+                  <div class="memo-actions"><button class="btn btn-utility btn-sm memo-save">저장</button></div>
+                </div>
+              </div>
+
+              <div class="chk-card card card-sm is-done" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox" checked>
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">장례 방식 정하기</span>
+                  </label>
+                  <button class="icon-btn memo-btn" aria-label="메모 열기"><i data-lucide="message-square-plus"></i></button>
+                </div>
+                <p class="memo-preview t-caption t-sub">메모: 화장 후 수목장으로 결정했어요.</p>
+                <div class="memo-edit" hidden>
+                  <textarea class="textarea" placeholder="메모를 남겨보세요">화장 후 수목장으로 결정했어요.</textarea>
+                  <div class="memo-actions"><button class="btn btn-utility btn-sm memo-save">저장</button></div>
+                </div>
+              </div>
+
+              <div class="chk-card card card-sm" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox">
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">장례업체 알아보기</span>
+                  </label>
+                  <a class="btn btn-utility btn-sm" href="funeral-info.html">알아보기</a>
+                </div>
+                <p class="memo-preview t-caption t-sub"></p>
+              </div>
+
+              <div class="chk-card card card-sm is-done" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox" checked>
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">마지막 사진 남기기</span>
+                  </label>
+                  <button class="icon-btn memo-btn" aria-label="메모 열기"><i data-lucide="message-square-plus"></i></button>
+                </div>
+                <p class="memo-preview t-caption t-sub"></p>
+                <div class="memo-edit" hidden>
+                  <textarea class="textarea" placeholder="메모를 남겨보세요"></textarea>
+                  <div class="memo-actions"><button class="btn btn-utility btn-sm memo-save">저장</button></div>
+                </div>
+              </div>
+
+              <div class="chk-card card card-sm is-done" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox" checked>
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">좋아하는 물건 정리하기</span>
+                  </label>
+                  <button class="icon-btn memo-btn" aria-label="메모 열기"><i data-lucide="message-square-plus"></i></button>
+                </div>
+                <p class="memo-preview t-caption t-sub">메모: 담요와 장난감은 곁에 두기로 했어요.</p>
+                <div class="memo-edit" hidden>
+                  <textarea class="textarea" placeholder="메모를 남겨보세요">담요와 장난감은 곁에 두기로 했어요.</textarea>
+                  <div class="memo-actions"><button class="btn btn-utility btn-sm memo-save">저장</button></div>
+                </div>
+              </div>
+
+              <div class="chk-card card card-sm" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox">
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">마지막 산책 다녀오기</span>
+                  </label>
+                  <button class="icon-btn memo-btn" aria-label="메모 열기"><i data-lucide="message-square-plus"></i></button>
+                </div>
+                <p class="memo-preview t-caption t-sub"></p>
+                <div class="memo-edit" hidden>
+                  <textarea class="textarea" placeholder="메모를 남겨보세요"></textarea>
+                  <div class="memo-actions"><button class="btn btn-utility btn-sm memo-save">저장</button></div>
+                </div>
+              </div>
+
+              <div class="chk-card card card-sm" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox">
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">가족·지인들에게 소식 전하기</span>
+                  </label>
+                  <button class="icon-btn memo-btn" aria-label="메모 열기"><i data-lucide="message-square-plus"></i></button>
+                </div>
+                <p class="memo-preview t-caption t-sub"></p>
+                <div class="memo-edit" hidden>
+                  <textarea class="textarea" placeholder="메모를 남겨보세요"></textarea>
+                  <div class="memo-actions"><button class="btn btn-utility btn-sm memo-save">저장</button></div>
+                </div>
+              </div>
+
+              <div class="chk-card card card-sm" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox">
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">수의사와 임종 계획 상담하기</span>
+                  </label>
+                  <button class="icon-btn memo-btn" aria-label="메모 열기"><i data-lucide="message-square-plus"></i></button>
+                </div>
+                <p class="memo-preview t-caption t-sub"></p>
+                <div class="memo-edit" hidden>
+                  <textarea class="textarea" placeholder="메모를 남겨보세요"></textarea>
+                  <div class="memo-actions"><button class="btn btn-utility btn-sm memo-save">저장</button></div>
+                </div>
+              </div>
+
+              <div class="chk-card card card-sm" data-chk-item>
+                <div class="chk-row">
+                  <label class="check">
+                    <input type="checkbox">
+                    <span class="box"><i data-lucide="check"></i></span>
+                    <span class="t-strong">보리가 좋아하던 자리 정리해두기</span>
+                  </label>
+                  <button class="icon-btn memo-btn" aria-label="메모 열기"><i data-lucide="message-square-plus"></i></button>
+                </div>
+                <p class="memo-preview t-caption t-sub"></p>
+                <div class="memo-edit" hidden>
+                  <textarea class="textarea" placeholder="메모를 남겨보세요"></textarea>
+                  <div class="memo-actions"><button class="btn btn-utility btn-sm memo-save">저장</button></div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="m-section">
+              <p class="disclaimer"><i data-lucide="info"></i> 항목은 필요에 따라 조금씩 바뀔 수 있어요. 정해진 순서는 없어요.</p>
+            </div>
+
+          </section>
+
+          <!-- ===================== 마지막 날 플래너 탭 (F16, 강제 진입 없음) ===================== -->
+          <section class="tab-panel" id="panelPlanner" data-panel="planner" hidden>
+
+            <div class="m-section">
+              <div class="notice notice-theme">
+                <i data-lucide="feather"></i>
+                <div class="grow">
+                  마음이 준비됐을 때, 천천히 적어주세요. 언제든 다시 열어 고칠 수 있어요.
+                </div>
+              </div>
+            </div>
+
+            <div class="m-section">
+              <div class="card">
+                <div class="planner-field field">
+                  <label class="field-label" for="pFood">보리가 좋아하는 음식</label>
+                  <input class="input" id="pFood" type="text" placeholder="예: 삶은 소고기, 고구마 스틱">
+                </div>
+                <div class="planner-field field">
+                  <label class="field-label" for="pPlace">가고 싶은 장소</label>
+                  <input class="input" id="pPlace" type="text" placeholder="예: 자주 걷던 동네 산책길, 바다">
+                </div>
+                <div class="planner-field field">
+                  <label class="field-label" for="pPeople">함께할 사람</label>
+                  <input class="input" id="pPeople" type="text" placeholder="예: 가족 모두, 자주 놀아주던 친구">
+                </div>
+                <div class="planner-field field">
+                  <label class="field-label" for="pMemo">그 밖에 남기고 싶은 것</label>
+                  <textarea class="textarea" id="pMemo" placeholder="하고 싶은 말, 남기고 싶은 순간을 자유롭게 적어보세요"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="m-section">
+              <div class="planner-actions">
+                <span class="saved-mark" id="plannerSaved" hidden><i data-lucide="check" class="ico-16"></i> 방금 저장했어요</span>
+                <button class="btn btn-primary btn-lg btn-block" id="plannerSaveBtn"><i data-lucide="save"></i> 저장하기</button>
+              </div>
+            </div>
+
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 탭 전환 — 체크리스트 / 마지막 날 플래너 (플래너는 강제 진입 없이 탭 클릭으로만 진입)
+    var tabs = document.querySelectorAll('.tab[data-tab]');
+    var panels = document.querySelectorAll('.tab-panel[data-panel]');
+    tabs.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        tabs.forEach(function (b) { b.classList.toggle('active', b === btn); });
+        panels.forEach(function (p) { p.hidden = p.dataset.panel !== btn.dataset.tab; });
+        document.querySelector('.m-content').scrollTop = 0;
+      });
+    });
+
+    // 체크리스트 — 완료 토글 + 진행률 갱신
+    var items = document.querySelectorAll('[data-chk-item]');
+    var progressCount = document.getElementById('progressCount');
+    var progressBar = document.getElementById('progressBar');
+
+    function updateProgress() {
+      var total = items.length;
+      var done = document.querySelectorAll('[data-chk-item] input[type="checkbox"]:checked').length;
+      progressCount.textContent = done + ' / ' + total;
+      progressBar.style.width = Math.round((done / total) * 100) + '%';
+    }
+
+    items.forEach(function (card) {
+      var checkbox = card.querySelector('input[type="checkbox"]');
+      checkbox.addEventListener('change', function () {
+        card.classList.toggle('is-done', checkbox.checked);
+        updateProgress();
+        var title = card.querySelector('.t-strong').textContent;
+        showToast(checkbox.checked ? '"' + title + '" 완료로 표시했어요' : '완료 표시를 취소했어요');
+      });
+
+      var memoBtn = card.querySelector('.memo-btn');
+      var memoEdit = card.querySelector('.memo-edit');
+      if (memoBtn && memoEdit) {
+        memoBtn.addEventListener('click', function () {
+          memoEdit.hidden = !memoEdit.hidden;
+          if (!memoEdit.hidden) { memoEdit.querySelector('textarea').focus(); }
+        });
+      }
+
+      var saveBtn = card.querySelector('.memo-save');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+          var text = memoEdit.querySelector('textarea').value.trim();
+          var preview = card.querySelector('.memo-preview');
+          preview.textContent = text ? '메모: ' + text : '';
+          memoEdit.hidden = true;
+          showToast('메모를 저장했어요');
+        });
+      }
+    });
+
+    updateProgress();
+
+    // 마지막 날 플래너 — 저장 (자동·강제 이동 없음, 같은 화면에 머무름)
+    document.getElementById('plannerSaveBtn').addEventListener('click', function () {
+      showToast('마지막 날 플래너를 저장했어요');
+      var mark = document.getElementById('plannerSaved');
+      mark.hidden = false;
+      lucide.createIcons();
+      clearTimeout(mark._t);
+      mark._t = setTimeout(function () { mark.hidden = true; }, 2600);
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/prep-checklist.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

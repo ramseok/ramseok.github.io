@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P20 하늘로 보내는 편지 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P20 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .letter-card { cursor: pointer; transition: transform var(--duration-fast) var(--ease-soft); }
+    .letter-card:active { transform: scale(0.985); }
+    .letter-vis-btn { border: 0; cursor: pointer; position: relative; }
+    /* 태그는 24px 높이 — 보이는 크기는 그대로 두고 터치 영역만 44×44px 이상으로 확장 */
+    .letter-vis-btn::after { content: ""; position: absolute; top: -10px; bottom: -10px; left: -8px; right: -8px; min-width: 44px; }
+    .sheet-letter-date { color: var(--color-text-sub); }
+    /* 안내 카드 — 상단 편지 수 행 + 본문 */
+    .intro-head { display: flex; align-items: center; gap: var(--space-2); }
+    .intro-head .ico-wrap { background: var(--color-surface); }
+    .intro-count { font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 600; white-space: nowrap; }
+    .intro-count .num { color: var(--color-primary-strong); }
+    .intro-body { margin-top: var(--space-3); }
+    .intro-note { margin-top: var(--space-2); }
+    /* 날짜 그룹 헤더 — 한 줄 고정 */
+    .date-group + .date-group { margin-top: var(--space-6); }
+    .date-group > .t-strong { display: flex; align-items: center; min-height: 28px; margin-bottom: var(--space-2); font-size: var(--fs-body-s); line-height: var(--lh-body-s); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .letter-card .letter-meta { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); white-space: nowrap; }
+    .letter-card .clamp-2 { min-height: calc(var(--lh-body-s) * 2); }
+    .sheet-toggle { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); border-radius: var(--radius-md); background: var(--color-bg); }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="rainbow">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기(P18) + 타이틀. 추모관 메뉴는 탭바에 없어 하단은 고정 CTA로 대체 -->
+        <header class="m-header">
+          <a class="icon-btn" href="memorial-edit.html" aria-label="메모리얼 페이지로 돌아가기"><i data-lucide="arrow-left"></i></a>
+          <span class="m-title">하늘로 보내는 편지</span>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 안내 + 편지 수 (F27: 빈도 제한 없음 · 독려 알림 없음) -->
+          <section class="m-section">
+            <div class="card card-theme">
+              <div class="intro-head">
+                <span class="ico-wrap sm"><i data-lucide="mail"></i></span>
+                <span class="intro-count">편지 <span id="letterCount" class="num">7</span>통 보관 중</span>
+              </div>
+              <p class="t-body-s intro-body">보리에게 못다 한 말을 편지로 남겨보세요. 날짜별로 모아두고, 편지마다 공개 여부도 따로 정할 수 있어요.</p>
+              <p class="t-caption t-sub intro-note">편지 개수에는 제한이 없어요. 따로 알려드리지 않으니 편하실 때 남겨주세요.</p>
+            </div>
+          </section>
+
+          <!-- 공개 범위 필터 -->
+          <section class="m-section">
+            <div class="chip-row">
+              <button class="chip active" data-filter="all"><i data-lucide="check" class="chip-check"></i>전체</button>
+              <button class="chip" data-filter="public"><i data-lucide="check" class="chip-check"></i>공개</button>
+              <button class="chip" data-filter="private"><i data-lucide="check" class="chip-check"></i>비공개</button>
+            </div>
+          </section>
+
+          <!-- 날짜별 편지함 (F27) -->
+          <section class="m-section" id="letterList">
+
+            <div class="date-group" data-date="2026-09-28">
+              <div class="t-strong t-sub mb-2">9월 28일 (월)</div>
+              <div class="letter-card-row stack">
+                <article class="card card-letter letter-card" data-visibility="public">
+                  <div class="row-between mb-2">
+                    <span class="letter-meta">이별 후 4일째</span>
+                    <button class="tag tag-sky letter-vis-btn" aria-label="비공개로 전환"><i data-lucide="globe"></i>공개</button>
+                  </div>
+                  <p class="t-body-s clamp-2 letter-body">해피동물병원 원장님이 안부를 물으셨어. 너 덕분에 좋은 사람들을 많이 만났다고 얘기했어.</p>
+                </article>
+                <article class="card card-letter letter-card" data-visibility="private">
+                  <div class="row-between mb-2">
+                    <span class="letter-meta">이별 후 4일째</span>
+                    <button class="tag tag-line letter-vis-btn" aria-label="공개로 전환"><i data-lucide="lock"></i>비공개</button>
+                  </div>
+                  <p class="t-body-s clamp-2 letter-body">관절 영양제 남은 걸 보다가 마음이 이상했어. 이제 안 챙겨도 되는데, 저녁만 되면 자꾸 생각나.</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="date-group" data-date="2026-09-27">
+              <div class="t-strong t-sub mb-2">9월 27일 (일)</div>
+              <div class="letter-card-row stack">
+                <article class="card card-letter letter-card" data-visibility="private">
+                  <div class="row-between mb-2">
+                    <span class="letter-meta">이별 후 3일째</span>
+                    <button class="tag tag-line letter-vis-btn" aria-label="공개로 전환"><i data-lucide="lock"></i>비공개</button>
+                  </div>
+                  <p class="t-body-s clamp-2 letter-body">보리야, 오늘 아침에도 습관처럼 네 밥그릇부터 봤어. 거기선 다리 안 아프지?</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="date-group" data-date="2026-09-26">
+              <div class="t-strong t-sub mb-2">9월 26일 (토)</div>
+              <div class="letter-card-row stack">
+                <article class="card card-letter letter-card" data-visibility="public">
+                  <div class="row-between mb-2">
+                    <span class="letter-meta">이별 후 2일째</span>
+                    <button class="tag tag-sky letter-vis-btn" aria-label="비공개로 전환"><i data-lucide="globe"></i>공개</button>
+                  </div>
+                  <p class="t-body-s clamp-2 letter-body">오늘은 네가 좋아하던 을왕리 사진을 다시 꺼내봤어. 바다 보고 신나서 뛰어다니던 모습이 눈에 선해.</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="date-group" data-date="2026-09-25">
+              <div class="t-strong t-sub mb-2">9월 25일 (금)</div>
+              <div class="letter-card-row stack">
+                <article class="card card-letter letter-card" data-visibility="public">
+                  <div class="row-between mb-2">
+                    <span class="letter-meta">이별 후 1일째</span>
+                    <button class="tag tag-sky letter-vis-btn" aria-label="비공개로 전환"><i data-lucide="globe"></i>공개</button>
+                  </div>
+                  <p class="t-body-s clamp-2 letter-body">언니한테 네 이야기를 했더니 같이 울었어. 다들 너를 참 예뻐했었나 봐.</p>
+                </article>
+                <article class="card card-letter letter-card" data-visibility="private">
+                  <div class="row-between mb-2">
+                    <span class="letter-meta">이별 후 1일째</span>
+                    <button class="tag tag-line letter-vis-btn" aria-label="공개로 전환"><i data-lucide="lock"></i>비공개</button>
+                  </div>
+                  <p class="t-body-s clamp-2 letter-body">어젯밤엔 네 발소리가 들리는 것 같아서 잠깐 깼어. 착각인 걸 알면서도 반가웠어.</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="date-group" data-date="2026-09-24">
+              <div class="t-strong t-sub mb-2">9월 24일 (목)</div>
+              <div class="letter-card-row stack">
+                <article class="card card-letter letter-card" data-visibility="private">
+                  <div class="row-between mb-2">
+                    <span class="letter-meta">이별 당일</span>
+                    <button class="tag tag-line letter-vis-btn" aria-label="공개로 전환"><i data-lucide="lock"></i>비공개</button>
+                  </div>
+                  <p class="t-body-s clamp-2 letter-body">보리야, 오늘 아침에 너를 보내고 왔어. 집에 오니 네 밥그릇이 그대로 있어서 자꾸 눈이 가. 잘 가고 있지?</p>
+                </article>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- 필터 결과 없음 -->
+          <section class="m-section" id="letterEmpty" hidden>
+            <div class="empty">
+              <span class="empty-art"><i data-lucide="cloud"></i></span>
+              <p class="t-body-s t-sub">조건에 맞는 편지가 없어요.</p>
+            </div>
+          </section>
+
+        </main>
+
+        <!-- 하단 고정 CTA — 추모관 메뉴는 탭바 없음 (02_PAGE.md 비고) -->
+        <div class="m-bottom-cta">
+          <button class="btn btn-primary btn-lg btn-block" id="newLetterBtn"><i data-lucide="pen-line"></i> 편지 쓰기</button>
+        </div>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 편지 쓰기·수정 바텀시트 -->
+        <div class="sheet-dim" id="sheetDim"></div>
+        <div class="sheet" id="letterSheet" role="dialog" aria-label="편지 쓰기">
+          <div class="sheet-grip"></div>
+          <div class="sheet-title" id="sheetTitle">편지 쓰기</div>
+          <p class="sheet-desc sheet-letter-date" id="sheetDate">오늘, 9월 29일 (화)에 남겨요</p>
+          <div class="field">
+            <label class="field-label" for="letterBody">보리에게 전하는 말</label>
+            <textarea class="textarea" id="letterBody" placeholder="편하게, 하고 싶은 말을 적어보세요"></textarea>
+          </div>
+          <div class="sheet-toggle">
+            <div class="grow">
+              <div class="cell-title">공개로 남기기</div>
+              <p class="cell-sub wrap">공개하면 추모관 편지 섹션에도 함께 보여요</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="letterPublicToggle"><span class="track"></span></label>
+          </div>
+          <div class="sheet-actions">
+            <button class="btn btn-secondary" id="sheetCancelBtn">취소</button>
+            <button class="btn btn-primary" id="sheetSaveBtn"><i data-lucide="check"></i> 저장</button>
+          </div>
+          <button class="btn btn-danger btn-block mt-3" id="sheetDeleteBtn" hidden><i data-lucide="trash-2"></i> 이 편지 삭제하기</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    function updateCount() {
+      document.getElementById('letterCount').textContent = document.querySelectorAll('.letter-card').length;
+    }
+
+    // 편지마다 공개/비공개 개별 토글 (목록에서 바로) — F27
+    function paintVisibility(card) {
+      var btn = card.querySelector('.letter-vis-btn');
+      var isPublic = card.dataset.visibility === 'public';
+      btn.classList.toggle('tag-sky', isPublic);
+      btn.classList.toggle('tag-line', !isPublic);
+      btn.setAttribute('aria-label', isPublic ? '비공개로 전환' : '공개로 전환');
+      btn.innerHTML = isPublic ? '<i data-lucide="globe"></i>공개' : '<i data-lucide="lock"></i>비공개';
+      lucide.createIcons();
+    }
+
+    function toggleVisibility(card) {
+      var next = card.dataset.visibility === 'public' ? 'private' : 'public';
+      card.dataset.visibility = next;
+      paintVisibility(card);
+      applyFilter();
+      showToast(next === 'public' ? '공개로 바뀌었어요. 추모관에도 함께 보여요' : '비공개로 바뀌었어요');
+    }
+
+    function bindCard(card) {
+      card.addEventListener('click', function () { openSheet('edit', card); });
+      card.querySelector('.letter-vis-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleVisibility(card);
+      });
+    }
+    document.querySelectorAll('.letter-card').forEach(bindCard);
+
+    // 공개 범위 필터 칩
+    document.querySelectorAll('.chip[data-filter]').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        document.querySelectorAll('.chip[data-filter]').forEach(function (c) { c.classList.toggle('active', c === chip); });
+        applyFilter();
+      });
+    });
+
+    function applyFilter() {
+      var active = document.querySelector('.chip[data-filter].active').dataset.filter;
+      var anyVisible = false;
+      document.querySelectorAll('#letterList .date-group').forEach(function (group) {
+        var groupHasVisible = false;
+        group.querySelectorAll('.letter-card').forEach(function (card) {
+          var show = active === 'all' || card.dataset.visibility === active;
+          card.hidden = !show;
+          if (show) groupHasVisible = true;
+        });
+        group.hidden = !groupHasVisible;
+        if (groupHasVisible) anyVisible = true;
+      });
+      document.getElementById('letterEmpty').hidden = anyVisible;
+    }
+
+    // 편지 쓰기 · 수정 바텀시트
+    var sheet = document.getElementById('letterSheet');
+    var dim = document.getElementById('sheetDim');
+    var bodyInput = document.getElementById('letterBody');
+    var toggleInput = document.getElementById('letterPublicToggle');
+    var currentCard = null;
+
+    function openSheet(mode, card) {
+      currentCard = mode === 'edit' ? card : null;
+      var title = document.getElementById('sheetTitle');
+      var dateEl = document.getElementById('sheetDate');
+      var delBtn = document.getElementById('sheetDeleteBtn');
+
+      if (mode === 'edit' && card) {
+        title.textContent = '편지 수정';
+        var heading = card.closest('.date-group').querySelector('.t-strong').textContent;
+        dateEl.textContent = heading + '에 남긴 편지예요';
+        bodyInput.value = card.querySelector('.letter-body').textContent.trim();
+        toggleInput.checked = card.dataset.visibility === 'public';
+        delBtn.hidden = false;
+      } else {
+        title.textContent = '편지 쓰기';
+        dateEl.textContent = '오늘, 9월 29일 (화)에 남겨요';
+        bodyInput.value = '';
+        toggleInput.checked = false;
+        delBtn.hidden = true;
+      }
+      sheet.classList.add('open');
+      dim.classList.add('open');
+      setTimeout(function () { bodyInput.focus(); }, 300);
+    }
+
+    function closeSheet() {
+      sheet.classList.remove('open');
+      dim.classList.remove('open');
+    }
+
+    document.getElementById('newLetterBtn').addEventListener('click', function () { openSheet('new'); });
+    dim.addEventListener('click', closeSheet);
+    document.getElementById('sheetCancelBtn').addEventListener('click', closeSheet);
+
+    function ensureTodayGroup() {
+      var list = document.getElementById('letterList');
+      var first = list.querySelector('.date-group');
+      if (first && first.dataset.date === '2026-09-29') return first;
+      var group = document.createElement('div');
+      group.className = 'date-group';
+      group.dataset.date = '2026-09-29';
+      group.innerHTML = '<div class="t-strong t-sub mb-2">9월 29일 (화)</div><div class="letter-card-row stack"></div>';
+      list.insertBefore(group, first || null);
+      return group;
+    }
+
+    document.getElementById('sheetSaveBtn').addEventListener('click', function () {
+      var text = bodyInput.value.trim();
+      if (!text) { bodyInput.focus(); return; }
+      var isPublic = toggleInput.checked;
+
+      if (currentCard) {
+        currentCard.querySelector('.letter-body').textContent = text;
+        currentCard.dataset.visibility = isPublic ? 'public' : 'private';
+        paintVisibility(currentCard);
+      } else {
+        var group = ensureTodayGroup();
+        var row = group.querySelector('.letter-card-row');
+        var card = document.createElement('article');
+        card.className = 'card card-letter letter-card';
+        card.dataset.visibility = isPublic ? 'public' : 'private';
+        card.innerHTML =
+          '<div class="row-between mb-2">' +
+            '<span class="letter-meta">오늘 남긴 편지</span>' +
+            '<button class="tag letter-vis-btn"></button>' +
+          '</div>' +
+          '<p class="t-body-s clamp-2 letter-body"></p>';
+        card.querySelector('.letter-body').textContent = text;
+        row.insertBefore(card, row.firstChild);
+        paintVisibility(card);
+        bindCard(card);
+        updateCount();
+      }
+      applyFilter();
+      closeSheet();
+      showToast('편지가 잘 보관됐어요');
+    });
+
+    document.getElementById('sheetDeleteBtn').addEventListener('click', function () {
+      if (!currentCard) return;
+      var group = currentCard.closest('.date-group');
+      currentCard.remove();
+      if (!group.querySelector('.letter-card')) group.remove();
+      updateCount();
+      applyFilter();
+      closeSheet();
+      showToast('편지를 삭제했어요');
+    });
+
+    updateCount();
+    applyFilter();
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/letter-to-sky.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>P19 공개 추모관 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P19 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 추모관 대표 영역 — 테마 면 위 radius-xl 카드처럼 (DESIGN 6.2) */
+    .memorial-hero { text-align: center; margin: var(--space-2) var(--space-4) 0; padding: var(--space-6) var(--space-5); border-radius: var(--radius-xl); background: var(--theme-header-bg); }
+    .memorial-hero .rainbow-band { width: 72px; margin: 0 auto var(--space-5); }
+    .memorial-hero .avatar-xl { margin: 0 auto var(--space-4); }
+    .memorial-hero .memorial-name { margin-top: var(--space-1); }
+    .memorial-hero .memorial-dates { margin-top: var(--space-2); }
+    .memorial-quote {
+      margin: var(--space-5) auto 0; max-width: 280px; padding-top: var(--space-4);
+      border-top: 1px solid var(--color-border);
+      font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--color-text-sub);
+    }
+    .flower-row { display: flex; justify-content: center; margin-top: var(--space-5); }
+    #flowerBtn { background: var(--color-surface); }
+    #flowerBtn .flower-count { margin-left: 2px; color: var(--color-text-sub); font-weight: 600; }
+    .brand { display: inline-flex; align-items: center; gap: var(--space-2); padding-left: var(--space-2); min-width: 0; font-weight: 600; white-space: nowrap; }
+
+    .memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
+    .memory-grid .photo { aspect-ratio: 1 / 1; border-radius: var(--radius-md); border: 2px solid transparent; transition: border-color var(--duration-fast) var(--ease-soft), transform var(--duration-fast) var(--ease-soft); }
+    .memory-grid button.photo:active { transform: scale(0.97); }
+    .memory-grid button.photo { width: 100%; padding: 0; border-width: 2px; border-style: solid; border-color: transparent; cursor: zoom-in; }
+    .memory-grid button.photo:focus-visible { border-color: var(--theme-accent); }
+    /* 사진 확대 보기 (방문자는 보기만 — 선택 기능 없음) */
+    .photo-view .photo { aspect-ratio: 1 / 1; border-radius: var(--radius-lg); }
+    .photo-view .photo [data-lucide], .photo-view .photo svg { width: 48px; height: 48px; }
+
+    .tl-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
+    .tl-item:first-child { padding-top: 0; }
+    .tl-item:last-child { border-bottom: 0; padding-bottom: 0; }
+    .tl-item .ico-wrap { width: 36px; height: 36px; }
+    .tl-item .ico-wrap [data-lucide] { width: 16px; height: 16px; }
+
+    .sound-card { display: flex; align-items: center; gap: var(--space-3); }
+    #soundBtn { background: var(--theme-accent-soft); flex-shrink: 0; }
+    .sound-wave { height: 6px; border-radius: var(--radius-full); background: var(--color-surface-soft); overflow: hidden; margin-top: var(--space-2); }
+    .sound-wave > span { display: block; height: 100%; width: 34%; background: var(--theme-accent); }
+
+    .gb-form-note { margin-bottom: var(--space-4); }
+    .gb-item { padding: var(--space-3) 0 var(--space-4); border-bottom: 1px solid var(--color-border); }
+    .gb-item:first-child { padding-top: 0; }
+    .gb-item:last-child { border-bottom: 0; padding-bottom: 0; }
+    /* 신고 버튼은 터치 영역 44px 유지하되 행 높이를 키우지 않게 음수 여백 */
+    .gb-item-top { display: flex; align-items: center; gap: var(--space-2); min-height: 32px; margin: 0 -12px var(--space-1) 0; }
+    .gb-item-name { font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gb-item-date { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .gb-report { color: var(--color-text-disabled); margin: -6px 0; }
+    .gb-item-msg { font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+    .gb-report { width: 44px; height: 44px; flex-shrink: 0; }
+    .gb-report [data-lucide] { width: 16px; height: 16px; }
+    .gb-report.is-on { color: var(--color-error-text); }
+
+    .guardian-cta { text-align: center; padding: var(--space-6) var(--space-4) var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface-soft); }
+    .report-last { margin-bottom: 0; }
+    .guardian-cta p { margin-bottom: var(--space-1); }
+    .public-foot { justify-content: center; margin-top: var(--space-4); }
+    .gb-form .field:last-of-type { margin-bottom: var(--space-4); }
+    .sec-title .num { color: var(--color-text-sub); font-weight: 600; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="rainbow">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 브랜드 표시 + 보호자 로그인 진입점 -->
+        <header class="m-header no-line">
+          <span class="brand">
+            <span class="avatar avatar-sm"><i data-lucide="cloud"></i></span>
+            <span>무지개 일기</span>
+          </span>
+          <div class="m-header-actions">
+            <a class="btn btn-utility btn-sm" href="login.html">보호자이신가요?</a>
+          </div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- 추모관 대표 영역 (F35: 프로필·한마디) -->
+          <section class="memorial-hero">
+            <div class="rainbow-band"></div>
+            <span class="avatar avatar-xl"><i data-lucide="dog"></i></span>
+            <div class="t-display memorial-name">보리</div>
+            <p class="t-body-s t-sub num memorial-dates"><span class="nowrap">2012.08.15 ~ 2026.09.24</span> · <span class="nowrap">함께한 5,154일</span></p>
+            <p class="memorial-quote">“매일 아침 발끝을 핥아 깨워주던 우리 보리, 고마웠어.”</p>
+            <div class="flower-row">
+              <button class="btn btn-outline btn-md" id="flowerBtn">
+                <i data-lucide="flower-2"></i><span class="btn-label">꽃 남기기 <span class="flower-count">· <span id="flowerCount" class="num">128</span></span></span>
+              </button>
+            </div>
+          </section>
+
+          <!-- 대표 추억 사진 -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">대표 추억 사진</h2></div>
+            <div class="memory-grid">
+              <button class="photo" aria-haspopup="dialog" aria-label="보리 사진, 2013년 봄 첫 산책 — 크게 보기" data-caption="2013년 봄 첫 산책"><i data-lucide="image"></i></button>
+              <button class="photo tone-butter" aria-haspopup="dialog" aria-label="보리 사진, 2016년 여름 바닷가 — 크게 보기" data-caption="2016년 여름 바닷가"><i data-lucide="image"></i></button>
+              <button class="photo tone-sky" aria-haspopup="dialog" aria-label="보리 사진, 2019년 가을 산책로 — 크게 보기" data-caption="2019년 가을 산책로"><i data-lucide="image"></i></button>
+              <button class="photo tone-mint" aria-haspopup="dialog" aria-label="보리 사진, 2021년 생일 — 크게 보기" data-caption="2021년 생일"><i data-lucide="image"></i></button>
+              <button class="photo tone-butter" aria-haspopup="dialog" aria-label="보리 사진, 2024년 겨울 담요 위 — 크게 보기" data-caption="2024년 겨울 담요 위"><i data-lucide="image"></i></button>
+              <button class="photo" aria-haspopup="dialog" aria-label="보리 사진, 2026년 마지막 산책 — 크게 보기" data-caption="2026년 마지막 산책"><i data-lucide="image"></i></button>
+            </div>
+          </section>
+
+          <!-- 타임라인 요약 (F35) -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">보리와 함께한 시간</h2></div>
+            <div class="card card-sm">
+              <div class="tl-item">
+                <span class="ico-wrap"><i data-lucide="heart"></i></span>
+                <div class="grow"><div class="cell-title">우리 가족이 된 날</div><div class="cell-sub num">2012.08.15</div></div>
+              </div>
+              <div class="tl-item">
+                <span class="ico-wrap butter"><i data-lucide="cake"></i></span>
+                <div class="grow"><div class="cell-title">13번째 생일</div><div class="cell-sub num">2025.06.02 · 가족이 다 함께 모였어요</div></div>
+              </div>
+              <div class="tl-item">
+                <span class="ico-wrap mint"><i data-lucide="footprints"></i></span>
+                <div class="grow"><div class="cell-title">마지막 산책</div><div class="cell-sub num">2026.09.20 · 동네 한 바퀴를 천천히 걸었어요</div></div>
+              </div>
+              <div class="tl-item">
+                <span class="ico-wrap sky"><i data-lucide="cloud"></i></span>
+                <div class="grow"><div class="cell-title">무지개다리를 건넌 날</div><div class="cell-sub num">2026.09.24 · 가족 품에서 편안히 떠났어요</div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 하늘로 보내는 편지 (공개된 편지만, F27) -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">하늘로 보내는 편지</h2></div>
+            <div class="stack-2">
+              <div class="card card-letter">
+                <div class="row-between mb-2"><span class="t-caption t-sub">9월 28일 (월)</span><span class="tag tag-sky"><i data-lucide="globe"></i> 공개</span></div>
+                <p class="t-body-s clamp-2">해피동물병원 원장님이 안부를 물으셨어. 너 덕분에 좋은 사람들을 많이 만났다고 얘기했어.</p>
+              </div>
+              <div class="card card-letter">
+                <div class="row-between mb-2"><span class="t-caption t-sub">9월 26일 (토)</span><span class="tag tag-sky"><i data-lucide="globe"></i> 공개</span></div>
+                <p class="t-body-s clamp-2">오늘은 네가 좋아하던 을왕리 사진을 다시 꺼내봤어. 바다 보고 신나서 뛰어다니던 모습이 눈에 선해.</p>
+              </div>
+              <div class="card card-letter">
+                <div class="row-between mb-2"><span class="t-caption t-sub">9월 25일 (금)</span><span class="tag tag-sky"><i data-lucide="globe"></i> 공개</span></div>
+                <p class="t-body-s clamp-2">언니한테 네 이야기를 했더니 같이 울었어. 다들 너를 참 예뻐했었나 봐.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 녹음 (F35) -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">보리 목소리</h2></div>
+            <div class="card card-sm sound-card">
+              <button class="icon-btn" id="soundBtn" aria-label="보리 목소리 재생" aria-pressed="false">
+                <i data-lucide="play"></i>
+              </button>
+              <div class="grow">
+                <div class="cell-title" id="soundLabel">보리의 콧노래</div>
+                <div class="cell-sub" id="soundMeta">0:42 · 2024년 여름에 녹음</div>
+                <div class="sound-wave"><span id="soundProgress"></span></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 방명록 (F25) -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">방명록 · <span id="gbCount" class="num">7</span></h2></div>
+
+            <div class="notice notice-info gb-form-note">
+              <i data-lucide="info"></i>
+              <div class="grow">보호자가 비회원 작성을 허용했어요. 보리에게 하고 싶은 말을 편하게 남겨주세요.</div>
+            </div>
+
+            <div class="card card-sm gb-form">
+              <div class="field">
+                <label class="field-label" for="gbName">이름</label>
+                <input class="input" id="gbName" type="text" placeholder="이름 또는 별명을 적어주세요">
+              </div>
+              <div class="field">
+                <label class="field-label" for="gbMsg">메시지</label>
+                <textarea class="textarea" id="gbMsg" placeholder="보리에게 남기고 싶은 마음을 적어주세요"></textarea>
+              </div>
+              <button class="btn btn-primary btn-block" id="gbSubmit"><i data-lucide="pen-line"></i> 방명록 남기기</button>
+            </div>
+
+            <div class="card card-sm mt-4" id="gbList">
+              <div class="gb-item">
+                <div class="gb-item-top">
+                  <span class="gb-item-name">이모 수진</span>
+                  <span class="tag tag-line">가족</span>
+                  <span class="t-caption t-sub gb-item-date">9월 28일</span>
+                  <button class="icon-btn gb-report" aria-label="신고하기"><i data-lucide="flag"></i></button>
+                </div>
+                <p class="gb-item-msg">보리 덕분에 우리 가족이 더 행복했어. 그동안 고마웠어.</p>
+              </div>
+              <div class="gb-item">
+                <div class="gb-item-top">
+                  <span class="gb-item-name">이수아</span>
+                  <span class="t-caption t-sub gb-item-date">9월 27일</span>
+                  <button class="icon-btn gb-report" aria-label="신고하기"><i data-lucide="flag"></i></button>
+                </div>
+                <p class="gb-item-msg">보리 사진 볼 때마다 마음이 따뜻해져요. 좋은 곳에서 편안하길 바라요.</p>
+              </div>
+              <div class="gb-item">
+                <div class="gb-item-top">
+                  <span class="gb-item-name">언니 은지</span>
+                  <span class="tag tag-line">가족</span>
+                  <span class="t-caption t-sub gb-item-date">9월 26일</span>
+                  <button class="icon-btn gb-report" aria-label="신고하기"><i data-lucide="flag"></i></button>
+                </div>
+                <p class="gb-item-msg">보리야, 집에 갈 때마다 제일 먼저 반겨줘서 고마웠어. 편히 쉬어.</p>
+              </div>
+              <div class="gb-item">
+                <div class="gb-item-top">
+                  <span class="gb-item-name">박서준</span>
+                  <span class="t-caption t-sub gb-item-date">9월 26일</span>
+                  <button class="icon-btn gb-report" aria-label="신고하기"><i data-lucide="flag"></i></button>
+                </div>
+                <p class="gb-item-msg">보리야 항상 꼬리 흔들며 반겨줘서 고마웠어.</p>
+              </div>
+              <div class="gb-item">
+                <div class="gb-item-top">
+                  <span class="gb-item-name">익명</span>
+                  <span class="t-caption t-sub gb-item-date">9월 25일</span>
+                  <button class="icon-btn gb-report" aria-label="신고하기"><i data-lucide="flag"></i></button>
+                </div>
+                <p class="gb-item-msg">삼가 마음을 전합니다. 부디 평안하시길 바랍니다.</p>
+              </div>
+              <div class="gb-item">
+                <div class="gb-item-top">
+                  <span class="gb-item-name">최유진</span>
+                  <span class="t-caption t-sub gb-item-date">9월 25일</span>
+                  <button class="icon-btn gb-report" aria-label="신고하기"><i data-lucide="flag"></i></button>
+                </div>
+                <p class="gb-item-msg">보리 진짜 사랑스러웠는데... 하늘에서도 잘 지내렴.</p>
+              </div>
+              <div class="gb-item">
+                <div class="gb-item-top">
+                  <span class="gb-item-name">익명</span>
+                  <span class="t-caption t-sub gb-item-date">9월 24일</span>
+                  <button class="icon-btn gb-report" aria-label="신고하기"><i data-lucide="flag"></i></button>
+                </div>
+                <p class="gb-item-msg">예쁜 아이였네요. 오래오래 기억할게요.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 보호자 로그인 진입점 (비고: 로그인(P2) 거쳐 편집 화면(P18)으로) -->
+          <section class="m-section">
+            <div class="guardian-cta">
+              <p class="t-caption t-sub mb-3">이 공간을 만든 보호자이신가요?</p>
+              <a class="btn btn-ghost" href="login.html"><i data-lucide="log-in"></i> 로그인하고 페이지 관리하기</a>
+            </div>
+            <p class="disclaimer public-foot"><i data-lucide="shield-check"></i> 이 추모관은 검색엔진에 노출되지 않아요</p>
+          </section>
+
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 사진 확대 보기 모달 (방문자는 보기만) -->
+        <div class="modal-dim" id="photoDim">
+          <div class="modal photo-view" role="dialog" aria-label="사진 크게 보기">
+            <div class="photo"><i data-lucide="image"></i></div>
+            <p class="t-body-s t-sub t-center mt-3" id="photoCaption"></p>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" id="photoClose">닫기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 신고 모달 -->
+        <div class="modal-dim" id="reportDim">
+          <div class="modal" role="dialog" aria-label="방명록 신고">
+            <div class="modal-title">신고 사유를 알려주세요</div>
+            <p class="modal-desc mb-4">신고된 글은 관리자 검토 후 처리돼요.</p>
+            <div class="field">
+              <label class="field-label" for="reportReason">사유</label>
+              <select class="select" id="reportReason">
+                <option>스팸·광고성 글</option>
+                <option>부적절한 표현</option>
+                <option>개인정보 노출</option>
+                <option>기타</option>
+              </select>
+            </div>
+            <div class="field report-last">
+              <label class="field-label" for="reportDetail">상세 내용 (선택)</label>
+              <textarea class="textarea" id="reportDetail" placeholder="상황을 조금 더 알려주시면 검토에 도움이 돼요"></textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" id="reportCancel">취소</button>
+              <button class="btn btn-danger" id="reportSubmit"><i data-lucide="flag"></i> 신고하기</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 꽃 남기기 (헌화) — 클릭마다 카운트 증가 + 스탬프 효과
+    var flowerCount = document.getElementById('flowerCount');
+    document.getElementById('flowerBtn').addEventListener('click', function () {
+      flowerCount.textContent = String(Number(flowerCount.textContent) + 1);
+      this.classList.remove('is-stamped'); void this.offsetWidth; this.classList.add('is-stamped');
+      showToast('꽃을 남겨주셨어요. 보리에게 전할게요');
+    });
+
+    // 대표 추억 사진 — 누르면 확대 보기 모달
+    var photoDim = document.getElementById('photoDim');
+    function closePhoto() { photoDim.classList.remove('open'); }
+    document.querySelectorAll('.memory-grid .photo').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.getElementById('photoCaption').textContent = btn.dataset.caption;
+        photoDim.classList.add('open');
+      });
+    });
+    document.getElementById('photoClose').addEventListener('click', closePhoto);
+    photoDim.addEventListener('click', function (e) { if (e.target === photoDim) closePhoto(); });
+
+    // 보리 목소리 재생 토글
+    var soundBtn = document.getElementById('soundBtn');
+    var soundLabel = document.getElementById('soundLabel');
+    var soundProgress = document.getElementById('soundProgress');
+    var playing = false;
+    soundBtn.addEventListener('click', function () {
+      playing = !playing;
+      soundBtn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+      soundBtn.innerHTML = playing ? '<i data-lucide="pause"></i>' : '<i data-lucide="play"></i>';
+      lucide.createIcons();
+      soundLabel.textContent = playing ? '재생 중 · 보리의 콧노래' : '보리의 콧노래';
+      soundProgress.style.width = playing ? '68%' : '34%';
+    });
+
+    // 방명록 등록
+    var gbList = document.getElementById('gbList');
+    var gbCount = document.getElementById('gbCount');
+    document.getElementById('gbSubmit').addEventListener('click', function () {
+      var nameEl = document.getElementById('gbName');
+      var msgEl = document.getElementById('gbMsg');
+      var name = nameEl.value.trim() || '익명';
+      var msg = msgEl.value.trim();
+      if (!msg) { msgEl.focus(); showToast('보리에게 전할 메시지를 적어주세요'); return; }
+
+      var item = document.createElement('div');
+      item.className = 'gb-item';
+      item.innerHTML =
+        '<div class="gb-item-top">' +
+          '<span class="gb-item-name"></span>' +
+          '<span class="t-caption t-sub gb-item-date">방금 전</span>' +
+          '<button class="icon-btn gb-report" aria-label="신고하기"><i data-lucide="flag"></i></button>' +
+        '</div>' +
+        '<p class="gb-item-msg"></p>';
+      item.querySelector('.gb-item-name').textContent = name;
+      item.querySelector('.gb-item-msg').textContent = msg;
+      gbList.insertBefore(item, gbList.firstChild);
+      bindReport(item.querySelector('.gb-report'));
+      lucide.createIcons();
+
+      gbCount.textContent = String(Number(gbCount.textContent) + 1);
+      nameEl.value = '';
+      msgEl.value = '';
+      showToast('방명록에 마음을 남겼어요');
+    });
+
+    // 신고 모달
+    var reportDim = document.getElementById('reportDim');
+    var reportTarget = null;
+    function openReport(btn) { reportTarget = btn; reportDim.classList.add('open'); }
+    function closeReport() { reportDim.classList.remove('open'); reportTarget = null; }
+    document.getElementById('reportCancel').addEventListener('click', closeReport);
+    reportDim.addEventListener('click', function (e) { if (e.target === reportDim) closeReport(); });
+    document.getElementById('reportSubmit').addEventListener('click', function () {
+      if (reportTarget) {
+        reportTarget.classList.add('is-on');
+        reportTarget.disabled = true;
+        reportTarget.setAttribute('aria-label', '신고 접수됨');
+      }
+      closeReport();
+      showToast('신고가 접수됐어요. 확인 후 처리할게요');
+    });
+    function bindReport(btn) {
+      btn.addEventListener('click', function () { openReport(btn); });
+    }
+    document.querySelectorAll('.gb-report').forEach(bindReport);
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/memorial-public.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

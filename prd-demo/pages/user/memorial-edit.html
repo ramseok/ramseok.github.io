@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P18 메모리얼 페이지 관리 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P18 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 추모관 대표 카드 (DESIGN 6.2 — radius-xl · 원형 대표 사진 · display 이름) */
+    .card-memorial .rainbow-band { width: 64px; margin: 0 auto var(--space-5); }
+    .card-memorial .memorial-name { margin-top: var(--space-1); }
+    .card-memorial .memorial-dates { margin-top: var(--space-1); }
+    .memorial-quote { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--color-text-sub); }
+    .memorial-tags { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+    .card-memorial .btn-block { margin-top: var(--space-5); }
+
+    .sub-label { font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 600; margin: var(--space-5) 0 var(--space-2); }
+    /* 배경 테마 — 화면 끝까지 bleed 되는 가로 스크롤 (오른쪽 칩이 프레임에 잘려 보이지 않게 좌우 여백) */
+    .theme-row { display: flex; gap: var(--space-2); overflow-x: auto; margin: 0 calc(var(--space-4) * -1); padding: 0 var(--space-4) 2px; scrollbar-width: none; scroll-padding: 0 var(--space-4); }
+    .theme-row::-webkit-scrollbar { display: none; }
+    .theme-row .chip [data-lucide="lock"], .theme-row .chip svg.lucide-lock { color: var(--color-text-sub); }
+    .sec-desc { margin: calc(var(--space-2) * -1) 0 var(--space-3); font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); }
+
+    .order-item { display: flex; align-items: center; gap: var(--space-3); min-height: 64px; padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4); border-bottom: 1px solid var(--color-border); transition: opacity var(--duration-fast) var(--ease-soft); }
+    .order-item:last-child { border-bottom: 0; }
+    .order-item.is-off .grow { opacity: 0.5; }
+    .order-grip { color: var(--color-text-disabled); margin-left: -4px; }
+    /* 위/아래 버튼을 하나의 알약 그룹으로 — 각 버튼 터치 영역 40×44 */
+    .order-arrows { display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: var(--radius-full); background: var(--color-surface-soft); }
+    .order-arrow {
+      width: 40px; height: 40px; border: 0; border-radius: var(--radius-full);
+      background: transparent; color: var(--color-text);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .order-arrow:hover { background: var(--color-surface); }
+    .order-arrow:disabled { opacity: 0.3; pointer-events: none; }
+    .order-arrow [data-lucide], .order-arrow svg { width: 18px; height: 18px; }
+    .order-state { margin-top: 2px; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); white-space: nowrap; }
+    .order-item.is-off .order-state { color: var(--color-text-disabled); }
+
+    .radio-item { position: relative; display: flex; align-items: center; gap: var(--space-3); min-height: 64px; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); cursor: pointer; }
+    .radio-item:last-child { border-bottom: 0; }
+    .radio-item input { position: absolute; opacity: 0; }
+    .radio-dot {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      border: 1.5px solid var(--color-text-disabled);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .radio-dot::after { content: ""; width: 11px; height: 11px; border-radius: 50%; background: var(--theme-accent); transform: scale(0); transition: transform var(--duration-fast) var(--ease-soft); }
+    .radio-item.active .radio-dot { border-color: var(--theme-accent); }
+    .radio-item.active .radio-dot::after { transform: scale(1); }
+
+    /* 공유 링크 카드 — 제목 행(우측 재발급) · 링크 필드(흰 면) · 안내 */
+    .link-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) var(--space-2) 0; }
+    .link-box { display: flex; align-items: center; gap: var(--space-2); height: 52px; padding: 0 var(--space-2) 0 var(--space-4); background: var(--color-surface); border-radius: var(--radius-md); }
+    .link-box input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: var(--fs-body-s); color: var(--color-text); outline: none; font-variant-numeric: tabular-nums; text-overflow: ellipsis; }
+    .link-help { margin-top: var(--space-2); font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); }
+
+    /* 방명록 — 상단: 이름·가족 태그 / 본문 / 하단: 날짜 + 우측 숨기기·삭제 */
+    .gb-item { padding: var(--space-4) var(--space-4) var(--space-3); border-bottom: 1px solid var(--color-border); transition: opacity var(--duration-base) var(--ease-soft), transform var(--duration-base) var(--ease-soft); }
+    .gb-item:last-child { border-bottom: 0; }
+    .gb-top { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+    .gb-name { font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gb-msg { margin-top: var(--space-1); }
+    .gb-item.is-hidden .gb-top, .gb-item.is-hidden .gb-msg { opacity: 0.5; }
+    .gb-item.is-hidden .gb-name, .gb-item.is-hidden .gb-msg { text-decoration: line-through; }
+    .gb-foot { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+    .gb-foot .meta { flex: 1; }
+    .gb-actions { display: flex; gap: var(--space-2); flex-shrink: 0; }
+    .gb-actions .btn { padding: 0 var(--space-3); }
+    .gb-removing { opacity: 0; transform: scale(0.97); }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="rainbow">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기 + 타이틀 + 방문자 화면 미리보기 -->
+        <header class="m-header">
+          <a class="icon-btn" href="home.html" aria-label="뒤로가기"><i data-lucide="arrow-left"></i></a>
+          <h1 class="m-title is-center">메모리얼 페이지 관리</h1>
+          <div class="m-header-actions">
+            <a class="icon-btn" href="memorial-public.html" target="_blank" rel="noopener" aria-label="방문자 화면 보기"><i data-lucide="eye"></i></a>
+          </div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <!-- ===== 자동 생성된 추모관 미리보기 (F23·F35) ===== -->
+          <section class="m-section">
+            <div class="card card-memorial">
+              <div class="rainbow-band"></div>
+              <span class="avatar avatar-xl"><i data-lucide="dog"></i></span>
+              <div class="t-display memorial-name" data-pet-name>보리</div>
+              <p class="t-body-s t-sub num memorial-dates"><span class="nowrap">2012.08.15 ~ 2026.09.24</span> · <span class="nowrap">함께한 5,154일</span></p>
+              <p class="memorial-quote">“매일 아침 발끝을 핥아 깨워주던 우리 보리, 고마웠어.”</p>
+              <div class="memorial-tags">
+                <span class="tag tag-line" id="scopeTag"><i data-lucide="link-2"></i> 링크 공개</span>
+                <span class="tag tag-line"><i data-lucide="message-circle"></i> 방명록 새 글 2개</span>
+              </div>
+              <a class="btn btn-primary btn-lg btn-block" href="memorial-public.html" target="_blank" rel="noopener"><i data-lucide="eye"></i> 방문자 화면 보기</a>
+            </div>
+          </section>
+
+          <!-- ===== 추모관 꾸미기: 대표 사진·배경 테마 (F23) ===== -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">추모관 꾸미기</h2></div>
+            <div class="list">
+              <div class="list-item">
+                <span class="ico-wrap"><i data-lucide="image"></i></span>
+                <div class="grow">
+                  <div class="cell-title">대표 사진</div>
+                  <div class="cell-sub" id="mainPhotoMeta">2026년 9월 24일에 설정함</div>
+                </div>
+                <button class="btn btn-utility btn-sm" id="mainPhotoBtn">변경</button>
+                <input type="file" accept="image/*" id="mainPhotoInput" class="sr-only">
+              </div>
+              <div class="list-item">
+                <span class="ico-wrap soft"><i data-lucide="images"></i></span>
+                <div class="grow">
+                  <div class="cell-title">대표 추억 사진</div>
+                  <div class="cell-sub" id="memoryPhotoMeta">6장 담아둠</div>
+                </div>
+                <button class="btn btn-utility btn-sm" id="memoryPhotoBtn">사진 선택</button>
+                <input type="file" accept="image/*" multiple id="memoryPhotoInput" class="sr-only">
+              </div>
+            </div>
+
+            <div>
+              <div class="sub-label">배경 테마</div>
+              <div class="theme-row" id="themeRow">
+                <button class="chip active" data-theme="cream" data-premium="false">크림 담요 <i data-lucide="check" class="chip-check"></i></button>
+                <button class="chip" data-theme="dawn" data-premium="false">새벽 하늘 <i data-lucide="check" class="chip-check"></i></button>
+                <button class="chip" data-theme="petal" data-premium="true"><i data-lucide="lock" class="ico-16"></i> 벚꽃 잎</button>
+                <button class="chip" data-theme="stars" data-premium="true"><i data-lucide="lock" class="ico-16"></i> 별이 총총</button>
+              </div>
+              <p class="t-caption t-sub mt-2">자물쇠 표시는 프리미엄 전용 테마예요.</p>
+            </div>
+          </section>
+
+          <!-- ===== 노출 섹션 순서 편집 (F23) ===== -->
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">노출 섹션 순서</h2>
+            </div>
+            <p class="sec-desc">켜둔 섹션만, 이 순서 그대로 방문자 화면에 보여요.</p>
+            <ul class="list" id="orderList">
+              <li class="order-item" data-key="quote">
+                <i data-lucide="grip-vertical" class="order-grip"></i>
+                <div class="grow">
+                  <div class="cell-title">한마디</div>
+                  <div class="order-state">노출 중</div>
+                </div>
+                <label class="switch"><input type="checkbox" checked><span class="track"></span></label>
+                <div class="order-arrows">
+                  <button class="order-arrow" data-dir="up" aria-label="위로" disabled><i data-lucide="chevron-up"></i></button>
+                  <button class="order-arrow" data-dir="down" aria-label="아래로"><i data-lucide="chevron-down"></i></button>
+                </div>
+              </li>
+              <li class="order-item" data-key="timeline">
+                <i data-lucide="grip-vertical" class="order-grip"></i>
+                <div class="grow">
+                  <div class="cell-title">추억 타임라인</div>
+                  <div class="order-state">노출 중</div>
+                </div>
+                <label class="switch"><input type="checkbox" checked><span class="track"></span></label>
+                <div class="order-arrows">
+                  <button class="order-arrow" data-dir="up" aria-label="위로"><i data-lucide="chevron-up"></i></button>
+                  <button class="order-arrow" data-dir="down" aria-label="아래로"><i data-lucide="chevron-down"></i></button>
+                </div>
+              </li>
+              <li class="order-item" data-key="letter">
+                <i data-lucide="grip-vertical" class="order-grip"></i>
+                <div class="grow">
+                  <div class="cell-title">편지</div>
+                  <div class="order-state">노출 중</div>
+                </div>
+                <label class="switch"><input type="checkbox" checked><span class="track"></span></label>
+                <div class="order-arrows">
+                  <button class="order-arrow" data-dir="up" aria-label="위로"><i data-lucide="chevron-up"></i></button>
+                  <button class="order-arrow" data-dir="down" aria-label="아래로"><i data-lucide="chevron-down"></i></button>
+                </div>
+              </li>
+              <li class="order-item" data-key="voice">
+                <i data-lucide="grip-vertical" class="order-grip"></i>
+                <div class="grow">
+                  <div class="cell-title">녹음</div>
+                  <div class="order-state">노출 중</div>
+                </div>
+                <label class="switch"><input type="checkbox" checked><span class="track"></span></label>
+                <div class="order-arrows">
+                  <button class="order-arrow" data-dir="up" aria-label="위로"><i data-lucide="chevron-up"></i></button>
+                  <button class="order-arrow" data-dir="down" aria-label="아래로"><i data-lucide="chevron-down"></i></button>
+                </div>
+              </li>
+              <li class="order-item" data-key="guestbook">
+                <i data-lucide="grip-vertical" class="order-grip"></i>
+                <div class="grow">
+                  <div class="cell-title">방명록</div>
+                  <div class="order-state">노출 중</div>
+                </div>
+                <label class="switch"><input type="checkbox" checked><span class="track"></span></label>
+                <div class="order-arrows">
+                  <button class="order-arrow" data-dir="up" aria-label="위로"><i data-lucide="chevron-up"></i></button>
+                  <button class="order-arrow" data-dir="down" aria-label="아래로" disabled><i data-lucide="chevron-down"></i></button>
+                </div>
+              </li>
+            </ul>
+          </section>
+
+          <!-- ===== 공개 범위·공유 링크 (F24·F37) ===== -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">공개 범위</h2></div>
+            <div class="list" id="scopeList">
+              <label class="radio-item" data-scope="private">
+                <input type="radio" name="scope">
+                <span class="radio-dot"></span>
+                <div class="grow">
+                  <div class="cell-title">비공개</div>
+                  <div class="cell-sub wrap">보호자인 나만 볼 수 있어요 (처음 만들 때 기본값)</div>
+                </div>
+              </label>
+              <label class="radio-item" data-scope="family">
+                <input type="radio" name="scope">
+                <span class="radio-dot"></span>
+                <div class="grow">
+                  <div class="cell-title">가족 공유</div>
+                  <div class="cell-sub wrap">초대한 가족 구성원까지 볼 수 있어요</div>
+                </div>
+              </label>
+              <label class="radio-item active" data-scope="link">
+                <input type="radio" name="scope" checked>
+                <span class="radio-dot"></span>
+                <div class="grow">
+                  <div class="cell-title">링크 공개</div>
+                  <div class="cell-sub wrap">공유 링크를 가진 누구나 볼 수 있어요</div>
+                </div>
+              </label>
+            </div>
+
+            <div class="card card-soft mt-3" id="linkSection">
+              <div class="link-head">
+                <span class="t-strong">공유 링크</span>
+                <button class="btn btn-ghost btn-sm" id="reissueBtn"><i data-lucide="refresh-cw"></i> 재발급</button>
+              </div>
+              <div class="link-box">
+                <input type="text" id="shareLinkInput" value="rndiary.app/m/bori-9fk2x7" readonly>
+                <button class="btn btn-utility btn-sm" id="copyLinkBtn"><i data-lucide="copy"></i> 복사</button>
+              </div>
+              <p class="link-help">카카오톡·SNS에 공유하면 썸네일이 자동으로 함께 보여요.</p>
+            </div>
+
+            <p class="disclaimer mt-3"><i data-lucide="search-x"></i> 이 추모관은 검색엔진에 노출되지 않아요.</p>
+          </section>
+
+          <!-- ===== 방명록 관리 (F26) ===== -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">방명록 관리</h2></div>
+            <div class="list">
+              <div class="list-item">
+                <span class="ico-wrap sky"><i data-lucide="user-round-check"></i></span>
+                <div class="grow">
+                  <div class="cell-title">비회원 작성 허용</div>
+                  <div class="cell-sub wrap t-balance" id="allowGuestMeta">로그인하지 않은 방문자도 글을 남길 수 있어요</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="allowGuestToggle" checked><span class="track"></span></label>
+              </div>
+            </div>
+
+            <div class="list mt-3" id="gbList">
+              <!-- 방명록 원본 = P19(memorial-public) 목록. 작성자·내용·날짜 동일 -->
+              <div class="gb-item" data-author="member">
+                <div class="gb-top">
+                  <span class="gb-name">이모 수진</span>
+                  <span class="tag tag-line">가족</span>
+                </div>
+                <p class="gb-msg t-body-s">보리 덕분에 우리 가족이 더 행복했어. 그동안 고마웠어.</p>
+                <div class="gb-foot">
+                  <span class="meta num">9월 28일</span>
+                  <div class="gb-actions">
+                    <button class="btn btn-utility btn-sm gb-hide"><i data-lucide="eye-off"></i> 숨기기</button>
+                    <button class="btn btn-danger btn-sm gb-del"><i data-lucide="trash-2"></i> 삭제</button>
+                  </div>
+                </div>
+              </div>
+              <div class="gb-item" data-author="guest">
+                <div class="gb-top">
+                  <span class="gb-name">비회원 · 이수아</span>
+                </div>
+                <p class="gb-msg t-body-s">보리 사진 볼 때마다 마음이 따뜻해져요. 좋은 곳에서 편안하길 바라요.</p>
+                <div class="gb-foot">
+                  <span class="meta num">9월 27일</span>
+                  <div class="gb-actions">
+                    <button class="btn btn-utility btn-sm gb-hide"><i data-lucide="eye-off"></i> 숨기기</button>
+                    <button class="btn btn-danger btn-sm gb-del"><i data-lucide="trash-2"></i> 삭제</button>
+                  </div>
+                </div>
+              </div>
+              <div class="gb-item" data-author="member">
+                <div class="gb-top">
+                  <span class="gb-name">언니 은지</span>
+                  <span class="tag tag-line">가족</span>
+                </div>
+                <p class="gb-msg t-body-s">보리야, 집에 갈 때마다 제일 먼저 반겨줘서 고마웠어. 편히 쉬어.</p>
+                <div class="gb-foot">
+                  <span class="meta num">9월 26일</span>
+                  <div class="gb-actions">
+                    <button class="btn btn-utility btn-sm gb-hide"><i data-lucide="eye-off"></i> 숨기기</button>
+                    <button class="btn btn-danger btn-sm gb-del"><i data-lucide="trash-2"></i> 삭제</button>
+                  </div>
+                </div>
+              </div>
+              <div class="gb-item" data-author="guest">
+                <div class="gb-top">
+                  <span class="gb-name">비회원 · 박서준</span>
+                </div>
+                <p class="gb-msg t-body-s">보리야 항상 꼬리 흔들며 반겨줘서 고마웠어.</p>
+                <div class="gb-foot">
+                  <span class="meta num">9월 26일</span>
+                  <div class="gb-actions">
+                    <button class="btn btn-utility btn-sm gb-hide"><i data-lucide="eye-off"></i> 숨기기</button>
+                    <button class="btn btn-danger btn-sm gb-del"><i data-lucide="trash-2"></i> 삭제</button>
+                  </div>
+                </div>
+              </div>
+              <div class="gb-item" data-author="guest">
+                <div class="gb-top">
+                  <span class="gb-name">비회원 · 익명</span>
+                </div>
+                <p class="gb-msg t-body-s">삼가 마음을 전합니다. 부디 평안하시길 바랍니다.</p>
+                <div class="gb-foot">
+                  <span class="meta num">9월 25일</span>
+                  <div class="gb-actions">
+                    <button class="btn btn-utility btn-sm gb-hide"><i data-lucide="eye-off"></i> 숨기기</button>
+                    <button class="btn btn-danger btn-sm gb-del"><i data-lucide="trash-2"></i> 삭제</button>
+                  </div>
+                </div>
+              </div>
+              <div class="gb-item" data-author="guest">
+                <div class="gb-top">
+                  <span class="gb-name">비회원 · 최유진</span>
+                </div>
+                <p class="gb-msg t-body-s">보리 진짜 사랑스러웠는데... 하늘에서도 잘 지내렴.</p>
+                <div class="gb-foot">
+                  <span class="meta num">9월 25일</span>
+                  <div class="gb-actions">
+                    <button class="btn btn-utility btn-sm gb-hide"><i data-lucide="eye-off"></i> 숨기기</button>
+                    <button class="btn btn-danger btn-sm gb-del"><i data-lucide="trash-2"></i> 삭제</button>
+                  </div>
+                </div>
+              </div>
+              <div class="gb-item" data-author="guest">
+                <div class="gb-top">
+                  <span class="gb-name">비회원 · 익명</span>
+                </div>
+                <p class="gb-msg t-body-s">예쁜 아이였네요. 오래오래 기억할게요.</p>
+                <div class="gb-foot">
+                  <span class="meta num">9월 24일</span>
+                  <div class="gb-actions">
+                    <button class="btn btn-utility btn-sm gb-hide"><i data-lucide="eye-off"></i> 숨기기</button>
+                    <button class="btn btn-danger btn-sm gb-del"><i data-lucide="trash-2"></i> 삭제</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 더 살펴보기 (P20·P23 연결) ===== -->
+          <section class="m-section">
+            <div class="sec-head"><h2 class="sec-title">더 살펴보기</h2></div>
+            <div class="list">
+              <a class="list-item" href="letter-to-sky.html">
+                <span class="ico-wrap sky"><i data-lucide="send"></i></span>
+                <div class="grow">
+                  <div class="cell-title">하늘로 보내는 편지</div>
+                  <div class="cell-sub">편지 7통 보관 중</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+              <a class="list-item" href="memorial-extras.html">
+                <span class="ico-wrap soft"><i data-lucide="book-heart"></i></span>
+                <div class="grow">
+                  <div class="cell-title">추억 앨범 · 회고록</div>
+                  <div class="cell-sub">사진을 모아 한 권으로 남겨요</div>
+                </div>
+                <i data-lucide="chevron-right" class="chev"></i>
+              </a>
+            </div>
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 링크 재발급 확인 모달 -->
+        <div class="modal-dim" id="reissueDim">
+          <div class="modal">
+            <div class="modal-title">링크를 재발급할까요?</div>
+            <p class="t-body-s t-sub">재발급하면 기존 공유 링크는 즉시 무효화돼서, 그 링크로는 더 이상 들어올 수 없어요.</p>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" id="reissueCancel">취소</button>
+              <button class="btn btn-primary" id="reissueConfirm">재발급할게요</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 대표 사진 · 대표 추억 사진 변경 (더미)
+    document.getElementById('mainPhotoBtn').addEventListener('click', function () {
+      document.getElementById('mainPhotoInput').click();
+    });
+    document.getElementById('mainPhotoInput').addEventListener('change', function () {
+      document.getElementById('mainPhotoMeta').textContent = '오늘 새로 설정함';
+      showToast('대표 사진을 바꿨어요');
+    });
+    document.getElementById('memoryPhotoBtn').addEventListener('click', function () {
+      document.getElementById('memoryPhotoInput').click();
+    });
+    document.getElementById('memoryPhotoInput').addEventListener('change', function (e) {
+      var n = e.target.files ? e.target.files.length : 0;
+      if (n > 0) {
+        document.getElementById('memoryPhotoMeta').textContent = n + '장 담아둠';
+        showToast('대표 추억 사진을 담았어요');
+      }
+    });
+
+    // 배경 테마 선택
+    document.querySelectorAll('#themeRow .chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        if (chip.dataset.premium === 'true') {
+          showToast('프리미엄에서 이용할 수 있는 테마예요');
+          return;
+        }
+        document.querySelectorAll('#themeRow .chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        showToast(chip.textContent.trim() + ' 테마로 바꿨어요');
+      });
+    });
+
+    // 노출 섹션 순서 — 위/아래 이동 + 노출 토글
+    function refreshOrderArrows() {
+      var items = Array.prototype.slice.call(document.querySelectorAll('#orderList .order-item'));
+      items.forEach(function (li, i) {
+        li.querySelector('[data-dir="up"]').disabled = (i === 0);
+        li.querySelector('[data-dir="down"]').disabled = (i === items.length - 1);
+      });
+    }
+    document.querySelectorAll('#orderList .order-arrow').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var li = btn.closest('.order-item');
+        if (btn.dataset.dir === 'up' && li.previousElementSibling) {
+          li.parentNode.insertBefore(li, li.previousElementSibling);
+        } else if (btn.dataset.dir === 'down' && li.nextElementSibling) {
+          li.parentNode.insertBefore(li.nextElementSibling, li);
+        }
+        refreshOrderArrows();
+        showToast('노출 순서를 바꿨어요');
+      });
+    });
+    document.querySelectorAll('#orderList .switch input').forEach(function (input) {
+      input.addEventListener('change', function () {
+        var li = input.closest('.order-item');
+        li.classList.toggle('is-off', !input.checked);
+        li.querySelector('.order-state').textContent = input.checked ? '노출 중' : '숨김';
+        showToast(input.checked ? '섹션을 노출했어요' : '섹션을 숨겼어요');
+      });
+    });
+    refreshOrderArrows();
+
+    // 공개 범위 선택
+    var linkSection = document.getElementById('linkSection');
+    var scopeTag = document.getElementById('scopeTag');
+    var scopeLabel = { private: '비공개', family: '가족 공유', link: '링크 공개' };
+    var scopeIcon = { private: 'lock', family: 'users', link: 'link-2' };
+    document.querySelectorAll('#scopeList .radio-item').forEach(function (item) {
+      item.addEventListener('click', function () {
+        document.querySelectorAll('#scopeList .radio-item').forEach(function (r) {
+          r.classList.remove('active');
+          r.querySelector('input').checked = false;
+        });
+        item.classList.add('active');
+        item.querySelector('input').checked = true;
+        var scope = item.dataset.scope;
+        linkSection.hidden = (scope !== 'link');
+        scopeTag.innerHTML = '<i data-lucide="' + scopeIcon[scope] + '"></i> ' + scopeLabel[scope];
+        lucide.createIcons();
+        showToast('공개 범위를 "' + scopeLabel[scope] + '"(으)로 바꿨어요');
+      });
+    });
+
+    // 공유 링크 복사
+    document.getElementById('copyLinkBtn').addEventListener('click', function () {
+      var input = document.getElementById('shareLinkInput');
+      input.select();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(input.value).catch(function () {});
+      }
+      showToast('링크를 복사했어요');
+    });
+
+    // 링크 재발급 — 기존 링크 무효화 경고 모달
+    var reissueDim = document.getElementById('reissueDim');
+    document.getElementById('reissueBtn').addEventListener('click', function () {
+      reissueDim.classList.add('open');
+    });
+    document.getElementById('reissueCancel').addEventListener('click', function () {
+      reissueDim.classList.remove('open');
+    });
+    document.getElementById('reissueConfirm').addEventListener('click', function () {
+      var token = 'bori-' + Math.random().toString(36).slice(2, 8);
+      document.getElementById('shareLinkInput').value = 'rndiary.app/m/' + token;
+      reissueDim.classList.remove('open');
+      showToast('새 링크로 재발급됐어요. 이전 링크는 더 이상 쓸 수 없어요');
+    });
+
+    // 방명록 비회원 작성 허용
+    document.getElementById('allowGuestToggle').addEventListener('change', function () {
+      document.getElementById('allowGuestMeta').textContent = this.checked
+        ? '로그인하지 않은 방문자도 글을 남길 수 있어요'
+        : '가족 구성원만 글을 남길 수 있어요';
+      showToast(this.checked ? '비회원 작성을 허용했어요' : '비회원 작성을 막았어요');
+    });
+
+    // 방명록 숨김/삭제
+    document.querySelectorAll('.gb-hide').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var item = btn.closest('.gb-item');
+        var hidden = item.classList.toggle('is-hidden');
+        btn.innerHTML = hidden ? '<i data-lucide="eye"></i> 숨김 해제' : '<i data-lucide="eye-off"></i> 숨기기';
+        lucide.createIcons();
+        showToast(hidden ? '방명록 글을 숨겼어요' : '숨김을 해제했어요');
+      });
+    });
+    document.querySelectorAll('.gb-del').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var item = btn.closest('.gb-item');
+        item.classList.add('gb-removing');
+        showToast('방명록 글을 삭제했어요');
+        setTimeout(function () { item.remove(); }, 220);
+      });
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/memorial-edit.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P28 대시보드(통계) · 무지개 일기 관리자</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P28 전용 — 공통 레이아웃(.admin-*)은 common.css 그대로 쓴다 */
+    .dash-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-4); }
+    .state-list { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-5); }
+    .dash-row > .panel .panel-body { flex: 1; display: flex; flex-direction: column; }
+    .dash-row .bar-chart { flex: 1; min-height: 200px; }
+    .state-line { display: flex; align-items: center; gap: var(--space-3); min-height: 32px; font-size: var(--fs-body-s); }
+    .state-line .grow { display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
+    .state-line .cnt { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; }
+    .state-line .pct { color: var(--color-text-sub); font-variant-numeric: tabular-nums; min-width: 48px; text-align: right; }
+    .dash-row .disclaimer { margin-top: auto; padding-top: var(--space-4); }
+    .pay-mini { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--color-border); }
+    .pay-mini > div { min-width: 0; padding: var(--space-4) var(--space-5); border-right: 1px solid var(--color-border); }
+    .pay-mini > div:last-child { border-right: 0; }
+    .pay-mini .t-caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pay-mini .v { font-size: var(--fs-h3); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; }
+    /* 처리할 일 — 4칸 스트립, 칸 사이 세로 헤어라인 */
+    .todo-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .todo-item { display: flex; align-items: center; gap: var(--space-3); min-height: 76px; padding: var(--space-3) var(--space-4) var(--space-3) var(--space-5); border-right: 1px solid var(--color-border); color: var(--color-text); }
+    .todo-item:last-child { border-right: 0; }
+    .todo-item:hover { background: var(--color-bg); text-decoration: none; }
+    .todo-item .cell-title { font-size: var(--fs-body-s); }
+    .todo-item .cell-sub { white-space: normal; }
+    .todo-item .n { font-weight: 700; font-size: var(--fs-h3); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+    .nav-count { margin-left: auto; font-size: var(--fs-caption); color: var(--color-text-sub); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .updated { font-size: var(--fs-caption); color: var(--color-text-sub); white-space: nowrap; }
+    .td-date { font-variant-numeric: tabular-nums; }
+    .col-share { width: 220px; }
+    @media (max-width: 1280px) { .todo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .todo-item:nth-child(2) { border-right: 0; } .todo-item:nth-child(-n+2) { border-bottom: 1px solid var(--color-border); } }
+    @media (max-width: 1100px) { .dash-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="admin">
+
+    <!-- 사이드바 (P28~P33) — 다른 관리자 페이지는 이 블록을 그대로 복사하고 active만 옮긴다 -->
+    <aside class="admin-side">
+      <div class="admin-brand">
+        <span class="ico-wrap"><i data-lucide="rainbow" class="ico-18"></i></span>
+        <div>
+          <div class="admin-brand-name">무지개 일기</div>
+          <div class="admin-brand-sub">운영 관리자</div>
+        </div>
+      </div>
+
+      <div class="admin-nav-label">통계</div>
+      <nav class="admin-nav">
+        <a href="dashboard.html" class="active"><i data-lucide="layout-dashboard"></i> 대시보드</a>
+      </nav>
+
+      <div class="admin-nav-label">운영</div>
+      <nav class="admin-nav">
+        <a href="members.html"><i data-lucide="users"></i> 회원·반려견</a>
+        <a href="inquiries.html"><i data-lucide="message-circle-question"></i> 1:1 문의 <span class="nav-count">대기 7</span></a>
+        <a href="content-cms.html"><i data-lucide="file-pen-line"></i> 콘텐츠(CMS)</a>
+        <a href="reports.html"><i data-lucide="flag"></i> 신고·모더레이션 <span class="nav-count">5</span></a>
+        <a href="partners.html"><i data-lucide="handshake"></i> 제휴 업체</a>
+      </nav>
+
+      <div class="admin-side-foot">
+        <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+        <div class="grow">
+          <div class="t-body-s t-strong">김하늘</div>
+          <div class="t-caption t-sub">운영 매니저</div>
+        </div>
+        <a class="icon-btn" href="login.html" aria-label="로그아웃" title="로그아웃"><i data-lucide="log-out" class="ico-18"></i></a>
+      </div>
+    </aside>
+
+    <!-- 메인 -->
+    <div class="admin-main">
+      <header class="admin-top">
+        <div class="admin-top-title">대시보드</div>
+        <span class="crumb">통계 · <span id="periodLabel">최근 30일 (8월 31일 ~ 9월 29일)</span></span>
+        <div class="admin-top-actions">
+          <span class="updated" id="updatedAt">9월 29일 14:20 기준</span>
+          <button class="icon-btn" id="refreshBtn" aria-label="새로고침" title="새로고침"><i data-lucide="refresh-cw" class="ico-18"></i></button>
+          <div class="segment" role="tablist" aria-label="기간">
+            <button class="seg-btn" data-period="7">7일</button>
+            <button class="seg-btn active" data-period="30">30일</button>
+            <button class="seg-btn" data-period="90">90일</button>
+          </div>
+          <button class="btn btn-utility btn-sm" id="csvBtn"><i data-lucide="download"></i> CSV 내보내기</button>
+        </div>
+      </header>
+
+      <main class="admin-body">
+
+        <!-- KPI (F44: 가입자 · 상태별 반려견 · 기록 작성 수 · 결제) -->
+        <section class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-label"><i data-lucide="user-plus" class="ico-18"></i> 신규 가입자</div>
+            <div class="kpi-value" id="kSignup">612<small>명</small></div>
+            <div class="kpi-diff">이전 기간 대비 <span class="up" id="kSignupDiff">+4.3%</span> · 누적 18,426명</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><i data-lucide="dog" class="ico-18"></i> 등록 반려견</div>
+            <div class="kpi-value">21,093<small>마리</small></div>
+            <div class="kpi-diff">기간 내 신규 <span class="up" id="kPetNew">+698</span>마리</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><i data-lucide="notebook-pen" class="ico-18"></i> 기록 작성 수</div>
+            <div class="kpi-value" id="kRecord">48,210<small>건</small></div>
+            <div class="kpi-diff">이전 기간 대비 <span class="up" id="kRecordDiff">+6.8%</span></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><i data-lucide="credit-card" class="ico-18"></i> 결제액</div>
+            <div class="kpi-value" id="kPay">₩6,291,600</div>
+            <div class="kpi-diff">활성 구독 1,284명 · 결제 실패 <span class="down" id="kFail">9</span>건</div>
+          </div>
+        </section>
+
+        <!-- 처리할 일 — KPI 바로 아래 4칸 가로 스트립 (빈 공간 없는 그리드) -->
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">처리할 일</div>
+            <span class="panel-sub">오늘 기준</span>
+          </div>
+          <div class="todo-grid">
+            <a class="todo-item" href="inquiries.html">
+              <span class="ico-wrap sm sky"><i data-lucide="message-circle-question"></i></span>
+              <div class="grow"><div class="cell-title">답변 대기 1:1 문의</div><div class="cell-sub">가장 오래된 문의 9월 25일</div></div>
+              <span class="n">7</span><i data-lucide="chevron-right" class="ico-18 t-sub"></i>
+            </a>
+            <a class="todo-item" href="reports.html">
+              <span class="ico-wrap sm"><i data-lucide="flag"></i></span>
+              <div class="grow"><div class="cell-title">미처리 신고</div><div class="cell-sub">방명록 2 · 커뮤니티 3</div></div>
+              <span class="n">5</span><i data-lucide="chevron-right" class="ico-18 t-sub"></i>
+            </a>
+            <a class="todo-item" href="partners.html">
+              <span class="ico-wrap sm mint"><i data-lucide="badge-check"></i></span>
+              <div class="grow"><div class="cell-title">검증 만료 장묘업체</div><div class="cell-sub" title="확인일로부터 180일 경과 · 재검증 필요">확인일로부터 180일 경과 · 재검증 필요</div></div>
+              <span class="n">1</span><i data-lucide="chevron-right" class="ico-18 t-sub"></i>
+            </a>
+            <a class="todo-item" href="content-cms.html">
+              <span class="ico-wrap sm butter"><i data-lucide="scale"></i></span>
+              <div class="grow"><div class="cell-title">법령 점검 예정 행정 안내</div><div class="cell-sub">최종 점검 후 90일 경과</div></div>
+              <span class="n">2</span><i data-lucide="chevron-right" class="ico-18 t-sub"></i>
+            </a>
+          </div>
+        </section>
+
+        <!-- 가입자 추이 + 상태별 반려견 -->
+        <section class="dash-row">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">가입자 추이</div>
+                <div class="panel-sub" id="chartSub">주 단위 · 신규 가입자 수</div>
+              </div>
+              <span class="tag tag-line">막대에 마우스를 올리면 강조돼요</span>
+            </div>
+            <div class="panel-body">
+              <div class="bar-chart" id="signupChart"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">상태별 반려견 수</div>
+                <div class="panel-sub">현재 기준 · 전체 21,093마리</div>
+              </div>
+              <a class="btn btn-ghost btn-sm" href="members.html">회원 관리</a>
+            </div>
+            <div class="panel-body">
+              <div class="stack-bar" aria-label="상태 분포">
+                <span style="width:75.2%; background:#F4A77B;"></span>
+                <span style="width:16.2%; background:#C9B8E8;"></span>
+                <span style="width:8.6%; background:#A9B7D9;"></span>
+              </div>
+              <div class="state-list">
+                <div class="state-line">
+                  <div class="grow"><span class="legend-dot" style="background:#F4A77B;"></span><i data-lucide="sun" class="ico-16"></i> 함께하는 중 <span class="t-caption t-sub">TOGETHER</span></div>
+                  <span class="cnt">15,870</span><span class="pct">75.2%</span>
+                </div>
+                <div class="state-line">
+                  <div class="grow"><span class="legend-dot" style="background:#C9B8E8;"></span><i data-lucide="sunset" class="ico-16"></i> 이별 준비 <span class="t-caption t-sub">PREPARING</span></div>
+                  <span class="cnt">3,412</span><span class="pct">16.2%</span>
+                </div>
+                <div class="state-line">
+                  <div class="grow"><span class="legend-dot" style="background:#A9B7D9;"></span><i data-lucide="cloud" class="ico-16"></i> 무지개다리 <span class="t-caption t-sub">RAINBOW</span></div>
+                  <span class="cnt">1,811</span><span class="pct">8.6%</span>
+                </div>
+              </div>
+              <p class="disclaimer mt-4"><i data-lucide="info"></i> 무지개다리 전환 후 7일 이내 되돌리기 23건은 이전 상태로 집계돼요.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 기록 작성 수 (유형별, 비중 막대) -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">기록 작성 수</div>
+              <div class="panel-sub" id="recordSub">유형별 · 최근 30일</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th>기록 유형</th><th>관련 기능</th><th class="t-right">작성 수</th><th class="t-right col-share">비중</th><th class="t-right">이전 대비</th></tr>
+              </thead>
+              <tbody id="recordBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 결제 현황 -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">결제 현황</div>
+              <div class="panel-sub">프리미엄 구독 · 추억 앨범 주문 포함</div>
+            </div>
+            <div class="segment" role="tablist" aria-label="결제 상태 필터">
+              <button class="seg-btn active" data-pay-filter="all">전체</button>
+              <button class="seg-btn" data-pay-filter="ok">완료</button>
+              <button class="seg-btn" data-pay-filter="err">실패</button>
+              <button class="seg-btn" data-pay-filter="refund">환불·해지</button>
+            </div>
+          </div>
+          <div class="pay-mini">
+            <div><div class="t-caption t-sub">신규 구독</div><div class="v" id="pNew">138명</div></div>
+            <div><div class="t-caption t-sub">해지</div><div class="v" id="pCancel">41명</div></div>
+            <div><div class="t-caption t-sub">결제 실패 · 읽기 전용 전환</div><div class="v" id="pFail">9건</div></div>
+            <div><div class="t-caption t-sub">앨범 주문</div><div class="v" id="pAlbum">57건</div></div>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th>결제 일시</th><th>회원</th><th>상품</th><th class="t-right">금액</th><th>상태</th><th>비고</th><th class="td-actions"><span class="sr-only">관리</span></th></tr>
+              </thead>
+              <tbody id="payBody">
+                <tr data-pay="ok"><td class="td-date">09.29 10:42</td><td>김*연</td><td>프리미엄 월간</td><td class="td-num">₩4,900</td><td><span class="status ok">결제 완료</span></td><td class="t-sub">정기 결제</td><td class="td-actions"><a class="btn btn-ghost btn-sm" href="members.html">회원 보기</a></td></tr>
+                <tr data-pay="ok"><td class="td-date">09.29 09:15</td><td>박*준</td><td>프리미엄 연간</td><td class="td-num">₩49,000</td><td><span class="status ok">결제 완료</span></td><td class="t-sub">신규 구독</td><td class="td-actions"><a class="btn btn-ghost btn-sm" href="members.html">회원 보기</a></td></tr>
+                <tr data-pay="err"><td class="td-date">09.28 22:03</td><td>이*희</td><td>프리미엄 월간</td><td class="td-num">₩4,900</td><td><span class="status err">결제 실패</span></td><td class="t-sub">카드 한도 · 읽기 전용 안내 발송</td><td class="td-actions"><a class="btn btn-ghost btn-sm" href="members.html">회원 보기</a></td></tr>
+                <tr data-pay="refund"><td class="td-date">09.28 18:47</td><td>최*민</td><td>프리미엄 월간</td><td class="td-num">—</td><td><span class="status">해지 예약</span></td><td class="t-sub">10월 18일 만료 · 데이터 유지</td><td class="td-actions"><a class="btn btn-ghost btn-sm" href="members.html">회원 보기</a></td></tr>
+                <tr data-pay="ok"><td class="td-date">09.28 13:30</td><td>정*아</td><td>추억 앨범 · 포토북 A4</td><td class="td-num">₩39,000</td><td><span class="status ok">결제 완료</span></td><td class="t-sub">인쇄 업체 전달 완료</td><td class="td-actions"><a class="btn btn-ghost btn-sm" href="members.html">회원 보기</a></td></tr>
+                <tr data-pay="wait"><td class="td-date">09.28 08:12</td><td>오*림</td><td>추억 앨범 · 원목 액자</td><td class="td-num">₩27,000</td><td><span class="status wait">입금 대기</span></td><td class="t-sub">가상계좌 · 9월 30일 마감</td><td class="td-actions"><a class="btn btn-ghost btn-sm" href="members.html">회원 보기</a></td></tr>
+                <tr data-pay="refund"><td class="td-date">09.27 20:11</td><td>한*수</td><td>프리미엄 월간</td><td class="td-num">-₩4,900</td><td><span class="status">환불 완료</span></td><td class="t-sub">결제 당일 요청</td><td class="td-actions"><a class="btn btn-ghost btn-sm" href="members.html">회원 보기</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button class="page-btn" data-page="prev" aria-label="이전"><i data-lucide="chevron-left" class="ico-16"></i></button>
+            <button class="page-btn active" data-page="1">1</button>
+            <button class="page-btn" data-page="2">2</button>
+            <button class="page-btn" data-page="3">3</button>
+            <button class="page-btn" data-page="next" aria-label="다음"><i data-lucide="chevron-right" class="ico-16"></i></button>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check"></i><span id="toastMsg"></span></div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+    function fmt(n) { return n.toLocaleString('ko-KR'); }
+
+    // 기간별 더미 데이터 (F44)
+    var PERIODS = {
+      7:  { label: '최근 7일 (9월 23일 ~ 9월 29일)', unit: '일 단위', signup: 146, signupDiff: '+8.1%', petNew: 171, recordDiff: '+2.4%', pay: 1504300, fail: 2,
+            bars: [['9/23',18],['9/24',22],['9/25',19],['9/26',25],['9/27',17],['9/28',21],['9/29',24]], factor: 0.236,
+            payMini: ['31명','9명','2건','13건'] },
+      30: { label: '최근 30일 (8월 31일 ~ 9월 29일)', unit: '주 단위', signup: 612, signupDiff: '+4.3%', petNew: 698, recordDiff: '+6.8%', pay: 6291600, fail: 9,
+            bars: [['9월 1주',131],['9월 2주',118],['9월 3주',140],['9월 4주',125],['9월 5주',98]], factor: 1,
+            payMini: ['138명','41명','9건','57건'] },
+      90: { label: '최근 90일 (7월 2일 ~ 9월 29일)', unit: '월 단위', signup: 1807, signupDiff: '+11.2%', petNew: 2054, recordDiff: '+9.5%', pay: 18105200, fail: 26,
+            bars: [['7월',562],['8월',633],['9월',612]], factor: 2.895,
+            payMini: ['402명','117명','26건','161건'] }
+    };
+    var RECORDS = [
+      ['일상 다이어리', 'F9', 21480, '+5.2%'],
+      ['건강 기록', 'F10', 15920, '+7.9%'],
+      ['삶의 질 체크', 'F11', 3870, '+12.4%'],
+      ['소리·발도장', 'F12', 2140, '+3.1%'],
+      ['미리 쓰는 편지', 'F17', 1260, '+9.0%'],
+      ['하늘로 보내는 편지', 'F27', 3540, '+6.1%']
+    ];
+
+    function renderChart(p) {
+      var max = Math.max.apply(null, p.bars.map(function (b) { return b[1]; }));
+      document.getElementById('signupChart').innerHTML = p.bars.map(function (b, i) {
+        var h = Math.round(b[1] / max * 100);
+        var hl = i === p.bars.length - 1 ? ' is-hl' : '';
+        return '<div class="bar-col' + hl + '"><span class="bar-val">' + fmt(b[1]) + '</span><div class="bar" style="height:' + h + '%"></div><span class="bar-x">' + b[0] + '</span></div>';
+      }).join('');
+    }
+
+    function renderRecords(p, days) {
+      var rows = RECORDS.map(function (r) { return [r[0], r[1], Math.round(r[2] * p.factor), r[3]]; });
+      var total = rows.reduce(function (s, r) { return s + r[2]; }, 0);
+      document.getElementById('recordBody').innerHTML = rows.map(function (r) {
+        var pct = (r[2] / total * 100).toFixed(1);
+        return '<tr><td>' + r[0] + '</td><td><span class="tag tag-primary">' + r[1] + '</span></td><td class="td-num">' + fmt(r[2]) + '</td>' +
+          '<td class="td-num"><span class="meter"><span class="meter-track"><span style="width:' + pct + '%"></span></span><span class="meter-val">' + pct + '%</span></span></td>' +
+          '<td class="td-num"><span class="t-sub">' + r[3] + '</span></td></tr>';
+      }).join('') + '<tr class="is-total"><td>합계</td><td></td><td class="td-num">' + fmt(total) + '</td><td class="td-num"><span class="meter"><span class="meter-val">100%</span></span></td><td></td></tr>';
+      document.getElementById('kRecord').innerHTML = fmt(total) + '<small>건</small>';
+      document.getElementById('recordSub').textContent = '유형별 · 최근 ' + days + '일';
+    }
+
+    function applyPeriod(days) {
+      var p = PERIODS[days];
+      document.getElementById('periodLabel').textContent = p.label;
+      document.getElementById('chartSub').textContent = p.unit + ' · 신규 가입자 수';
+      document.getElementById('kSignup').innerHTML = fmt(p.signup) + '<small>명</small>';
+      document.getElementById('kSignupDiff').textContent = p.signupDiff;
+      document.getElementById('kPetNew').textContent = '+' + fmt(p.petNew);
+      document.getElementById('kRecordDiff').textContent = p.recordDiff;
+      document.getElementById('kPay').textContent = '₩' + fmt(p.pay);
+      document.getElementById('kFail').textContent = p.fail;
+      ['pNew', 'pCancel', 'pFail', 'pAlbum'].forEach(function (id, i) { document.getElementById(id).textContent = p.payMini[i]; });
+      renderChart(p);
+      renderRecords(p, days);
+    }
+
+    // 기간 세그먼트 — active 토글 + 데이터 교체
+    document.querySelectorAll('[data-period]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('[data-period]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        applyPeriod(btn.dataset.period);
+      });
+    });
+    applyPeriod('30');
+
+    // 결제 상태 필터
+    document.querySelectorAll('[data-pay-filter]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var f = btn.dataset.payFilter;
+        document.querySelectorAll('[data-pay-filter]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        document.querySelectorAll('#payBody tr').forEach(function (tr) { tr.hidden = !(f === 'all' || tr.dataset.pay === f); });
+      });
+    });
+
+    // 결제 행 선택 (시각 피드백)
+    document.querySelectorAll('#payBody tr').forEach(function (tr) {
+      tr.addEventListener('click', function (e) {
+        if (e.target.closest('a')) return;
+        var wasSelected = tr.classList.contains('is-selected');
+        document.querySelectorAll('#payBody tr').forEach(function (r) { r.classList.remove('is-selected'); });
+        if (!wasSelected) tr.classList.add('is-selected');
+      });
+    });
+
+    // 페이지네이션
+    (function () {
+      var nums = Array.prototype.slice.call(document.querySelectorAll('[data-page]')).filter(function (b) { return /^\d+$/.test(b.dataset.page); });
+      document.querySelectorAll('[data-page]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var cur = nums.findIndex(function (b) { return b.classList.contains('active'); });
+          var v = btn.dataset.page;
+          var next = v === 'prev' ? Math.max(0, cur - 1) : v === 'next' ? Math.min(nums.length - 1, cur + 1) : nums.indexOf(btn);
+          nums.forEach(function (b, i) { b.classList.toggle('active', i === next); });
+          showToast((next + 1) + '페이지 결제 내역을 불러왔어요');
+        });
+      });
+    })();
+
+    // 새로고침 · CSV
+    document.getElementById('refreshBtn').addEventListener('click', function () {
+      var d = new Date();
+      var hh = String(d.getHours()).padStart(2, '0'), mm = String(d.getMinutes()).padStart(2, '0');
+      document.getElementById('updatedAt').textContent = '9월 29일 ' + hh + ':' + mm + ' 기준';
+      showToast('최신 통계로 새로고침했어요');
+    });
+    document.getElementById('csvBtn').addEventListener('click', function () {
+      var active = document.querySelector('[data-period].active').dataset.period;
+      showToast('최근 ' + active + '일 통계 CSV를 내려받았어요');
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/admin/dashboard.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

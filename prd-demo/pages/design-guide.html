@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>디자인 가이드 · 무지개 일기(가칭)</title>
+<link rel="stylesheet" href="assets/css/common.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  /* dg- : design-guide 전용 스타일. common.css 클래스명과 겹치지 않게 접두사를 붙인다 */
+  .dg-shell { max-width: 1180px; margin: 0 auto; padding: 32px 32px 100px; }
+  .dg-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: var(--fs-body-s); font-weight: 600; color: var(--color-text-sub);
+    margin-bottom: 20px;
+  }
+  .dg-back svg { width: 16px; height: 16px; }
+  .dg-back:hover { color: var(--color-text); text-decoration: none; }
+
+  .dg-head { padding-bottom: 24px; border-bottom: 1px solid var(--color-border); }
+  .dg-title { margin: 10px 0 6px; }
+
+  .dg-layout { display: grid; grid-template-columns: 216px 1fr; gap: 40px; align-items: start; margin-top: 28px; }
+  .dg-nav { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 2px; }
+  .dg-nav a {
+    display: block; padding: 8px 12px; border-radius: var(--radius-md);
+    font-size: var(--fs-body-s); font-weight: 600; color: var(--color-text-sub);
+  }
+  .dg-nav a:hover { background: var(--color-surface); color: var(--color-text); text-decoration: none; }
+  .dg-nav a.is-active { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+
+  .dg-main { min-width: 0; display: flex; flex-direction: column; gap: 56px; }
+  .dg-section { scroll-margin-top: 32px; }
+  .dg-eyebrow { font-size: var(--fs-caption); font-weight: 700; color: var(--color-primary-strong); margin-bottom: 4px; }
+  .dg-lead { max-width: 720px; margin-top: 6px; }
+
+  /* 01 콘셉트 */
+  .dg-quote {
+    font-family: var(--font-title); font-size: 20px; line-height: 32px;
+    padding: var(--space-5); background: var(--color-surface-soft); border-radius: var(--radius-lg);
+    margin: var(--space-4) 0;
+  }
+  .dg-principle { display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
+  .dg-principle:last-child { border-bottom: 0; }
+  .dg-principle-num {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: var(--radius-full);
+    background: var(--color-primary-soft); color: var(--color-primary-strong);
+    display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: var(--fs-caption);
+  }
+
+  /* 문서 공통 — 인라인 코드 · 표 면 */
+  .dg-shell code {
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 0.86em;
+    padding: 1px 6px; border-radius: 6px; background: var(--color-surface-soft); color: var(--color-text);
+    white-space: nowrap;
+  }
+  .dg-main .table-wrap { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+  .dg-main .table th:first-child { border-top-left-radius: var(--radius-lg); }
+  .dg-main .table th:last-child { border-top-right-radius: var(--radius-lg); }
+  .dg-main .table td { vertical-align: middle; }
+  .group-label > span { white-space: nowrap; }
+  .dg-main .card-flat { background: var(--color-surface); border-radius: var(--radius-md); }
+
+  /* 02 컬러 */
+  .dg-swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(198px, 1fr)); gap: 14px; }
+  .dg-swatch { padding: 0; overflow: hidden; background: var(--color-surface); border-radius: var(--radius-md); display: flex; flex-direction: column; }
+  .dg-swatch-color { height: 64px; flex-shrink: 0; border-bottom: 1px solid var(--color-border); }
+  .dg-swatch-info { flex: 1; }
+  .dg-swatch-info { padding: var(--space-3) var(--space-4) var(--space-4); }
+  .dg-swatch-token { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12px; font-weight: 700; }
+
+  .dg-theme-stage { max-width: 620px; }
+  .dg-theme-swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .dg-theme-swatch {
+    height: 64px; border-radius: var(--radius-md); display: flex; align-items: flex-end;
+    padding: 6px 8px; font-size: 11px; font-weight: 700; color: var(--color-text);
+    font-family: ui-monospace, monospace;
+  }
+  .dg-dark-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .dg-dark-chip {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md);
+    background: #2A2420; color: #F5EDE6; font-size: 12px; font-family: ui-monospace, monospace;
+  }
+  .dg-dark-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,.15); }
+
+  /* 03 타이포 */
+  .dg-type-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px dashed var(--color-border); }
+  .dg-type-row:last-child { border-bottom: 0; }
+  .dg-type-sample { flex: 1; min-width: 0; }
+  .dg-type-meta { flex-shrink: 0; text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+
+  /* 04 간격·반경 */
+  .dg-space-row { display: grid; grid-template-columns: 160px 56px 1fr; align-items: center; gap: var(--space-4); padding: 8px 0; }
+  .dg-space-bar { height: 14px; border-radius: var(--radius-full); background: var(--color-primary-soft); }
+  .dg-radius-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+  .dg-radius-item { text-align: center; }
+  .dg-radius-box { width: 80px; height: 80px; margin: 0 auto 10px; background: var(--color-primary-soft); border: 1.5px solid var(--color-primary); }
+
+  /* 05 그림자 */
+  .dg-shadow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+  .dg-shadow-card { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-5); text-align: center; }
+  .dg-shadow-box { width: 100%; height: 56px; border-radius: var(--radius-md); background: var(--color-surface); margin-bottom: var(--space-3); }
+
+  /* 06 버튼 */
+  .dg-btn-block { padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border); }
+  .dg-btn-block:last-child { border-bottom: 0; }
+  .dg-btn-block-head { display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+  /* 07 모바일 프레임 */
+  .dg-frame-wrap { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+  .dg-frame-mini { width: 168px; padding: 6px; border-radius: 30px; background: var(--bezel); box-shadow: var(--shadow-device); flex-shrink: 0; }
+  .dg-frame-mini-screen { display: flex; flex-direction: column; background: var(--color-bg); border-radius: 24px; overflow: hidden; height: 328px; }
+  .dg-fm-status { height: 14px; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: var(--color-text); }
+  .dg-fm-header { height: 24px; font-size: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--color-border); color: var(--color-text-sub); background: var(--color-bg); }
+  .dg-fm-content { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--color-text-disabled); text-align: center; padding: 0 10px; }
+  .dg-fm-tabbar { height: 28px; border-top: 1px solid var(--color-border); background: var(--color-surface); font-size: 8px; color: var(--color-text-sub); display: flex; align-items: center; justify-content: center; }
+  .dg-fm-home { height: 10px; position: relative; background: var(--color-surface); }
+  .dg-fm-home::after { content: ""; position: absolute; left: 50%; top: 50%; width: 36px; height: 2px; background: var(--color-text); opacity: .9; transform: translate(-50%, -50%); border-radius: 2px; }
+  .dg-frame-note { max-width: none; padding: 0 var(--space-5) var(--space-4); }
+  .dg-frame-wrap > .table-wrap { padding-bottom: 0; }
+
+  /* 04 줄바꿈 규칙 */
+  .dg-wrap-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .dg-wrap-card { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); }
+  .dg-wrap-card-head { display: flex; align-items: center; gap: var(--space-2); }
+  .dg-wrap-card-head .ico-wrap { width: 32px; height: 32px; }
+  .dg-wrap-card-head .ico-wrap svg { width: 16px; height: 16px; }
+  .dg-wrap-card-head .tag { margin-left: auto; }
+  .dg-rule { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding-top: var(--space-3); border-top: 1px dashed var(--color-border); }
+  .dg-wrap-card-head + .dg-rule { border-top: 0; padding-top: var(--space-1); }
+  .dg-rule p, .dg-rule-foot { font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--color-text-sub); }
+  .dg-rule-foot { margin-top: auto; padding-top: var(--space-3); border-top: 1px dashed var(--color-border); }
+  .dg-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .dg-chips code { font-size: 12px; }
+  .dg-wrap-demo { display: grid; grid-template-columns: 280px 1fr; gap: var(--space-5); align-items: start; }
+  .dg-wrap-phone { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+  @media (max-width: 1100px) { .dg-wrap-grid { grid-template-columns: 1fr; } .dg-wrap-demo { grid-template-columns: 1fr; } }
+
+  /* 08 보이스 */
+  .dg-voice-do { color: var(--color-success); font-weight: 700; }
+  .dg-voice-dont { color: var(--color-error-text); font-weight: 700; text-decoration: line-through; text-decoration-color: var(--color-error); }
+
+  /* 09 접근성 */
+  .dg-a11y-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--color-border); }
+  .dg-a11y-item:last-child { border-bottom: 0; }
+  .dg-a11y-item svg { color: var(--color-success); margin-top: 2px; }
+
+  /* 10 금지 사항 */
+  .dg-dont-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .dg-dont-col { border-radius: var(--radius-lg); padding: var(--space-5); }
+  .dg-dont-col.is-do { background: #EEF7F0; }
+  .dg-dont-col.is-dont { background: #FBEDEB; }
+  .dg-dont-col h3 { display: flex; align-items: center; gap: 6px; margin-bottom: var(--space-3); }
+  .dg-dont-col ul { display: flex; flex-direction: column; gap: 8px; }
+  .dg-dont-col li { display: flex; align-items: flex-start; gap: 8px; font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+  .dg-dont-col li svg { flex-shrink: 0; margin-top: 2px; }
+
+  @media (max-width: 900px) {
+    .dg-layout { grid-template-columns: 1fr; }
+    .dg-nav { position: static; flex-direction: row; flex-wrap: wrap; }
+    .dg-dont-grid { grid-template-columns: 1fr; }
+    .dg-space-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="dg-shell">
+  <a class="dg-back" href="index.html"><i data-lucide="arrow-left"></i> 시안 허브</a>
+
+  <header class="dg-head">
+    <span class="tag tag-line"><i data-lucide="book-open"></i> 참조 문서 · PC 폭 · 시안 아님</span>
+    <h1 class="t-display dg-title">디자인 가이드</h1>
+    <p class="t-body t-sub dg-lead">무지개 일기(가칭) — 노령견 이별 준비 + 추모 플랫폼. DESIGN.md v0.1의 토큰이 화면에서 실제로 어떻게 적용되는지 실물로 보여주는 문서예요. 값은 전부 DESIGN.md와 <code>assets/css/common.css</code>에서 그대로 가져왔어요.</p>
+  </header>
+
+  <div class="dg-layout">
+    <nav class="dg-nav" aria-label="섹션 이동" id="dgNav">
+      <a href="#concept">01 콘셉트</a>
+      <a href="#color">02 컬러</a>
+      <a href="#type">03 타이포그래피</a>
+      <a href="#wrap">04 줄바꿈 규칙</a>
+      <a href="#space">05 간격·반경</a>
+      <a href="#shadow">06 그림자·깊이</a>
+      <a href="#button">07 버튼</a>
+      <a href="#frame">08 모바일 프레임</a>
+      <a href="#voice">09 보이스 &amp; 톤</a>
+      <a href="#a11y">10 접근성</a>
+      <a href="#dont">11 금지 사항</a>
+    </nav>
+
+    <main class="dg-main">
+
+      <!-- 01 콘셉트 -->
+      <section class="dg-section" id="concept">
+        <div class="dg-eyebrow">01</div>
+        <h2>콘셉트 · 상태별 감정 강도</h2>
+        <p class="t-body-s t-sub dg-lead">키워드: 포근함 · 동글동글 · 햇살 · 담담한 위로</p>
+
+        <div class="dg-quote">"오후 햇살이 드는 거실, 담요 위에서 졸고 있는 강아지 옆자리"</div>
+
+        <p class="t-body-s t-sub" style="max-width:720px;">귀엽고 따뜻한 분위기가 기본이지만, 이 서비스는 <b class="t-strong">이별을 다루는 서비스</b>라는 전제를 항상 가져가요. 그래서 귀여움의 강도를 반려견 상태에 따라 조절해요.</p>
+
+        <div class="table-wrap mt-4">
+          <table class="table">
+            <thead>
+              <tr><th>반려견 상태</th><th>무드</th><th class="t-right">귀여움 강도</th><th>비유</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="state-badge state-together"><i data-lucide="sun"></i> TOGETHER</span></td>
+                <td>밝고 따뜻함</td><td class="num">●●●●○</td><td>햇살 드는 오후</td>
+              </tr>
+              <tr>
+                <td><span class="state-badge state-preparing"><i data-lucide="cloud-sun"></i> PREPARING</span></td>
+                <td>차분하고 다정함</td><td class="num">●●●○○</td><td>노을 지기 전 저녁</td>
+              </tr>
+              <tr>
+                <td><span class="state-badge state-rainbow"><i data-lucide="cloud"></i> RAINBOW</span></td>
+                <td>고요하고 포근함</td><td class="num">●●○○○</td><td>비 갠 뒤 새벽 하늘</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="t-caption t-sub mt-2">근거: 이별 직후 보호자에게 발랄한 캐릭터나 축하 연출이 보이면 상처가 돼요. 브랜드 일관성은 유지하되 채도·연출 강도만 낮춰서 톤을 전환해요.</p>
+
+        <div class="mt-6">
+          <div class="dg-principle">
+            <span class="dg-principle-num">1</span>
+            <div><b class="t-strong">동그랗게</b> — 날카로운 모서리를 쓰지 않아요. 모든 요소는 둥근 모서리가 기본이에요.</div>
+          </div>
+          <div class="dg-principle">
+            <span class="dg-principle-num">2</span>
+            <div><b class="t-strong">따뜻하게</b> — 순수한 회색·검정 대신 갈색 기운이 도는 웜톤 뉴트럴을 써요.</div>
+          </div>
+          <div class="dg-principle">
+            <span class="dg-principle-num">3</span>
+            <div><b class="t-strong">여유 있게</b> — 여백을 넉넉히 두어 서두르는 느낌을 주지 않아요.</div>
+          </div>
+          <div class="dg-principle">
+            <span class="dg-principle-num">4</span>
+            <div><b class="t-strong">조용하게</b> — 알림 배지, 빨간 점, 과한 애니메이션으로 재촉하지 않아요.</div>
+          </div>
+          <div class="dg-principle">
+            <span class="dg-principle-num">5</span>
+            <div><b class="t-strong">누구나 읽히게</b> — 고령 보호자도 편하게 쓰도록 글자 크기·대비를 충분히 확보해요.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 컬러 -->
+      <section class="dg-section" id="color">
+        <div class="dg-eyebrow">02</div>
+        <h2>컬러</h2>
+        <p class="t-body-s t-sub dg-lead">베이스 → 브랜드 → 상태별 테마 → 시맨틱 순서예요. 상태별 테마는 아래 스위처로 실물 전환을 볼 수 있어요.</p>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">베이스 팔레트</span></div>
+        <div class="dg-swatch-grid">
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#FFF9F2"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-bg</div>
+              <div class="t-caption t-sub">#FFF9F2</div>
+              <div class="t-body-s mt-1">전체 배경 (크림)</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#FFFFFF"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-surface</div>
+              <div class="t-caption t-sub">#FFFFFF</div>
+              <div class="t-body-s mt-1">카드, 모달 배경</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#FDF1E6"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-surface-soft</div>
+              <div class="t-caption t-sub">#FDF1E6</div>
+              <div class="t-body-s mt-1">섹션 구분 배경, 입력 필드</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#EFE2D6"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-border</div>
+              <div class="t-caption t-sub">#EFE2D6</div>
+              <div class="t-body-s mt-1">구분선, 카드 테두리</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#4A3F38"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-text</div>
+              <div class="t-caption t-sub">#4A3F38</div>
+              <div class="t-body-s mt-1">본문, 제목 (웜 브라운)</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#7D6E64"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-text-sub</div>
+              <div class="t-caption t-sub">#7D6E64</div>
+              <div class="t-body-s mt-1">보조 텍스트, 캡션</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#B8ABA1"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-text-disabled</div>
+              <div class="t-caption t-sub">#B8ABA1</div>
+              <div class="t-body-s mt-1">비활성 텍스트 (정보 전달용 금지)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">브랜드 컬러</span></div>
+        <div class="dg-swatch-grid">
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#F4A77B"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-primary</div>
+              <div class="t-caption t-sub">#F4A77B · 살구</div>
+              <div class="t-body-s mt-1">주요 버튼, 강조 요소</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#FDE3D3"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-primary-soft</div>
+              <div class="t-caption t-sub">#FDE3D3 · 연살구</div>
+              <div class="t-body-s mt-1">선택 상태 배경, 태그</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#B35A30"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-primary-strong</div>
+              <div class="t-caption t-sub">#B35A30 · 구운 살구</div>
+              <div class="t-body-s mt-1">텍스트 링크, 강조 텍스트</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#FFD98A"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-butter</div>
+              <div class="t-caption t-sub">#FFD98A · 버터</div>
+              <div class="t-body-s mt-1">하이라이트, 버킷리스트 완료</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#BFE3C8"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-mint</div>
+              <div class="t-caption t-sub">#BFE3C8 · 민트</div>
+              <div class="t-body-s mt-1">건강 기록, 긍정 상태</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#BFD9F2"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-sky</div>
+              <div class="t-caption t-sub">#BFD9F2 · 하늘</div>
+              <div class="t-body-s mt-1">정보성 요소, 편지</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">상태별 테마 — 실물 전환 미리보기</span></div>
+        <div class="segment mt-3" role="tablist" aria-label="반려견 상태 전환">
+          <button class="seg-btn active" data-pet-demo="together"><i data-lucide="sun"></i> 함께하는 중</button>
+          <button class="seg-btn" data-pet-demo="preparing"><i data-lucide="cloud-sun"></i> 이별 준비</button>
+          <button class="seg-btn" data-pet-demo="rainbow"><i data-lucide="cloud"></i> 무지개다리</button>
+        </div>
+
+        <div class="card dg-theme-stage mt-3" id="themeStage" data-pet-state="together">
+          <div class="row-between">
+            <div>
+              <div class="t-h3" id="themeStageTitle">함께하는 중 — 밝고 따뜻함</div>
+              <p class="t-body-s t-sub mt-1" id="themeStageDesc">햇살 드는 오후 · 귀여움 강도 ●●●●○</p>
+            </div>
+            <span class="state-badge state-together" id="themeStageBadge"><i data-lucide="sun"></i> TOGETHER</span>
+          </div>
+
+          <div class="dg-theme-swatches mt-4">
+            <div class="dg-theme-swatch" style="background:var(--theme-accent)">--theme-accent</div>
+            <div class="dg-theme-swatch" style="background:var(--theme-accent-soft)">--theme-accent-soft</div>
+            <div class="dg-theme-swatch" style="background:var(--theme-header-bg)">--theme-header-bg</div>
+          </div>
+
+          <button class="btn btn-primary btn-md mt-4"><i data-lucide="check"></i> Primary 버튼 미리보기</button>
+          <div class="rainbow-band mt-4" id="themeRainbowBand" hidden></div>
+          <p class="t-caption t-sub mt-2" id="themeRainbowNote" hidden>무지개 그라데이션은 RAINBOW 상태에서만, 4px 이하 띠로만 사용해요 (넓게 쓰지 않음).</p>
+        </div>
+        <p class="t-caption t-sub mt-2">토큰: <code>--theme-accent</code> · <code>--theme-accent-soft</code> · <code>--theme-header-bg</code> — 최상위 요소에 <code>data-pet-state="together|preparing|rainbow"</code>를 부여하면 전체 화면이 자동으로 톤을 바꿔요.</p>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">시맨틱 컬러</span></div>
+        <div class="dg-swatch-grid">
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#6FAF84"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-success</div>
+              <div class="t-caption t-sub">#6FAF84</div>
+              <div class="t-body-s mt-1">저장 완료, 체크</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#E8B04A"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-warning</div>
+              <div class="t-caption t-sub">#E8B04A</div>
+              <div class="t-body-s mt-1">주의 안내</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#D9695F"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-error</div>
+              <div class="t-caption t-sub">#D9695F</div>
+              <div class="t-body-s mt-1">오류 아이콘, 테두리</div>
+            </div>
+          </div>
+          <div class="card-flat dg-swatch">
+            <div class="dg-swatch-color" style="background:#B84A42"></div>
+            <div class="dg-swatch-info">
+              <div class="dg-swatch-token">--color-error-text</div>
+              <div class="t-caption t-sub">#B84A42</div>
+              <div class="t-body-s mt-1">오류 메시지 텍스트</div>
+            </div>
+          </div>
+        </div>
+        <div class="notice notice-warn mt-4">
+          <i data-lucide="alert-triangle"></i>
+          <div class="grow">살구색 버튼 위에는 흰 글자 대신 반드시 <code>--color-text</code>(웜 브라운)를 써요. 흰색 글자 on <code>--color-primary</code>는 대비 약 2.1:1로 <b class="t-strong">사용 금지</b>예요. 오류 색상도 채도를 낮춘 부드러운 빨강을 쓰고, 원색 빨강(#FF0000 계열)은 쓰지 않아요.</div>
+        </div>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">다크 모드 (참고)</span></div>
+        <div class="dg-dark-row">
+          <span class="dg-dark-chip"><span class="dg-dark-dot" style="background:#2A2420"></span>--color-bg #2A2420</span>
+          <span class="dg-dark-chip"><span class="dg-dark-dot" style="background:#352E29"></span>--color-surface #352E29</span>
+          <span class="dg-dark-chip"><span class="dg-dark-dot" style="background:#3F3731"></span>--color-surface-soft #3F3731</span>
+          <span class="dg-dark-chip"><span class="dg-dark-dot" style="background:#4D443D"></span>--color-border #4D443D</span>
+          <span class="dg-dark-chip"><span class="dg-dark-dot" style="background:#F5EDE6"></span>--color-text #F5EDE6</span>
+          <span class="dg-dark-chip"><span class="dg-dark-dot" style="background:#C4B6AB"></span>--color-text-sub #C4B6AB</span>
+          <span class="dg-dark-chip"><span class="dg-dark-dot" style="background:#F7BD9B"></span>--color-primary-strong #F7BD9B</span>
+        </div>
+        <p class="t-caption t-sub mt-2">순수 검정(#000000)은 다크 모드에서도 쓰지 않고, 따뜻한 짙은 갈색을 배경으로 써요. <code>[data-color-mode="dark"]</code> 또는 <code>[data-color-mode="auto"]</code> + OS 다크 설정에서 적용돼요.</p>
+      </section>
+
+      <!-- 03 타이포그래피 -->
+      <section class="dg-section" id="type">
+        <div class="dg-eyebrow">03</div>
+        <h2>타이포그래피 스케일</h2>
+        <p class="t-body-s t-sub dg-lead">제목은 고운돋움 400 · 본문/UI는 Pretendard. 본문 최소 크기는 16px, 어떤 정보성 텍스트도 13px 미만으로 쓰지 않아요.</p>
+
+        <div class="mt-4">
+          <div class="dg-type-row">
+            <div class="dg-type-sample t-display">추모관 이름, 온보딩 타이틀</div>
+            <div class="dg-type-meta">
+              <span class="tag tag-theme">display</span>
+              <span class="t-caption t-sub">28 / 38px · 400 · 고운돋움 · -0.015em</span>
+            </div>
+          </div>
+          <div class="dg-type-row">
+            <div class="dg-type-sample t-h1">페이지 제목이 이렇게 보여요</div>
+            <div class="dg-type-meta">
+              <span class="tag tag-theme">h1</span>
+              <span class="t-caption t-sub">24 / 34px · 400 · 고운돋움 · -0.01em</span>
+            </div>
+          </div>
+          <div class="dg-type-row">
+            <div class="dg-type-sample t-h2">섹션 제목은 이런 굵기예요</div>
+            <div class="dg-type-meta">
+              <span class="tag">h2</span>
+              <span class="t-caption t-sub">20 / 30px · 600 · Pretendard · -0.02em</span>
+            </div>
+          </div>
+          <div class="dg-type-row">
+            <div class="dg-type-sample t-h3">카드 제목 크기예요</div>
+            <div class="dg-type-meta">
+              <span class="tag">h3</span>
+              <span class="t-caption t-sub">18 / 27px · 600 · Pretendard · -0.015em</span>
+            </div>
+          </div>
+          <div class="dg-type-row">
+            <div class="dg-type-sample t-body">기본 본문이에요. 오늘 ○○이는 어떤 하루였나요? 이 정도 길이의 문장이 두 줄 정도 편하게 읽혀요.</div>
+            <div class="dg-type-meta">
+              <span class="tag">body</span>
+              <span class="t-caption t-sub">16 / 26px · 400</span>
+            </div>
+          </div>
+          <div class="dg-type-row">
+            <div class="dg-type-sample t-body-s">보조 본문이에요. 카드 설명, 목록 부가 설명 등에 써요.</div>
+            <div class="dg-type-meta">
+              <span class="tag">body-s</span>
+              <span class="t-caption t-sub">14 / 22px · 400</span>
+            </div>
+          </div>
+          <div class="dg-type-row">
+            <div class="dg-type-sample t-caption">2026년 9월 29일 · 날짜, 메타 정보</div>
+            <div class="dg-type-meta">
+              <span class="tag">caption</span>
+              <span class="t-caption t-sub">13 / 20px · 400 · 정보 최소 크기</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="notice notice-info mt-4">
+          <i data-lucide="text"></i>
+          <div class="grow">마이페이지에서 글자 크기를 보통(100%) / 크게(115%) / 아주 크게(130%)로 조절할 수 있어요. <code>[data-font-scale="lg"|"xl"]</code>를 최상위 요소에 부여하면 이 페이지의 모든 <code>--fs-*</code> 값이 함께 커져요. 40~50대와 고령 보호자가 주 타깃이라 일반 서비스보다 한 단계 큰 크기를 기준으로 잡았어요.</div>
+        </div>
+      </section>
+
+      <!-- 04 줄바꿈 규칙 -->
+      <section class="dg-section" id="wrap">
+        <div class="dg-eyebrow">04</div>
+        <h2>줄바꿈 규칙</h2>
+        <p class="t-body-s t-sub dg-lead">한국어가 글자 중간에서 끊기거나, 짧은 라벨이 두 줄로 쪼개지지 않게 하는 규칙이에요. 대부분 <code>common.css</code>가 전역으로 처리하니 페이지에서는 아래 유틸만 골라 쓰면 돼요.</p>
+
+        <div class="dg-wrap-grid mt-4">
+          <div class="dg-wrap-card">
+            <div class="dg-wrap-card-head"><span class="ico-wrap"><i data-lucide="wrap-text"></i></span><span class="t-strong">어절 단위 줄바꿈</span><span class="tag tag-line">전역</span></div>
+            <div class="dg-rule"><code>word-break: keep-all</code><p>한국어는 띄어쓰기 단위로만 줄을 바꿔요.</p></div>
+            <div class="dg-rule"><code>overflow-wrap: break-word</code><p>이메일·URL처럼 공백 없는 긴 토큰만 예외로 끊어요.</p></div>
+            <p class="dg-rule-foot">둘 다 <code>body</code>에 걸려 있어 페이지에서 따로 쓰지 않아요.</p>
+          </div>
+          <div class="dg-wrap-card">
+            <div class="dg-wrap-card-head"><span class="ico-wrap butter"><i data-lucide="type"></i></span><span class="t-strong">균형 · 고아 방지</span><span class="tag tag-line">전역</span></div>
+            <div class="dg-rule"><code>text-wrap: balance</code><p>제목류와 가운데 정렬 문단. 두 줄이 비슷한 길이가 돼요.</p>
+              <div class="dg-chips"><code>h1~h4</code><code>.sec-title</code><code>.card-title</code><code>.modal-title</code><code>.sheet-title</code></div></div>
+            <div class="dg-rule"><code>text-wrap: pretty</code><p>본문의 마지막 줄에 한 단어만 남지 않게 해요.</p>
+              <div class="dg-chips"><code>p</code><code>li</code><code>.notice</code><code>.field-help</code></div></div>
+          </div>
+          <div class="dg-wrap-card">
+            <div class="dg-wrap-card-head"><span class="ico-wrap mint"><i data-lucide="minus"></i></span><span class="t-strong">한 줄 고정</span><span class="tag tag-line">nowrap</span></div>
+            <div class="dg-rule"><p>자동 적용 — 줄어들지도 않아요.</p>
+              <div class="dg-chips"><code>.btn</code><code>.chip</code><code>.tag</code><code>.state-badge</code><code>.status</code><code>.seg-btn</code><code>.tab</code><code>.m-tab</code><code>.sec-more</code><code>.page-btn</code><code>.kpi-value</code><code>.stat-value</code></div></div>
+            <div class="dg-rule"><p>직접 붙이기 — 날짜, 숫자+단위, <span class="nowrap">"만 14살"</span> 같은 짧은 값.</p>
+              <div class="dg-chips"><code>.nowrap</code></div></div>
+          </div>
+        </div>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">넘칠 때 쓰는 유틸</span></div>
+        <div class="dg-wrap-demo mt-2">
+          <div class="dg-wrap-phone" aria-label="좁은 폭 예시">
+            <div class="row">
+              <span class="avatar avatar-sm"><i data-lucide="dog"></i></span>
+              <div class="grow">
+                <div class="row"><span class="t-strong clamp-1">몽실이와 함께하는 오후의 산책 기록</span><span class="state-badge state-together"><i data-lucide="sun"></i> 함께하는 중</span></div>
+                <span class="meta">말티즈<span class="meta-sep">·</span>여아<span class="meta-sep">·</span>만 14살<span class="meta-sep">·</span>2026.09.29 오후 4:10</span>
+              </div>
+            </div>
+            <p class="t-body-s clamp-2">오늘은 볕이 좋아서 담요 위에서 한참을 졸았다. 산책은 짧게 다녀왔지만 꼬리를 살랑였다.</p>
+            <button class="btn btn-primary btn-sm btn-block"><i data-lucide="pencil"></i><span class="btn-label">오늘의 <span>몽실이</span> 남기기</span></button>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>클래스</th><th>동작</th><th>쓰는 곳</th></tr></thead>
+              <tbody>
+                <tr><td><code>.nowrap</code></td><td>한 줄 고정 + 줄어들지 않음</td><td>날짜, 숫자+단위, 짧은 라벨</td></tr>
+                <tr><td><code>.clamp-1</code></td><td>한 줄 말줄임 <span class="nowrap">(flex 안 min-width: 0)</span></td><td>이름 + 뱃지 행의 이름</td></tr>
+                <tr><td><code>.clamp-2</code></td><td>두 줄 말줄임</td><td>카드 본문 미리보기</td></tr>
+                <tr><td class="nowrap"><code>.meta</code> <code>.meta-sep</code></td><td>캡션 한 줄 + 말줄임, 구분점</td><td>견종·성별·나이, 날짜·시간</td></tr>
+                <tr><td><code>.btn-label</code></td><td>버튼 라벨을 한 덩어리로</td><td>라벨 안에 이름 치환이 낄 때</td></tr>
+                <tr><td><code>.t-balance</code></td><td>균형 줄바꿈</td><td>가운데 정렬 감성 문구</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="t-caption t-sub mt-2">원칙: 줄바꿈이 어색하면 문장을 억지로 끊지 말고 레이아웃을 먼저 바꿔요 — 좁은 카드의 우측 버튼은 <code>.card-foot</code>으로 내리고, 가로 목록은 <code>.h-scroll</code>로 폭을 확보해요.</p>
+      </section>
+
+      <!-- 05 간격·반경 -->
+      <section class="dg-section" id="space">
+        <div class="dg-eyebrow">05</div>
+        <h2>간격 · 모서리 반경</h2>
+        <p class="t-body-s t-sub dg-lead">4px 기반 간격 스케일과 알약형을 지향하는 반경 스케일이에요. 반경을 일반 서비스보다 크게 잡아 "동글동글한" 인상을 만들어요.</p>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">간격 (4px 기반)</span></div>
+        <div class="mt-2">
+          <div class="dg-space-row">
+            <span class="t-body-s t-strong">--space-1 · 4px</span>
+            <span class="dg-space-bar" style="width:4px"></span>
+            <span class="t-caption t-sub">아이콘과 텍스트 사이</span>
+          </div>
+          <div class="dg-space-row">
+            <span class="t-body-s t-strong">--space-2 · 8px</span>
+            <span class="dg-space-bar" style="width:8px"></span>
+            <span class="t-caption t-sub">태그 간격</span>
+          </div>
+          <div class="dg-space-row">
+            <span class="t-body-s t-strong">--space-3 · 12px</span>
+            <span class="dg-space-bar" style="width:12px"></span>
+            <span class="t-caption t-sub">카드 내부 요소 간격</span>
+          </div>
+          <div class="dg-space-row">
+            <span class="t-body-s t-strong">--space-4 · 16px</span>
+            <span class="dg-space-bar" style="width:16px"></span>
+            <span class="t-caption t-sub">기본 간격, 모바일 좌우 여백</span>
+          </div>
+          <div class="dg-space-row">
+            <span class="t-body-s t-strong">--space-5 · 20px</span>
+            <span class="dg-space-bar" style="width:20px"></span>
+            <span class="t-caption t-sub">카드 내부 패딩</span>
+          </div>
+          <div class="dg-space-row">
+            <span class="t-body-s t-strong">--space-6 · 24px</span>
+            <span class="dg-space-bar" style="width:24px"></span>
+            <span class="t-caption t-sub">섹션 간격</span>
+          </div>
+          <div class="dg-space-row">
+            <span class="t-body-s t-strong">--space-8 · 32px</span>
+            <span class="dg-space-bar" style="width:32px"></span>
+            <span class="t-caption t-sub">큰 섹션 간격</span>
+          </div>
+          <div class="dg-space-row">
+            <span class="t-body-s t-strong">--space-10 · 40px</span>
+            <span class="dg-space-bar" style="width:40px"></span>
+            <span class="t-caption t-sub">페이지 상하 여백</span>
+          </div>
+        </div>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">모서리 반경</span></div>
+        <div class="dg-radius-grid mt-2">
+          <div class="dg-radius-item">
+            <div class="dg-radius-box" style="border-radius:8px"></div>
+            <div class="t-body-s t-strong">--radius-sm · 8px</div>
+            <div class="t-caption t-sub">태그, 작은 뱃지</div>
+          </div>
+          <div class="dg-radius-item">
+            <div class="dg-radius-box" style="border-radius:14px"></div>
+            <div class="t-body-s t-strong">--radius-md · 14px</div>
+            <div class="t-caption t-sub">입력 필드, 작은 카드</div>
+          </div>
+          <div class="dg-radius-item">
+            <div class="dg-radius-box" style="border-radius:20px"></div>
+            <div class="t-body-s t-strong">--radius-lg · 20px</div>
+            <div class="t-caption t-sub">기본 카드, 바텀시트 상단</div>
+          </div>
+          <div class="dg-radius-item">
+            <div class="dg-radius-box" style="border-radius:28px"></div>
+            <div class="t-body-s t-strong">--radius-xl · 28px</div>
+            <div class="t-caption t-sub">추모관 대표 카드, 모달</div>
+          </div>
+          <div class="dg-radius-item">
+            <div class="dg-radius-box" style="border-radius:9999px"></div>
+            <div class="t-body-s t-strong">--radius-full</div>
+            <div class="t-caption t-sub">버튼, 아바타, 칩</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 그림자 -->
+      <section class="dg-section" id="shadow">
+        <div class="dg-eyebrow">06</div>
+        <h2>그림자 · 깊이</h2>
+        <p class="t-body-s t-sub dg-lead">회색 그림자 대신 갈색 기운(rgba(122, 90, 60, ...))의 그림자를 써서 따뜻함을 유지해요. 깊은 드롭섀도보다 헤어라인 테두리를 우선해요.</p>
+
+        <div class="dg-shadow-grid mt-4">
+          <div class="dg-shadow-card" style="box-shadow:var(--shadow-sm)">
+            <div class="dg-shadow-box" style="box-shadow:var(--shadow-sm)"></div>
+            <div class="t-body-s t-strong">--shadow-sm</div>
+            <div class="t-caption t-sub">0 2px 6px rgba(122,90,60,.06)</div>
+            <div class="t-caption t-sub mt-1">카드 기본, 리스트</div>
+          </div>
+          <div class="dg-shadow-card" style="box-shadow:var(--shadow-md)">
+            <div class="dg-shadow-box" style="box-shadow:var(--shadow-md)"></div>
+            <div class="t-body-s t-strong">--shadow-md</div>
+            <div class="t-caption t-sub">0 6px 16px rgba(122,90,60,.08)</div>
+            <div class="t-caption t-sub mt-1">떠 있는 요소, hover 카드</div>
+          </div>
+          <div class="dg-shadow-card" style="box-shadow:var(--shadow-lg)">
+            <div class="dg-shadow-box" style="box-shadow:var(--shadow-lg)"></div>
+            <div class="t-body-s t-strong">--shadow-lg</div>
+            <div class="t-caption t-sub">0 12px 32px rgba(122,90,60,.12)</div>
+            <div class="t-caption t-sub mt-1">모달, 바텀시트</div>
+          </div>
+        </div>
+
+        <div class="table-wrap mt-4">
+          <table class="table">
+            <thead><tr><th>본문/카드 헤어라인</th><th>테두리</th><th>배경</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>.card-flat</code> — 그림자 없음, 1px 테두리</td>
+                <td><code>1px solid --color-border</code></td>
+                <td><code>--color-surface</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="t-caption t-sub mt-2">근거: 진한 드롭섀도는 서비스 톤과 어울리지 않아요. 대부분의 구분은 헤어라인(1px 테두리)으로 처리하고, 그림자는 sm 위주로 최소화해서 써요.</p>
+      </section>
+
+      <!-- 07 버튼 -->
+      <section class="dg-section" id="button">
+        <div class="dg-eyebrow">07</div>
+        <h2>버튼 5종</h2>
+        <p class="t-body-s t-sub dg-lead">높이 Large 52 / Medium 44(기본) / Small 36, 모양은 전부 알약형(<code>--radius-full</code>). 누름 시 0.97배로 살짝 눌리고, 비활성은 불투명도 45%예요.</p>
+
+        <div class="mt-4">
+          <div class="dg-btn-block">
+            <div class="dg-btn-block-head"><span class="t-h3">Primary</span><span class="t-caption t-sub">화면당 1개의 핵심 행동 · btn-primary</span></div>
+            <div class="row" style="flex-wrap:wrap;">
+              <button class="btn btn-primary btn-lg">확인할게요</button>
+              <button class="btn btn-primary btn-md">확인할게요</button>
+              <button class="btn btn-primary btn-sm">확인할게요</button>
+              <button class="btn btn-primary btn-md" disabled>비활성</button>
+            </div>
+          </div>
+          <div class="dg-btn-block">
+            <div class="dg-btn-block-head"><span class="t-h3">Secondary</span><span class="t-caption t-sub">보조 행동 · btn-secondary</span></div>
+            <div class="row" style="flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-lg">잠시 후에 할게요</button>
+              <button class="btn btn-secondary btn-md">잠시 후에 할게요</button>
+              <button class="btn btn-secondary btn-sm">잠시 후에 할게요</button>
+              <button class="btn btn-secondary btn-md" disabled>비활성</button>
+            </div>
+          </div>
+          <div class="dg-btn-block">
+            <div class="dg-btn-block-head"><span class="t-h3">Outline</span><span class="t-caption t-sub">카드 안 보조 행동(수정·추가) · btn-outline</span></div>
+            <div class="row" style="flex-wrap:wrap;">
+              <button class="btn btn-outline btn-lg"><i data-lucide="plus"></i> 추가하기</button>
+              <button class="btn btn-outline btn-md"><i data-lucide="plus"></i> 추가하기</button>
+              <button class="btn btn-outline btn-sm"><i data-lucide="plus"></i> 추가하기</button>
+            </div>
+          </div>
+          <div class="dg-btn-block">
+            <div class="dg-btn-block-head"><span class="t-h3">Utility</span><span class="t-caption t-sub">헤더·툴바 인라인 액션 · btn-utility</span></div>
+            <div class="row" style="flex-wrap:wrap;">
+              <button class="btn btn-utility btn-lg"><i data-lucide="filter"></i> 필터</button>
+              <button class="btn btn-utility btn-md"><i data-lucide="filter"></i> 필터</button>
+              <button class="btn btn-utility btn-sm"><i data-lucide="filter"></i> 필터</button>
+            </div>
+          </div>
+          <div class="dg-btn-block">
+            <div class="dg-btn-block-head"><span class="t-h3">Ghost</span><span class="t-caption t-sub">텍스트 링크형(취소·로그아웃) · btn-ghost</span></div>
+            <div class="row" style="flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-lg">취소</button>
+              <button class="btn btn-ghost btn-md">취소</button>
+              <button class="btn btn-ghost btn-sm">취소</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="notice notice-theme mt-4">
+          <i data-lucide="info"></i>
+          <div class="grow">common.css에는 삭제 행동용 <code>btn-danger</code>(surface 배경 + error-text 글자 + 1.5px error 테두리)도 있어요: <button class="btn btn-danger btn-sm" style="margin-left:8px;">삭제</button></div>
+        </div>
+      </section>
+
+      <!-- 08 모바일 프레임 -->
+      <section class="dg-section" id="frame">
+        <div class="dg-eyebrow">08</div>
+        <h2>모바일 디바이스 프레임</h2>
+        <p class="t-body-s t-sub dg-lead">사용자 화면 전부가 쓰는 다크 베젤 폰 프레임의 실제 치수예요. 노치·카메라홀·측면 버튼·반사광은 없어요. 아래는 비율 참고용 축소 모형이고, 실제 프레임은 <code>pages/user/*.html</code>의 <code>.mobile-stage</code>예요.</p>
+
+        <div class="dg-frame-wrap mt-4">
+          <div class="dg-frame-mini">
+            <div class="dg-frame-mini-screen">
+              <div class="dg-fm-status">9:41</div>
+              <div class="dg-fm-header">헤더 56px</div>
+              <div class="dg-fm-content">콘텐츠 영역<br>(스크롤은 여기만)</div>
+              <div class="dg-fm-tabbar">탭바 64px</div>
+              <div class="dg-fm-home"></div>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="flex:1; min-width:320px;">
+            <table class="table">
+              <thead><tr><th>구조</th><th>치수</th><th>클래스</th></tr></thead>
+              <tbody>
+                <tr><td>프레임 전체</td><td class="nowrap">376 × 736px, padding 8px, radius 40px</td><td><code>.mobile-frame</code></td></tr>
+                <tr><td>스크린</td><td class="nowrap">radius 32px</td><td><code>.m-screen</code></td></tr>
+                <tr><td>상태바</td><td class="nowrap">height 32px</td><td><code>.m-status</code></td></tr>
+                <tr><td>헤더</td><td class="nowrap">height 56px</td><td><code>.m-header</code></td></tr>
+                <tr><td>콘텐츠</td><td class="nowrap">가변, 세로 스크롤만</td><td><code>.m-content</code></td></tr>
+                <tr><td>하단 고정 CTA</td><td class="nowrap">가변 (탭바 없는 플로우용)</td><td><code>.m-bottom-cta</code></td></tr>
+                <tr><td>탭바</td><td class="nowrap">height 64px</td><td><code>.m-tabbar</code></td></tr>
+                <tr><td>홈 인디케이터</td><td class="nowrap">height 24px, 바 112 × 4px</td><td><code>.m-home</code></td></tr>
+                <tr><td>베젤 색상</td><td class="nowrap">#1b1d22</td><td><code>--bezel</code> <span class="t-caption t-sub">프레임 전용</span></td></tr>
+                <tr><td>디바이스 그림자</td><td class="nowrap">0 24px 50px -28px rgba(0,0,0,.5)</td><td><code>--shadow-device</code> <span class="t-caption t-sub">프레임 전용</span></td></tr>
+              </tbody>
+            </table>
+            <p class="t-caption t-sub mt-3 dg-frame-note">헤더가 44px 터치 영역 기준보다 높은 56px인 이유: 좌측 뒤로가기 아이콘 버튼(44×44)이 상하 여백 없이 딱 맞게 들어가야 해서예요. 탭바 선택 상태는 배지(빨간 점) 없이 아이콘 배경과 색으로만 표시해요.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 09 보이스 & 톤 -->
+      <section class="dg-section" id="voice">
+        <div class="dg-eyebrow">09</div>
+        <h2>보이스 &amp; 톤 (마이크로카피)</h2>
+
+        <div class="grid-2 mt-3">
+          <div class="card-flat" style="padding:16px;"><b class="t-strong">1.</b> 존댓말을 쓰되 딱딱하지 않은 <b class="t-strong">"~해요"체</b>로 써요.</div>
+          <div class="card-flat" style="padding:16px;"><b class="t-strong">2.</b> 반려견은 항상 <b class="t-strong">이름으로</b> 불러요. <span class="nowrap">("반려견" ✕ → "○○이" ○)</span></div>
+          <div class="card-flat" style="padding:16px;"><b class="t-strong">3.</b> 재촉하거나 죄책감을 주는 표현은 쓰지 않아요.</div>
+          <div class="card-flat" style="padding:16px;"><b class="t-strong">4.</b> "죽음·사망" 대신 "무지개다리·이별·떠나다"를 써요. 단, 사망 신고 같은 행정 안내는 공식 용어를 그대로 써요.</div>
+        </div>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">상태별 예시</span></div>
+        <div class="table-wrap mt-2">
+          <table class="table">
+            <thead><tr><th>상황</th><th>함께하는 중</th><th>이별 준비</th><th>무지개다리</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="nowrap t-strong">홈 인사</td>
+                <td>"오늘 ○○이는 어떤 하루였나요?"</td>
+                <td>"오늘도 ○○이 곁에 있어 줘서 고마워요"</td>
+                <td>"○○이와 함께한 날들이 여기 있어요"</td>
+              </tr>
+              <tr>
+                <td class="nowrap t-strong">저장 완료</td>
+                <td>"소중한 하루가 저장됐어요"</td>
+                <td>"오늘의 ○○이를 잘 담아뒀어요"</td>
+                <td>"편지가 잘 보관됐어요"</td>
+              </tr>
+              <tr>
+                <td class="nowrap t-strong">오랜만의 방문</td>
+                <td>"보고 싶었어요! ○○이 소식 들려주세요"</td>
+                <td>"천천히, 편할 때 남겨주세요"</td>
+                <td class="t-sub">(별도 문구 없음)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="t-caption t-sub mt-2">원문 예시에는 이모지(해·발바닥 등)가 포함돼 있었지만, 이 문서에서는 실제 화면의 아이콘 사용 원칙(라인 아이콘, 이모지 대신 lucide)에 맞춰 텍스트만 인용했어요.</p>
+
+        <div class="group-label mt-6"><span class="t-body-s t-strong">금지 표현 예시</span></div>
+        <div class="grid-2 mt-2">
+          <div class="card-flat stack-2" style="padding:16px;">
+            <span class="dg-voice-dont">"3일째 기록이 없어요!"</span>
+            <span class="t-caption t-sub">↓</span>
+            <span class="dg-voice-do">"오늘 ○○이는 어땠나요?"</span>
+          </div>
+          <div class="card-flat stack-2" style="padding:16px;">
+            <span class="dg-voice-dont">"이별을 준비할 때가 됐어요"</span>
+            <span class="t-caption t-sub">↓</span>
+            <span class="t-body-s">(시스템이 먼저 이별을 권하지 않음)</span>
+          </div>
+          <div class="card-flat stack-2" style="padding:16px;">
+            <span class="dg-voice-dont">"추모관이 생성되었습니다"</span>
+            <span class="t-caption t-sub">↓</span>
+            <span class="dg-voice-do">"○○이의 공간이 만들어졌어요"</span>
+          </div>
+          <div class="card-flat stack-2" style="padding:16px;">
+            <span class="dg-voice-dont">"사망일을 입력하세요"</span>
+            <span class="t-caption t-sub">↓</span>
+            <span class="dg-voice-do">"무지개다리를 건넌 날을 알려주세요"</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 접근성 -->
+      <section class="dg-section" id="a11y">
+        <div class="dg-eyebrow">10</div>
+        <h2>접근성 체크리스트</h2>
+        <p class="t-body-s t-sub dg-lead">고령 보호자도 편하게 쓸 수 있도록 모든 화면에서 확인해야 하는 항목이에요.</p>
+
+        <div class="mt-4">
+          <div class="dg-a11y-item"><i data-lucide="check-circle-2"></i><span class="t-body-s">텍스트 대비 4.5:1 이상 (큰 글씨 3:1 이상)</span></div>
+          <div class="dg-a11y-item"><i data-lucide="check-circle-2"></i><span class="t-body-s">본문 16px 이상, 글자 크기 조절 기능 제공 (100/115/130%)</span></div>
+          <div class="dg-a11y-item"><i data-lucide="check-circle-2"></i><span class="t-body-s">터치 영역 최소 44 × 44px</span></div>
+          <div class="dg-a11y-item"><i data-lucide="check-circle-2"></i><span class="t-body-s">색상만으로 정보를 전달하지 않음 (아이콘·텍스트 병행)</span></div>
+          <div class="dg-a11y-item"><i data-lucide="check-circle-2"></i><span class="t-body-s">모든 이미지에 대체 텍스트 제공 (사용자 사진은 "○○이 사진, YYYY년 M월 D일" 형식 자동 부여)</span></div>
+          <div class="dg-a11y-item"><i data-lucide="check-circle-2"></i><span class="t-body-s"><code>prefers-reduced-motion</code>, 다크 모드(<code>prefers-color-scheme</code>) 대응</span></div>
+          <div class="dg-a11y-item"><i data-lucide="check-circle-2"></i><span class="t-body-s">스크린리더 사용 시 상태 전환 모달 내용이 순서대로 읽히는지 확인</span></div>
+        </div>
+
+        <div class="table-wrap mt-4">
+          <table class="table">
+            <thead><tr><th>조합</th><th class="t-right">대비</th><th>판정</th></tr></thead>
+            <tbody>
+              <tr><td>--color-text on --color-bg</td><td class="num">약 9.8:1</td><td><span class="status ok">통과</span></td></tr>
+              <tr><td>--color-text-sub on --color-bg</td><td class="num">약 4.8:1</td><td><span class="status ok">통과</span></td></tr>
+              <tr><td>--color-text on --color-primary</td><td class="num">약 5.0:1</td><td><span class="status ok">통과</span></td></tr>
+              <tr><td>--color-primary-strong on --color-bg</td><td class="num">약 4.8:1</td><td><span class="status ok">통과</span></td></tr>
+              <tr><td>흰색 텍스트 on --color-primary</td><td class="num">약 2.1:1</td><td><span class="status err">사용 금지</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="t-caption t-sub mt-2">수치는 설계 기준 추정값이며, 구현 후 대비 검사 도구로 재확인해요.</p>
+      </section>
+
+      <!-- 11 금지 사항 -->
+      <section class="dg-section" id="dont">
+        <div class="dg-eyebrow">11</div>
+        <h2>금지 사항</h2>
+        <p class="t-body-s t-sub dg-lead">Don't 항목은 실제로 렌더하지 않고 말로만 설명해요 (금지된 표현을 이 문서에 실물로 보여주지 않아요).</p>
+
+        <div class="dg-dont-grid mt-4">
+          <div class="dg-dont-col is-do">
+            <h3><i data-lucide="check-circle-2" style="color:var(--color-success)"></i> Do</h3>
+            <ul>
+              <li><i data-lucide="check" style="color:var(--color-success)"></i> 헤어라인(1px 테두리) 위주로 구분하고, 그림자는 sm 위주로 최소화한다</li>
+              <li><i data-lucide="check" style="color:var(--color-success)"></i> 살구색 버튼 위에는 --color-text(웜 브라운) 글자를 쓴다</li>
+              <li><i data-lucide="check" style="color:var(--color-success)"></i> 무지개 그라데이션은 RAINBOW 상태에서만, 4px 이하 띠(.rainbow-band)로만 쓴다</li>
+              <li><i data-lucide="check" style="color:var(--color-success)"></i> 새 소식은 해당 화면 안에서 조용히 표시한다</li>
+              <li><i data-lucide="check" style="color:var(--color-success)"></i> 아이콘은 lucide 라인 아이콘(2px, round cap/join)만 쓴다</li>
+              <li><i data-lucide="check" style="color:var(--color-success)"></i> RAINBOW 상태에서는 저장 완료 애니메이션도 페이드만 쓴다</li>
+            </ul>
+          </div>
+          <div class="dg-dont-col is-dont">
+            <h3><i data-lucide="x-circle" style="color:var(--color-error)"></i> Don't</h3>
+            <ul>
+              <li><i data-lucide="x" style="color:var(--color-error)"></i> 버튼·배경에 그라데이션 CTA를 쓴다 (무지개 띠 예외 제외)</li>
+              <li><i data-lucide="x" style="color:var(--color-error)"></i> 진한 드롭섀도로 요소를 붕 띄운다</li>
+              <li><i data-lucide="x" style="color:var(--color-error)"></i> UI 장식에 이모지를 쓴다</li>
+              <li><i data-lucide="x" style="color:var(--color-error)"></i> 탭바·알림에 빨간 점 배지를 노출한다</li>
+              <li><i data-lucide="x" style="color:var(--color-error)"></i> 무지개 그라데이션을 넓은 배경 면에 쓴다</li>
+              <li><i data-lucide="x" style="color:var(--color-error)"></i> RAINBOW 상태에서 반짝임·도장·튕김 같은 축하 연출을 재생한다</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+
+  // 상태별 테마 스위처 — data-pet-state 를 실제로 바꿔서 --theme-accent 계열이
+  // 카드 전체에 실물로 반영되는 걸 보여준다
+  (function () {
+    var meta = {
+      together: { title: '함께하는 중 — 밝고 따뜻함', desc: '햇살 드는 오후 · 귀여움 강도 ●●●●○', badgeClass: 'state-together', badgeText: 'TOGETHER', icon: 'sun' },
+      preparing: { title: '이별 준비 — 차분하고 다정함', desc: '노을 지기 전 저녁 · 귀여움 강도 ●●●○○', badgeClass: 'state-preparing', badgeText: 'PREPARING', icon: 'cloud-sun' },
+      rainbow: { title: '무지개다리 — 고요하고 포근함', desc: '비 갠 뒤 새벽 하늘 · 귀여움 강도 ●●○○○', badgeClass: 'state-rainbow', badgeText: 'RAINBOW', icon: 'cloud' }
+    };
+    var stage = document.getElementById('themeStage');
+    var title = document.getElementById('themeStageTitle');
+    var desc = document.getElementById('themeStageDesc');
+    var badge = document.getElementById('themeStageBadge');
+    var band = document.getElementById('themeRainbowBand');
+    var bandNote = document.getElementById('themeRainbowNote');
+    var btns = document.querySelectorAll('[data-pet-demo]');
+
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var key = btn.dataset.petDemo;
+        var m = meta[key];
+        btns.forEach(function (b) { b.classList.toggle('active', b === btn); });
+        stage.dataset.petState = key;
+        title.textContent = m.title;
+        desc.textContent = m.desc;
+        badge.className = 'state-badge ' + m.badgeClass;
+        badge.innerHTML = '<i data-lucide="' + m.icon + '"></i> ' + m.badgeText;
+        band.hidden = key !== 'rainbow';
+        bandNote.hidden = key !== 'rainbow';
+        lucide.createIcons();
+      });
+    });
+  })();
+
+  // 좌측 섹션 네비 — 스크롤 위치에 따라 현재 섹션 강조
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('#dgNav a'));
+    var sections = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var idx = sections.indexOf(entry.target);
+        if (idx === -1) return;
+        links.forEach(function (l) { l.classList.remove('is-active'); });
+        links[idx].classList.add('is-active');
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function (s) { if (s) io.observe(s); });
+  })();
+</script>
+<button type="button" class="to-top" id="toTop" aria-label="맨 위로 이동"><i data-lucide="arrow-up"></i>맨 위로</button>
+<script>
+  (function () {
+    var btn = document.getElementById("toTop");
+    function sync() { btn.classList.toggle("show", window.scrollY > 400); }
+    window.addEventListener("scroll", sync, { passive: true });
+    btn.addEventListener("click", function () {
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+      if (history.replaceState) history.replaceState(null, "", location.pathname + location.search);
+    });
+    sync();
+    if (window.lucide) lucide.createIcons();
+  })();
+</script>
+</body>
+</html>

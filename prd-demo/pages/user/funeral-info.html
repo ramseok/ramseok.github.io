@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P17 장례 정보 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P17 전용 — 공통 크롬(.m-*)은 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    .method-card { display: flex; flex-direction: column; gap: var(--space-2); }
+    .method-card .row-between { align-items: center; flex-wrap: nowrap; }
+    .method-name { min-width: 0; gap: var(--space-2); }
+    .method-name .t-strong { white-space: nowrap; }
+    .method-cost { flex-shrink: 0; white-space: nowrap; font-size: var(--fs-body-s); font-weight: 700; color: var(--color-primary-strong); font-variant-numeric: tabular-nums; }
+
+    /* 지역 칩 — 화면 끝까지 bleed, 좌우 16px 여백에서 스크롤 */
+    #regionChips { margin: 0 calc(var(--space-4) * -1); padding: 0 var(--space-4); scroll-padding: 0 var(--space-4); }
+    .biz-note { display: flex; align-items: center; gap: 6px; margin: var(--space-3) 0; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--color-text-sub); }
+    .biz-note [data-lucide], .biz-note svg { color: var(--color-success); }
+
+    /* 업체 카드 — 표준 셀 헤더(아이콘 · 이름/주소 · 즐겨찾기) + 비용 태그 + 하단 풋(검증일 / 전화) */
+    .biz-card { display: flex; flex-direction: column; gap: var(--space-3); }
+    .biz-head { display: flex; align-items: center; gap: var(--space-3); margin-right: calc(var(--space-2) * -1); }
+    .biz-head .grow { flex: 1; min-width: 0; }
+    .biz-cost-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .biz-card .card-foot { margin-top: 0; min-height: 52px; }
+    .biz-verify { display: inline-flex; align-items: center; gap: 4px; min-width: 0; color: var(--color-text-sub); }
+    .biz-verify [data-lucide], .biz-verify svg { color: var(--color-success); }
+    .fav-btn.is-on [data-lucide], .fav-btn.is-on svg { fill: var(--color-primary); fill-opacity: 0.35; }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="preparing">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기(준비 체크리스트) + 제목 -->
+        <header class="m-header">
+          <a class="icon-btn" href="prep-checklist.html" aria-label="뒤로 가기"><i data-lucide="arrow-left"></i></a>
+          <h1 class="m-title is-center">장례 정보</h1>
+          <span class="m-header-spacer" aria-hidden="true"></span>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <section class="m-section">
+            <div class="notice notice-theme">
+              <i data-lucide="heart-handshake"></i>
+              <div class="grow">
+                미리 알아두면 그날 마음이 조금 덜 급해져요. <span data-pet-name>보리</span>에게 맞는 방식을 천천히 살펴보세요.
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 장례 방식 안내·비교 ===== -->
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">장례 방식 안내</h2>
+              <span class="sec-sub">비용은 업체마다 달라요</span>
+            </div>
+            <div class="stack-2">
+              <div class="card card-sm method-card">
+                <div class="row-between">
+                  <div class="row method-name"><span class="ico-wrap sm"><i data-lucide="flame"></i></span><span class="t-strong">개별 화장</span></div>
+                  <span class="method-cost num">25만 ~ 60만원</span>
+                </div>
+                <p class="t-body-s t-sub">아이만 따로 화장하고, 유골을 유골함으로 직접 돌려받아요. 가장 많이 선택하는 방식이에요.</p>
+              </div>
+              <div class="card card-sm method-card">
+                <div class="row-between">
+                  <div class="row method-name"><span class="ico-wrap sm soft"><i data-lucide="users"></i></span><span class="t-strong">합동 화장</span></div>
+                  <span class="method-cost num">8만 ~ 20만원</span>
+                </div>
+                <p class="t-body-s t-sub">다른 아이들과 함께 화장한 뒤 업체의 합동 추모 공간에 안치해요. 유골은 개별로 돌려받지 않아요.</p>
+              </div>
+              <div class="card card-sm method-card">
+                <div class="row-between">
+                  <div class="row method-name"><span class="ico-wrap sm mint"><i data-lucide="trees"></i></span><span class="t-strong">자연장 · 수목장</span></div>
+                  <span class="method-cost num">30만 ~ 80만원</span>
+                </div>
+                <p class="t-body-s t-sub">화장 후 유골을 나무·정원 아래에 안치해요. 정해진 장소에 아이를 잠들게 하고 싶을 때 선택해요.</p>
+              </div>
+            </div>
+            <p class="disclaimer mt-3"><i data-lucide="info"></i> 반려동물 사체는 개인적으로 매장할 수 없어요. 관할 지자체에 정식 등록된 동물장묘업체를 통해서만 화장·장례를 진행할 수 있어요.</p>
+          </section>
+
+          <!-- ===== 지역별 정식 등록 업체 ===== -->
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">지역별 등록 업체</h2>
+            </div>
+            <div class="chip-row scroll" id="regionChips" role="tablist" aria-label="지역 선택">
+              <button class="chip active" data-region="all">전체</button>
+              <button class="chip" data-region="서울"><span class="chip-check"><i data-lucide="check" class="ico-16"></i></span>서울</button>
+              <button class="chip" data-region="경기"><span class="chip-check"><i data-lucide="check" class="ico-16"></i></span>경기</button>
+              <button class="chip" data-region="인천"><span class="chip-check"><i data-lucide="check" class="ico-16"></i></span>인천</button>
+              <button class="chip" data-region="대전"><span class="chip-check"><i data-lucide="check" class="ico-16"></i></span>대전</button>
+              <button class="chip" data-region="대구"><span class="chip-check"><i data-lucide="check" class="ico-16"></i></span>대구</button>
+              <button class="chip" data-region="부산"><span class="chip-check"><i data-lucide="check" class="ico-16"></i></span>부산</button>
+              <button class="chip" data-region="제주"><span class="chip-check"><i data-lucide="check" class="ico-16"></i></span>제주</button>
+            </div>
+
+            <p class="biz-note"><i data-lucide="shield-check" class="ico-16"></i> 관할 기관에 정식 등록이 확인된 업체만 소개해요.</p>
+
+            <div class="stack-2" id="bizList">
+
+              <div class="card card-sm biz-card" data-region="서울">
+                <div class="biz-head">
+                  <span class="ico-wrap"><i data-lucide="building-2"></i></span>
+                  <div class="grow">
+                    <div class="cell-title biz-name">하늘정원 반려동물장례식장</div>
+                    <div class="meta biz-addr">서울 강동구<span class="meta-sep">·</span>02-1234-5678</div>
+                  </div>
+                  <button class="icon-btn fav-btn" aria-label="즐겨찾기"><i data-lucide="heart"></i></button>
+                </div>
+                <div class="biz-cost-row">
+                  <span class="tag">개별화장 25만~45만원</span>
+                  <span class="tag">합동화장 10만~15만원</span>
+                </div>
+                <div class="card-foot">
+                  <span class="t-caption biz-verify"><i data-lucide="shield-check" class="ico-16"></i> <span class="clamp-1">등록 검증일 2026.08.01</span></span>
+                  <a class="btn btn-outline btn-sm" href="tel:02-1234-5678"><i data-lucide="phone"></i> 전화 문의</a>
+                </div>
+              </div>
+
+              <div class="card card-sm biz-card" data-region="서울">
+                <div class="biz-head">
+                  <span class="ico-wrap"><i data-lucide="building-2"></i></span>
+                  <div class="grow">
+                    <div class="cell-title biz-name">초록언덕 동물사랑추모공원</div>
+                    <div class="meta biz-addr">서울 은평구<span class="meta-sep">·</span>02-2345-6789</div>
+                  </div>
+                  <button class="icon-btn fav-btn" aria-label="즐겨찾기"><i data-lucide="heart"></i></button>
+                </div>
+                <div class="biz-cost-row">
+                  <span class="tag">개별화장 30만~50만원</span>
+                  <span class="tag">수목장 40만~80만원</span>
+                </div>
+                <div class="card-foot">
+                  <span class="t-caption biz-verify"><i data-lucide="shield-check" class="ico-16"></i> <span class="clamp-1">등록 검증일 2026.07.15</span></span>
+                  <a class="btn btn-outline btn-sm" href="tel:02-2345-6789"><i data-lucide="phone"></i> 전화 문의</a>
+                </div>
+              </div>
+
+              <div class="card card-sm biz-card" data-region="경기">
+                <div class="biz-head">
+                  <span class="ico-wrap"><i data-lucide="building-2"></i></span>
+                  <div class="grow">
+                    <div class="cell-title biz-name">라온 펫추모관</div>
+                    <div class="meta biz-addr">경기 용인시<span class="meta-sep">·</span>031-345-6789</div>
+                  </div>
+                  <button class="icon-btn fav-btn" aria-label="즐겨찾기"><i data-lucide="heart"></i></button>
+                </div>
+                <div class="biz-cost-row">
+                  <span class="tag">개별화장 28만~48만원</span>
+                  <span class="tag">합동화장 9만~14만원</span>
+                </div>
+                <div class="card-foot">
+                  <span class="t-caption biz-verify"><i data-lucide="shield-check" class="ico-16"></i> <span class="clamp-1">등록 검증일 2026.08.20</span></span>
+                  <a class="btn btn-outline btn-sm" href="tel:031-345-6789"><i data-lucide="phone"></i> 전화 문의</a>
+                </div>
+              </div>
+
+              <div class="card card-sm biz-card" data-region="경기">
+                <div class="biz-head">
+                  <span class="ico-wrap"><i data-lucide="building-2"></i></span>
+                  <div class="grow">
+                    <div class="cell-title biz-name">별빛동물장례식장</div>
+                    <div class="meta biz-addr">경기 파주시<span class="meta-sep">·</span>031-456-7890</div>
+                  </div>
+                  <button class="icon-btn fav-btn" aria-label="즐겨찾기"><i data-lucide="heart"></i></button>
+                </div>
+                <div class="biz-cost-row">
+                  <span class="tag">개별화장 26만~42만원</span>
+                </div>
+                <div class="card-foot">
+                  <span class="t-caption biz-verify"><i data-lucide="shield-check" class="ico-16"></i> <span class="clamp-1">등록 검증일 2026.06.30</span></span>
+                  <a class="btn btn-outline btn-sm" href="tel:031-456-7890"><i data-lucide="phone"></i> 전화 문의</a>
+                </div>
+              </div>
+
+              <div class="card card-sm biz-card" data-region="인천">
+                <div class="biz-head">
+                  <span class="ico-wrap"><i data-lucide="building-2"></i></span>
+                  <div class="grow">
+                    <div class="cell-title biz-name">하나로 반려동물추모원</div>
+                    <div class="meta biz-addr">인천 서구<span class="meta-sep">·</span>032-567-8901</div>
+                  </div>
+                  <button class="icon-btn fav-btn" aria-label="즐겨찾기"><i data-lucide="heart"></i></button>
+                </div>
+                <div class="biz-cost-row">
+                  <span class="tag">개별화장 27만~46만원</span>
+                  <span class="tag">수목장 35만~70만원</span>
+                </div>
+                <div class="card-foot">
+                  <span class="t-caption biz-verify"><i data-lucide="shield-check" class="ico-16"></i> <span class="clamp-1">등록 검증일 2026.08.05</span></span>
+                  <a class="btn btn-outline btn-sm" href="tel:032-567-8901"><i data-lucide="phone"></i> 전화 문의</a>
+                </div>
+              </div>
+
+              <div class="card card-sm biz-card" data-region="대전">
+                <div class="biz-head">
+                  <span class="ico-wrap"><i data-lucide="building-2"></i></span>
+                  <div class="grow">
+                    <div class="cell-title biz-name">소풍 동물화장장</div>
+                    <div class="meta biz-addr">대전 유성구<span class="meta-sep">·</span>042-678-9012</div>
+                  </div>
+                  <button class="icon-btn fav-btn" aria-label="즐겨찾기"><i data-lucide="heart"></i></button>
+                </div>
+                <div class="biz-cost-row">
+                  <span class="tag">개별화장 24만~40만원</span>
+                </div>
+                <div class="card-foot">
+                  <span class="t-caption biz-verify"><i data-lucide="shield-check" class="ico-16"></i> <span class="clamp-1">등록 검증일 2026.07.01</span></span>
+                  <a class="btn btn-outline btn-sm" href="tel:042-678-9012"><i data-lucide="phone"></i> 전화 문의</a>
+                </div>
+              </div>
+
+              <div class="card card-sm biz-card" data-region="대구">
+                <div class="biz-head">
+                  <span class="ico-wrap"><i data-lucide="building-2"></i></span>
+                  <div class="grow">
+                    <div class="cell-title biz-name">편안한 안식 동물장묘시설</div>
+                    <div class="meta biz-addr">대구 달서구<span class="meta-sep">·</span>053-789-0123</div>
+                  </div>
+                  <button class="icon-btn fav-btn" aria-label="즐겨찾기"><i data-lucide="heart"></i></button>
+                </div>
+                <div class="biz-cost-row">
+                  <span class="tag">개별화장 29만~47만원</span>
+                  <span class="tag">합동화장 11만~16만원</span>
+                </div>
+                <div class="card-foot">
+                  <span class="t-caption biz-verify"><i data-lucide="shield-check" class="ico-16"></i> <span class="clamp-1">등록 검증일 2026.08.12</span></span>
+                  <a class="btn btn-outline btn-sm" href="tel:053-789-0123"><i data-lucide="phone"></i> 전화 문의</a>
+                </div>
+              </div>
+
+              <div class="card card-sm biz-card" data-region="부산">
+                <div class="biz-head">
+                  <span class="ico-wrap"><i data-lucide="building-2"></i></span>
+                  <div class="grow">
+                    <div class="cell-title biz-name">은하수 펫추모공원</div>
+                    <div class="meta biz-addr">부산 해운대구<span class="meta-sep">·</span>051-890-1234</div>
+                  </div>
+                  <button class="icon-btn fav-btn" aria-label="즐겨찾기"><i data-lucide="heart"></i></button>
+                </div>
+                <div class="biz-cost-row">
+                  <span class="tag">개별화장 30만~55만원</span>
+                  <span class="tag">수목장 45만~85만원</span>
+                </div>
+                <div class="card-foot">
+                  <span class="t-caption biz-verify"><i data-lucide="shield-check" class="ico-16"></i> <span class="clamp-1">등록 검증일 2026.07.22</span></span>
+                  <a class="btn btn-outline btn-sm" href="tel:051-890-1234"><i data-lucide="phone"></i> 전화 문의</a>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 지역에 등록 업체가 없을 때 -->
+            <div class="empty" id="bizEmpty" hidden>
+              <div class="empty-art"><i data-lucide="map-pin-off"></i></div>
+              <p class="t-body-s t-sub">이 지역은 아직 정식 등록이 확인된 업체가 없어요.</p>
+              <button class="btn btn-secondary btn-sm" id="resetRegionBtn">전체 지역 다시 보기</button>
+            </div>
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    // 토스트
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 지역 필터 — 칩 선택에 따라 업체 카드 표시/숨김
+    var chips = document.querySelectorAll('#regionChips .chip');
+    var cards = document.querySelectorAll('#bizList .biz-card');
+    var emptyEl = document.getElementById('bizEmpty');
+
+    function applyRegion(region) {
+      chips.forEach(function (c) { c.classList.toggle('active', c.dataset.region === region); });
+      var visible = 0;
+      cards.forEach(function (card) {
+        var show = region === 'all' || card.dataset.region === region;
+        card.hidden = !show;
+        if (show) visible++;
+      });
+      emptyEl.hidden = visible !== 0;
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        applyRegion(chip.dataset.region);
+      });
+    });
+
+    document.getElementById('resetRegionBtn').addEventListener('click', function () {
+      applyRegion('all');
+      showToast('전체 지역을 다시 보여드릴게요');
+    });
+
+    // 즐겨찾기 토글
+    document.querySelectorAll('.fav-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var on = btn.classList.toggle('is-on');
+        showToast(on ? '즐겨찾기에 담아뒀어요' : '즐겨찾기에서 뺐어요');
+      });
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/funeral-info.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

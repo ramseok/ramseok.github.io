@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P33 제휴 업체 관리 · 무지개 일기 관리자</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P33 전용 — 공통 레이아웃(.admin-*, .panel, .table 등)은 common.css 그대로 쓴다 */
+    .nav-count { margin-left: auto; font-size: var(--fs-caption); color: var(--color-text-sub); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    /* 탭 + 검색·지역 필터 한 줄 바 */
+    .list-bar { display: flex; align-items: center; gap: var(--space-2); min-height: 60px; padding: 0 var(--space-5) 0 var(--space-3); border-bottom: 1px solid var(--color-border); }
+    .list-bar .tabs { flex: 1; min-width: 0; align-self: stretch; align-items: stretch; padding: 0; border-bottom: 0; overflow: visible; }
+    .list-bar .tab { height: auto; font-size: var(--fs-body-s); display: inline-flex; align-items: center; }
+    .list-bar .tab.active::after { bottom: 0; }
+    .list-bar .input-wrap { width: 240px; flex-shrink: 0; }
+    .list-bar .input-wrap .input, .list-bar .select { height: 40px; font-size: var(--fs-body-s); }
+    .list-bar .select { width: 136px; flex-shrink: 0; }
+    .list-bar .count { font-size: var(--fs-caption); color: var(--color-text-sub); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 60px; text-align: right; }
+    .type-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: var(--radius-full); background: var(--color-surface-soft); color: var(--color-text-sub); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .tab.active .type-count { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+    .verify-notice { margin: var(--space-4) var(--space-5) var(--space-2); padding: var(--space-3) var(--space-4); align-items: center; }
+    .verify-notice > svg { margin-top: 0; color: #B7791F; }
+    /* 표 — 업체명 셀에 지역·연락처를 보조 줄로 묶어 한 행 높이를 고정 */
+    .partner-table { table-layout: fixed; min-width: 1100px; }
+    .partner-table td { height: 60px; }
+    .partner-table td, .partner-table th { overflow: hidden; }
+    .partner-table .cell-title { font-size: var(--fs-body-s); }
+    .partner-table .cell-sub { font-variant-numeric: tabular-nums; }
+    .col-type { width: 96px; }
+    .col-cost { width: 176px; }
+    .col-reg { width: 92px; }
+    .col-verify { width: 156px; }
+    .col-expose { width: 184px; }
+    .partner-table .col-actions { width: 232px; }
+    .verify-cell { white-space: nowrap; }
+    .verify-cell .td-date { font-variant-numeric: tabular-nums; }
+    .verify-cell .status { margin-left: var(--space-2); }
+    .expose-cell { display: flex; align-items: center; gap: var(--space-2); }
+    .expose-cell .expose-label { white-space: nowrap; }
+    .expose-cell.is-locked .expose-label { white-space: normal; max-width: 108px; line-height: 16px; }
+    .row-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--space-1); }
+    .row-actions .btn { flex: 0 0 auto; }
+    .row-actions .btn-ghost { padding: 0 10px; }
+    .cost-one { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    /* 등록·수정 모달 */
+    .partner-modal { max-width: 560px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .partner-modal .modal-head { padding: var(--space-6) var(--space-6) var(--space-4); border-bottom: 1px solid var(--color-border); }
+    .partner-modal .modal-head .modal-title { margin-bottom: 2px; }
+    .partner-modal .modal-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-5) var(--space-6) var(--space-1); }
+    .partner-modal .modal-actions { margin-top: 0; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--color-border); }
+    .partner-modal .modal-actions .spacer { flex: 1; }
+    .partner-modal .modal-actions .btn { flex: 0 0 auto; min-width: 112px; }
+    .partner-modal .field { margin-bottom: var(--space-4); }
+    .partner-modal .grid-2 { column-gap: var(--space-3); row-gap: 0; }
+    .opt-box { margin-bottom: var(--space-4); border-radius: var(--radius-md); background: var(--color-bg); }
+    .opt-box .opt-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) var(--space-4); min-height: 56px; }
+    .opt-box .opt-row + .opt-row, .opt-box .opt-row + .field { border-top: 1px solid var(--color-border); }
+    .opt-box .opt-row .t { font-size: var(--fs-body-s); font-weight: 600; }
+    .opt-box .opt-row .field-help { margin-top: 2px; }
+    .opt-box .field { margin: 0; padding: var(--space-3) var(--space-4) var(--space-4); }
+    .opt-box .field .input { background: var(--color-surface); }
+  </style>
+</head>
+<body>
+  <div class="admin">
+
+    <!-- 사이드바 — dashboard.html과 동일, active만 이동 -->
+    <aside class="admin-side">
+      <div class="admin-brand">
+        <span class="ico-wrap"><i data-lucide="rainbow" class="ico-18"></i></span>
+        <div>
+          <div class="admin-brand-name">무지개 일기</div>
+          <div class="admin-brand-sub">운영 관리자</div>
+        </div>
+      </div>
+
+      <div class="admin-nav-label">통계</div>
+      <nav class="admin-nav">
+        <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> 대시보드</a>
+      </nav>
+
+      <div class="admin-nav-label">운영</div>
+      <nav class="admin-nav">
+        <a href="members.html"><i data-lucide="users"></i> 회원·반려견</a>
+        <a href="inquiries.html"><i data-lucide="message-circle-question"></i> 1:1 문의 <span class="nav-count">대기 7</span></a>
+        <a href="content-cms.html"><i data-lucide="file-pen-line"></i> 콘텐츠(CMS)</a>
+        <a href="reports.html"><i data-lucide="flag"></i> 신고·모더레이션 <span class="nav-count">5</span></a>
+        <a href="partners.html" class="active"><i data-lucide="handshake"></i> 제휴 업체</a>
+      </nav>
+
+      <div class="admin-side-foot">
+        <span class="avatar avatar-sm"><i data-lucide="user-round"></i></span>
+        <div class="grow">
+          <div class="t-body-s t-strong">김하늘</div>
+          <div class="t-caption t-sub">운영 매니저</div>
+        </div>
+        <a class="icon-btn" href="login.html" aria-label="로그아웃" title="로그아웃"><i data-lucide="log-out" class="ico-18"></i></a>
+      </div>
+    </aside>
+
+    <!-- 메인 -->
+    <div class="admin-main">
+      <header class="admin-top">
+        <div class="admin-top-title">제휴 업체 관리</div>
+        <span class="crumb">관리 · 장묘업체·상담기관·인쇄 업체 정보와 노출 여부를 관리해요</span>
+        <div class="admin-top-actions">
+          <button class="btn btn-utility btn-sm" id="resetBtn"><i data-lucide="rotate-ccw"></i> 필터 초기화</button>
+          <button class="btn btn-primary btn-sm" id="addBtn"><i data-lucide="plus"></i> 업체 등록</button>
+        </div>
+      </header>
+
+      <main class="admin-body">
+
+        <!-- F43: 제휴 업체 목록 (장묘업체·상담기관·인쇄 업체) -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">제휴 업체 목록</div>
+              <div class="panel-sub">정식 등록 여부·검증일은 장묘업체에만 적용돼요 · 총 <span id="totalCount">17</span>곳</div>
+            </div>
+          </div>
+
+          <div class="list-bar">
+          <div class="tabs" id="typeTabs" role="tablist" aria-label="업체 유형">
+            <button type="button" class="tab active" data-type="all">전체 <span class="type-count" id="cntAll">17</span></button>
+            <button type="button" class="tab" data-type="cemetery">장묘업체 <span class="type-count" id="cntCemetery">10</span></button>
+            <button type="button" class="tab" data-type="counsel">상담기관 <span class="type-count" id="cntCounsel">4</span></button>
+            <button type="button" class="tab" data-type="print">인쇄 업체 <span class="type-count" id="cntPrint">3</span></button>
+          </div>
+            <div class="input-wrap">
+              <i data-lucide="search" class="ico-16"></i>
+              <input class="input" id="searchInput" placeholder="업체명으로 검색">
+            </div>
+            <select class="select" id="regionFilter">
+              <option value="">전체 지역</option>
+              <option value="서울">서울</option>
+              <option value="경기">경기</option>
+              <option value="인천">인천</option>
+              <option value="대구">대구</option>
+              <option value="부산">부산</option>
+              <option value="대전">대전</option>
+              <option value="충남">충남</option>
+              <option value="경북">경북</option>
+            </select>
+            <span class="count" id="resultCount">17개 업체</span>
+          </div>
+
+          <div class="notice notice-warn verify-notice" id="verifyNotice" hidden>
+            <i data-lucide="triangle-alert"></i>
+            <div class="grow"></div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table partner-table">
+              <thead>
+                <tr>
+                  <th>업체명 <span class="t-sub" style="font-weight:500;">· 지역 · 연락처</span></th><th class="col-type">유형</th><th class="col-cost">비용 범위</th>
+                  <th class="col-reg">정식 등록</th><th class="col-verify">검증일</th><th class="col-expose">노출</th><th class="col-actions td-actions"><span class="sr-only">관리</span></th>
+                </tr>
+              </thead>
+              <tbody id="partnerBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- 등록·수정 모달 -->
+    <div class="modal-dim" id="partnerModalDim">
+      <div class="modal partner-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-head">
+          <div class="modal-title" id="modalTitle">업체 등록</div>
+          <div class="modal-desc">장묘업체는 정식 등록 여부와 검증일을 함께 관리해요.</div>
+        </div>
+        <div class="modal-scroll">
+
+        <div class="field">
+          <label class="field-label">업체 유형<span class="req">*</span></label>
+          <select class="select" id="fType">
+            <option value="cemetery">장묘업체</option>
+            <option value="counsel">상담기관</option>
+            <option value="print">인쇄 업체</option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="field" id="fNameField">
+            <label class="field-label">업체명<span class="req">*</span></label>
+            <input class="input" id="fName" placeholder="예: 햇살마루 반려동물장례식장">
+            <span class="field-error">업체명을 입력해 주세요</span>
+          </div>
+          <div class="field" id="fRegionField">
+            <label class="field-label">지역<span class="req">*</span></label>
+            <input class="input" id="fRegion" placeholder="예: 경기 고양">
+            <span class="field-error">지역을 입력해 주세요</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field" id="fPhoneField">
+            <label class="field-label">연락처<span class="req">*</span></label>
+            <input class="input" id="fPhone" placeholder="예: 031-552-7710">
+            <span class="field-error">연락처를 입력해 주세요</span>
+          </div>
+          <div class="field">
+            <label class="field-label">비용 범위</label>
+            <input class="input" id="fCost" placeholder="예: 개별화장 25만~45만원">
+          </div>
+        </div>
+
+        <div class="opt-box" id="cemeteryFields">
+          <div class="opt-row">
+            <span class="t">관할 기관 정식 등록</span>
+            <label class="switch"><input type="checkbox" id="fRegistered" aria-label="관할 기관 정식 등록"><span class="track"></span></label>
+          </div>
+          <div class="field" id="fVerifyField">
+            <label class="field-label">검증일</label>
+            <input type="date" class="input" id="fVerify">
+            <span class="field-help">확인일로부터 150일이 지나면 재검증 안내가 표시돼요.</span>
+          </div>
+        </div>
+
+        <div class="opt-box">
+          <div class="opt-row">
+            <div class="grow">
+              <div class="t">사용자 화면 노출</div>
+              <p class="field-help" id="fExposeHint">장묘업체는 정식 등록 확인 후 노출할 수 있어요.</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="fExposed" checked aria-label="사용자 화면 노출"><span class="track"></span></label>
+          </div>
+        </div>
+        </div>
+
+        <div class="modal-actions">
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-secondary" id="modalCancel">취소</button>
+          <button type="button" class="btn btn-primary" id="modalSave">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check"></i><span id="toastMsg"></span></div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 오늘 날짜 — 시안 고정값 (2026-09-29)
+    var TODAY = new Date(2026, 8, 29);
+    var TODAY_STR = '2026-09-29';
+
+    function fmtDate(dateStr) {
+      var d = new Date(dateStr + 'T00:00:00');
+      return d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
+    }
+    // 검증 유효기간 150일(임박) / 180일(만료) — F43 "검증 만료 표시"
+    function verifyStatus(dateStr) {
+      var d = new Date(dateStr + 'T00:00:00');
+      var diff = Math.round((TODAY - d) / 86400000);
+      if (diff >= 180) return { cls: 'err', label: '만료됨' };
+      if (diff >= 150) return { cls: 'wait', label: '임박' };
+      return { cls: 'ok', label: '정상' };
+    }
+
+    var TYPE_META = {
+      cemetery: { label: '장묘업체', tagClass: 'tag-theme' },
+      counsel: { label: '상담기관', tagClass: 'tag-sky' },
+      print: { label: '인쇄 업체', tagClass: 'tag-butter' }
+    };
+
+    // F43 더미 데이터 — 장묘업체 10 · 상담기관 4 · 인쇄 업체 3
+    // 장묘업체 상위 8곳 = 사용자 화면(P funeral-info) 노출 업체와 동일(업체명·지역·연락처·비용·검증일)
+    // 관리자 전용 2곳: 검증 만료로 비노출 1곳 · 정식 등록 심사 대기(미등록) 1곳 — 사용자 화면에는 없음
+    var PARTNERS = [
+      { type: 'cemetery', name: '하늘정원 반려동물장례식장', region: '서울 강동구', phone: '02-1234-5678', cost: '개별화장 25만~45만원 · 합동화장 10만~15만원', registered: true, verify: '2026-08-01', exposed: true },
+      { type: 'cemetery', name: '초록언덕 동물사랑추모공원', region: '서울 은평구', phone: '02-2345-6789', cost: '개별화장 30만~50만원 · 수목장 40만~80만원', registered: true, verify: '2026-07-15', exposed: true },
+      { type: 'cemetery', name: '라온 펫추모관', region: '경기 용인시', phone: '031-345-6789', cost: '개별화장 28만~48만원 · 합동화장 9만~14만원', registered: true, verify: '2026-08-20', exposed: true },
+      { type: 'cemetery', name: '별빛동물장례식장', region: '경기 파주시', phone: '031-456-7890', cost: '개별화장 26만~42만원', registered: true, verify: '2026-06-30', exposed: true },
+      { type: 'cemetery', name: '하나로 반려동물추모원', region: '인천 서구', phone: '032-567-8901', cost: '개별화장 27만~46만원 · 수목장 35만~70만원', registered: true, verify: '2026-08-05', exposed: true },
+      { type: 'cemetery', name: '소풍 동물화장장', region: '대전 유성구', phone: '042-678-9012', cost: '개별화장 24만~40만원', registered: true, verify: '2026-07-01', exposed: true },
+      { type: 'cemetery', name: '편안한 안식 동물장묘시설', region: '대구 달서구', phone: '053-789-0123', cost: '개별화장 29만~47만원 · 합동화장 11만~16만원', registered: true, verify: '2026-08-12', exposed: true },
+      { type: 'cemetery', name: '은하수 펫추모공원', region: '부산 해운대구', phone: '051-890-1234', cost: '개별화장 30만~55만원 · 수목장 45만~85만원', registered: true, verify: '2026-07-22', exposed: true },
+      { type: 'cemetery', name: '무지개숲 펫스톤', region: '충남 천안시', phone: '041-522-7789', cost: '개별화장 32만~58만원 · 수목장 50만~90만원', registered: true, verify: '2026-03-01', exposed: false },
+      { type: 'cemetery', name: '새봄 반려동물장례식장', region: '경북 경산시', phone: '053-812-3345', cost: '개별화장 25만~44만원', registered: false, verify: '', exposed: false },
+      { type: 'counsel', name: '마음이음 펫로스상담센터', region: '서울 마포', phone: '02-333-8890', cost: '회당 6만원 · 초기 상담 무료', registered: false, verify: '', exposed: true },
+      { type: 'counsel', name: '다시봄 심리상담연구소', region: '서울 강남', phone: '02-6215-4402', cost: '회당 8만원', registered: false, verify: '', exposed: true },
+      { type: 'counsel', name: '온기 펫로스돌봄센터', region: '부산 해운대', phone: '051-711-2298', cost: '회당 5만원', registered: false, verify: '', exposed: true },
+      { type: 'counsel', name: '구름산책 마음건강센터', region: '대전 유성', phone: '042-822-1150', cost: '회당 7만원', registered: false, verify: '', exposed: false },
+      { type: 'print', name: '포토무드 인쇄공방', region: '경기 파주', phone: '031-945-2201', cost: '포토북 2.9만원~', registered: false, verify: '', exposed: true },
+      { type: 'print', name: '리틀프레임 굿즈스튜디오', region: '서울 성동', phone: '02-467-9930', cost: '액자 3.5만원~', registered: false, verify: '', exposed: true },
+      { type: 'print', name: '소소한기록 포토북', region: '경기 화성', phone: '031-227-6650', cost: '포토북 2.4만원~ · 굿즈 세트 4.9만원~', registered: false, verify: '', exposed: true }
+    ];
+
+    // 정식 등록이 확인되지 않은 장묘업체는 사용자 화면에 노출할 수 없다
+    function isExposeLocked(p) { return p.type === 'cemetery' && !p.registered; }
+
+    // 비용 범위 — ' · '로 이어진 항목을 첫 항목(본 줄) + 나머지(보조 줄)로 나눠 두 줄 고정
+    function costHTML(cost) {
+      if (!cost) return '<span class="t-sub">—</span>';
+      var parts = cost.split(' · ');
+      return '<div class="cell-title' + (parts.length > 1 ? '' : ' cost-one') + '" style="font-weight:500;" title="' + cost + '">' + parts[0] + '</div>' +
+        (parts.length > 1 ? '<div class="cell-sub" title="' + cost + '">' + parts.slice(1).join(' · ') + '</div>' : '');
+    }
+
+    function rowHTML(p, idx) {
+      var meta = TYPE_META[p.type];
+      var regCell, verifyCell, actionCell;
+      if (p.type === 'cemetery') {
+        regCell = p.registered ? '<span class="tag tag-primary">정식 등록</span>' : '<span class="tag tag-line">미등록</span>';
+        if (!p.registered) {
+          verifyCell = '<span class="t-sub">심사 대기</span>';
+        } else {
+          var st = verifyStatus(p.verify);
+          verifyCell = '<span class="td-date">' + fmtDate(p.verify) + '</span><span class="status ' + st.cls + '">' + st.label + '</span>';
+        }
+        actionCell = '<div class="row-actions">' +
+          (p.registered ? '<button type="button" class="btn btn-ghost btn-sm verify-btn"><i data-lucide="refresh-cw"></i>검증일 갱신</button>' : '') +
+          '<button type="button" class="btn btn-utility btn-sm edit-btn"><i data-lucide="pencil"></i>수정</button></div>';
+      } else {
+        regCell = '<span class="t-sub">해당 없음</span>';
+        verifyCell = '<span class="t-sub">해당 없음</span>';
+        actionCell = '<div class="row-actions"><button type="button" class="btn btn-utility btn-sm edit-btn"><i data-lucide="pencil"></i>수정</button></div>';
+      }
+      return '<tr data-idx="' + idx + '" data-type="' + p.type + '" data-name="' + p.name + '" data-region="' + p.region + '">' +
+        '<td class="td-name"><div class="cell-title" title="' + p.name + '">' + p.name + '</div><div class="cell-sub"><span class="region">' + p.region + '</span><span class="meta-sep">·</span><span class="phone">' + p.phone + '</span></div></td>' +
+        '<td><span class="tag ' + meta.tagClass + '">' + meta.label + '</span></td>' +
+        '<td class="td-cost">' + costHTML(p.cost) + '</td>' +
+        '<td class="registered-cell">' + regCell + '</td>' +
+        '<td class="verify-cell">' + verifyCell + '</td>' +
+        (isExposeLocked(p)
+          ? '<td><div class="expose-cell is-locked"><label class="switch" title="정식 등록 확인 후 노출 가능"><input type="checkbox" class="expose-toggle" disabled aria-describedby="lockHint' + idx + '"><span class="track"></span></label><span class="t-caption t-sub expose-label" id="lockHint' + idx + '">정식 등록 확인 후 노출 가능</span></div></td>'
+          : '<td><div class="expose-cell"><label class="switch"><input type="checkbox" class="expose-toggle"' + (p.exposed ? ' checked' : '') + '><span class="track"></span></label><span class="t-caption t-sub expose-label">' + (p.exposed ? '노출중' : '비노출') + '</span></div></td>') +
+        '<td class="td-actions">' + actionCell + '</td>' +
+        '</tr>';
+    }
+
+    function renderCounts() {
+      var c = { all: PARTNERS.length, cemetery: 0, counsel: 0, print: 0 };
+      PARTNERS.forEach(function (p) { c[p.type]++; });
+      document.getElementById('cntAll').textContent = c.all;
+      document.getElementById('cntCemetery').textContent = c.cemetery;
+      document.getElementById('cntCounsel').textContent = c.counsel;
+      document.getElementById('cntPrint').textContent = c.print;
+      document.getElementById('totalCount').textContent = c.all;
+    }
+
+    function renderNotice() {
+      var need = 0;
+      PARTNERS.forEach(function (p) {
+        if (p.type === 'cemetery' && p.registered && p.verify) {
+          var st = verifyStatus(p.verify);
+          if (st.cls !== 'ok') need++;
+        }
+      });
+      var el = document.getElementById('verifyNotice');
+      if (need > 0) {
+        el.hidden = false;
+        el.querySelector('.grow').textContent = '재검증이 필요한 장묘업체가 ' + need + '곳 있어요. 검증일 갱신 버튼으로 최신 상태를 반영해 주세요.';
+      } else {
+        el.hidden = true;
+      }
+    }
+
+    var partnerBody = document.getElementById('partnerBody');
+    var searchInput = document.getElementById('searchInput');
+    var regionFilter = document.getElementById('regionFilter');
+
+    function applyFilters() {
+      var activeTab = document.querySelector('#typeTabs .tab.active');
+      var type = activeTab ? activeTab.dataset.type : 'all';
+      var q = searchInput.value.trim();
+      var region = regionFilter.value;
+      var shown = 0;
+      partnerBody.querySelectorAll('tr').forEach(function (tr) {
+        var matchType = type === 'all' || tr.dataset.type === type;
+        var matchQ = !q || tr.dataset.name.indexOf(q) > -1;
+        var matchRegion = !region || tr.dataset.region.indexOf(region) > -1;
+        var show = matchType && matchQ && matchRegion;
+        tr.hidden = !show;
+        if (show) shown++;
+      });
+      document.getElementById('resultCount').textContent = shown + '개 업체';
+    }
+
+    function renderTable() {
+      partnerBody.innerHTML = PARTNERS.map(rowHTML).join('');
+      lucide.createIcons();
+      renderCounts();
+      renderNotice();
+      applyFilters();
+    }
+
+    // 유형 탭
+    document.querySelectorAll('#typeTabs .tab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#typeTabs .tab').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        applyFilters();
+      });
+    });
+    searchInput.addEventListener('input', applyFilters);
+    regionFilter.addEventListener('change', applyFilters);
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      document.querySelectorAll('#typeTabs .tab').forEach(function (b) { b.classList.toggle('active', b.dataset.type === 'all'); });
+      searchInput.value = '';
+      regionFilter.value = '';
+      applyFilters();
+      showToast('필터를 초기화했어요');
+    });
+
+    // 행 위임 이벤트 — 검증일 갱신 · 노출 토글 · 수정
+    partnerBody.addEventListener('click', function (e) {
+      var tr = e.target.closest('tr');
+      if (!tr) return;
+      var idx = Number(tr.dataset.idx);
+      if (e.target.closest('.verify-btn')) {
+        PARTNERS[idx].verify = TODAY_STR;
+        renderTable();
+        showToast(PARTNERS[idx].name + '의 검증일을 오늘 날짜로 갱신했어요');
+      } else if (e.target.closest('.edit-btn')) {
+        openModal(idx);
+      }
+    });
+    partnerBody.addEventListener('change', function (e) {
+      if (!e.target.classList.contains('expose-toggle')) return;
+      var tr = e.target.closest('tr');
+      var idx = Number(tr.dataset.idx);
+      if (isExposeLocked(PARTNERS[idx])) {
+        e.target.checked = false;
+        showToast('정식 등록이 확인된 장묘업체만 노출할 수 있어요');
+        return;
+      }
+      PARTNERS[idx].exposed = e.target.checked;
+      renderTable();
+      showToast(PARTNERS[idx].name + (PARTNERS[idx].exposed ? ' 노출을 시작했어요' : ' 노출을 껐어요'));
+    });
+
+    // 등록·수정 모달
+    var modalDim = document.getElementById('partnerModalDim');
+    var modalTitle = document.getElementById('modalTitle');
+    var fType = document.getElementById('fType');
+    var fName = document.getElementById('fName');
+    var fRegion = document.getElementById('fRegion');
+    var fPhone = document.getElementById('fPhone');
+    var fCost = document.getElementById('fCost');
+    var fRegistered = document.getElementById('fRegistered');
+    var fVerify = document.getElementById('fVerify');
+    var fExposed = document.getElementById('fExposed');
+    var cemeteryFields = document.getElementById('cemeteryFields');
+    var currentEditIndex = null;
+
+    function updateFieldVisibility() {
+      cemeteryFields.hidden = fType.value !== 'cemetery';
+      document.getElementById('fExposeHint').hidden = fType.value !== 'cemetery';
+    }
+    fType.addEventListener('change', updateFieldVisibility);
+
+    function clearErrors() {
+      ['fNameField', 'fRegionField', 'fPhoneField'].forEach(function (id) { document.getElementById(id).classList.remove('is-error'); });
+    }
+
+    function openModal(idx) {
+      currentEditIndex = idx;
+      clearErrors();
+      if (idx === null) {
+        modalTitle.textContent = '업체 등록';
+        var activeTab = document.querySelector('#typeTabs .tab.active');
+        var activeType = activeTab ? activeTab.dataset.type : 'all';
+        fType.value = activeType === 'all' ? 'cemetery' : activeType;
+        fName.value = ''; fRegion.value = ''; fPhone.value = ''; fCost.value = '';
+        fRegistered.checked = false; fVerify.value = '';
+        fExposed.checked = fType.value !== 'cemetery';
+      } else {
+        var p = PARTNERS[idx];
+        modalTitle.textContent = '업체 정보 수정';
+        fType.value = p.type; fName.value = p.name; fRegion.value = p.region; fPhone.value = p.phone; fCost.value = p.cost;
+        fRegistered.checked = !!p.registered; fVerify.value = p.verify || '';
+        fExposed.checked = !!p.exposed;
+      }
+      updateFieldVisibility();
+      modalDim.classList.add('open');
+    }
+    function closeModal() { modalDim.classList.remove('open'); }
+
+    document.getElementById('addBtn').addEventListener('click', function () { openModal(null); });
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    modalDim.addEventListener('click', function (e) { if (e.target === modalDim) closeModal(); });
+
+    document.getElementById('modalSave').addEventListener('click', function () {
+      var name = fName.value.trim(), region = fRegion.value.trim(), phone = fPhone.value.trim();
+      clearErrors();
+      var ok = true;
+      if (!name) { document.getElementById('fNameField').classList.add('is-error'); ok = false; }
+      if (!region) { document.getElementById('fRegionField').classList.add('is-error'); ok = false; }
+      if (!phone) { document.getElementById('fPhoneField').classList.add('is-error'); ok = false; }
+      if (!ok) return;
+
+      var isCemetery = fType.value === 'cemetery';
+      if (isCemetery && !fRegistered.checked && fExposed.checked) {
+        showToast('정식 등록 확인 후 노출할 수 있어요. 노출을 끄거나 정식 등록을 먼저 확인해 주세요');
+        return;
+      }
+      var data = {
+        type: fType.value,
+        name: name, region: region, phone: phone,
+        cost: fCost.value.trim(),
+        registered: isCemetery ? fRegistered.checked : false,
+        verify: isCemetery && fRegistered.checked ? (fVerify.value || TODAY_STR) : '',
+        exposed: fExposed.checked
+      };
+      if (currentEditIndex === null) {
+        PARTNERS.push(data);
+      } else {
+        PARTNERS[currentEditIndex] = data;
+      }
+      renderTable();
+      closeModal();
+      showToast(currentEditIndex === null ? name + ' 업체를 등록했어요' : name + ' 정보를 수정했어요');
+    });
+
+    renderTable();
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/admin/partners.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>

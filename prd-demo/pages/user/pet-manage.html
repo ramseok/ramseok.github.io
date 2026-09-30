@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P5 반려견 관리 · 무지개 일기(가칭)</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* P5 전용 — 공통 크롬(.m-*)·컴포넌트는 common.css 그대로 쓰고 여기서 재정의하지 않는다 */
+    /* 카드 상단 — 아바타 · 이름+뱃지 / 한 줄 메타 2줄 · 우측 사진 버튼 */
+    .pm-top { display: flex; align-items: center; gap: var(--space-4); }
+    .pm-top .avatar-lg { width: 64px; height: 64px; }
+    .pm-top .avatar-lg svg { width: 30px; height: 30px; }
+    .pm-top .grow > .row { margin-bottom: 2px; }
+    .pm-top .icon-btn { align-self: flex-start; margin: -8px -10px 0 0; color: var(--color-text-sub); }
+    /* 정보 박스 — 함께한 날 · 동물등록번호 (아이콘 + 한 줄) */
+    .pm-facts { margin-top: var(--space-4); padding: 2px var(--space-4); border-radius: var(--radius-md); background: var(--color-bg); }
+    .pm-fact { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 10px 0; font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+    .pm-fact:not(:last-child) { border-bottom: 1px solid var(--color-border); }
+    .pm-fact .fact-2l > span { display: block; }
+    .pm-fact .fact-sep { display: none !important; }
+    .pm-fact > svg { color: var(--color-text-sub); }
+    .pm-fact .grow { min-width: 0; }
+    .pm-fact b { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pm-fact.is-sub { color: var(--color-text-sub); }
+    .pm-actions { margin-top: var(--space-4); }
+    .pm-actions .btn-row .btn { height: 44px; }
+    .pm-actions .btn-ghost { margin-top: var(--space-1); }
+    .pm-revert { margin-top: var(--space-3); }
+    .pm-revert .btn { margin-top: var(--space-2); }
+    .pet-edit-form { margin-top: var(--space-4); border-top: 1px solid var(--color-border); padding-top: var(--space-5); }
+    /* 성별 세그먼트는 필드 폭을 채운다 */
+    .pet-edit-form .segment, .sheet .segment { display: flex; width: 100%; }
+    .pet-edit-form .seg-btn, .sheet .seg-btn { flex: 1; min-height: 44px; }
+    .pet-edit-form .btn-row { margin-top: var(--space-2); }
+    .add-note { margin-top: var(--space-2); }
+    .birth-unknown { margin: calc(var(--space-2) * -1) 0 var(--space-3); }
+  </style>
+</head>
+<body class="is-mobile" data-pet-state="together">
+  <div class="mobile-stage">
+    <div class="mobile-frame">
+      <div class="m-screen">
+
+        <!-- 상태바 -->
+        <div class="m-status">
+          <span>9:41</span>
+          <span class="m-status-icons"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+        </div>
+
+        <!-- 헤더: 뒤로가기 + 제목 -->
+        <header class="m-header">
+          <a class="icon-btn" href="mypage.html" aria-label="마이페이지로 돌아가기"><i data-lucide="arrow-left"></i></a>
+          <div class="m-title">반려견 관리</div>
+        </header>
+
+        <!-- 본문 (유일한 스크롤 영역) -->
+        <main class="m-content">
+
+          <section class="m-section">
+            <p class="t-body-s t-sub">등록한 아이들의 정보를 살펴보고, 필요할 때 상태를 바꿔요.</p>
+          </section>
+
+          <!-- ===== 등록된 반려견 목록 (F2 다견 관리) ===== -->
+          <section class="m-section">
+            <div class="sec-head">
+              <h2 class="sec-title">우리 아이들</h2>
+              <span class="sec-sub num"><b id="petCount">2</b> / 5마리</span>
+            </div>
+
+            <div class="stack" id="petList">
+
+              <!-- 보리 -->
+              <div class="card pet-manage-card" data-pet-state="together" id="boriCard">
+                <div class="pm-top">
+                  <span class="avatar avatar-lg"><i data-lucide="dog"></i></span>
+                  <div class="grow">
+                    <div class="row">
+                      <span class="t-h3 clamp-1" data-pet-name>보리</span>
+                      <span class="state-badge state-together" data-badge-together><i data-lucide="sun"></i> 함께하는 중</span>
+                      <span class="state-badge state-preparing" data-badge-preparing hidden><i data-lucide="sunset"></i> 이별 준비</span>
+                      <span class="state-badge state-rainbow" data-badge-rainbow hidden><i data-lucide="cloud"></i> 무지개다리</span>
+                    </div>
+                    <p class="meta" data-pet-meta>말티즈 · 여아 · 만 14살</p>
+                    <p class="meta">2012.06.02생</p>
+                  </div>
+                  <button class="icon-btn" data-edit-photo aria-label="보리 대표 사진 바꾸기"><i data-lucide="camera"></i></button>
+                </div>
+
+                <div class="pm-facts">
+                  <p class="pm-fact pet-days" data-alive-only><i data-lucide="heart" class="ico-16"></i><span class="grow">함께한 지 <b>5,159</b>일</span></p>
+                  <p class="pm-fact pet-days" data-rainbow-only hidden><i data-lucide="heart" class="ico-16"></i><span class="grow fact-2l"><span class="nowrap num">2012.08.15 ~ 2026.09.24</span><span class="fact-sep"> · </span><span class="nowrap">함께한 <b>5,154</b>일</span></span></p>
+                  <p class="pm-fact is-sub"><i data-lucide="shield-check" class="ico-16"></i><span class="grow clamp-1">동물등록번호 <span class="num">4100*******8901</span></span></p>
+                </div>
+
+                <div class="notice notice-theme pm-revert" data-rainbow-only hidden>
+                  <i data-lucide="undo-2"></i>
+                  <div class="grow">
+                    <p class="t-balance">잘못 남기셨다면 <b class="nowrap">10월 1일(목)</b>까지 이전 상태로 되돌릴 수 있어요.</p>
+                    <a class="btn btn-outline btn-sm" href="rainbow-transition.html?mode=revert&amp;pet=보리" data-rainbow-only hidden>되돌리기 (10월 1일까지)</a>
+                  </div>
+                </div>
+
+                <div class="pm-actions">
+                  <div class="btn-row">
+                    <button class="btn btn-secondary btn-sm" data-edit-toggle>정보 수정</button>
+                    <button class="btn btn-outline btn-sm" data-state-toggle data-alive-only>이별 준비로 전환</button>
+                  </div>
+                  <a class="btn btn-ghost btn-sm btn-block" href="rainbow-transition.html?pet=보리" data-alive-only><i data-lucide="cloud"></i> 무지개다리를 건넜어요</a>
+                </div>
+
+                <!-- 인라인 정보 수정 폼 (기본 숨김) -->
+                <div class="pet-edit-form" data-edit-form hidden>
+                  <div class="field">
+                    <label class="field-label">이름<span class="req">*</span></label>
+                    <input class="input" type="text" value="보리">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">생년월일<span class="req">*</span></label>
+                    <input class="input" type="text" value="2012.06.02">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">견종</label>
+                    <input class="input" type="text" value="말티즈">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">성별</label>
+                    <div class="segment">
+                      <button type="button" class="seg-btn active">여아</button>
+                      <button type="button" class="seg-btn">남아</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">입양일</label>
+                    <input class="input" type="text" value="2012.08.15">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">동물등록번호 <span class="opt">선택</span></label>
+                    <input class="input" type="text" value="4100*******8901">
+                    <div class="field-help">등록번호는 화면에 항상 마스킹되어 표시돼요.</div>
+                  </div>
+                  <div class="btn-row">
+                    <button class="btn btn-secondary btn-block" data-edit-cancel>취소</button>
+                    <button class="btn btn-primary btn-block" data-edit-save>저장</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 콩이 -->
+              <div class="card pet-manage-card" data-pet-state="together">
+                <div class="pm-top">
+                  <span class="avatar avatar-lg"><i data-lucide="dog"></i></span>
+                  <div class="grow">
+                    <div class="row">
+                      <span class="t-h3 clamp-1" data-pet-name>콩이</span>
+                      <span class="state-badge state-together" data-badge-together><i data-lucide="sun"></i> 함께하는 중</span>
+                      <span class="state-badge state-preparing" data-badge-preparing hidden><i data-lucide="sunset"></i> 이별 준비</span>
+                    </div>
+                    <p class="meta" data-pet-meta>푸들 · 남아 · 만 8살</p>
+                    <p class="meta">2017.10.15생</p>
+                  </div>
+                  <button class="icon-btn" data-edit-photo aria-label="콩이 대표 사진 바꾸기"><i data-lucide="camera"></i></button>
+                </div>
+
+                <div class="pm-facts">
+                  <p class="pm-fact pet-days"><i data-lucide="heart" class="ico-16"></i><span class="grow">함께한 지 <b>3,225</b>일</span></p>
+                  <p class="pm-fact is-sub"><i data-lucide="shield-x" class="ico-16"></i><span class="grow clamp-1">동물등록번호 미등록</span></p>
+                </div>
+
+                <div class="pm-actions">
+                  <div class="btn-row">
+                    <button class="btn btn-secondary btn-sm" data-edit-toggle>정보 수정</button>
+                    <button class="btn btn-outline btn-sm" data-state-toggle>이별 준비로 전환</button>
+                  </div>
+                  <a class="btn btn-ghost btn-sm btn-block" href="rainbow-transition.html?pet=콩이"><i data-lucide="cloud"></i> 무지개다리를 건넜어요</a>
+                </div>
+
+                <!-- 인라인 정보 수정 폼 (기본 숨김) -->
+                <div class="pet-edit-form" data-edit-form hidden>
+                  <div class="field">
+                    <label class="field-label">이름<span class="req">*</span></label>
+                    <input class="input" type="text" value="콩이">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">생년월일<span class="req">*</span></label>
+                    <input class="input" type="text" value="2017.10.15">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">견종</label>
+                    <input class="input" type="text" value="푸들">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">성별</label>
+                    <div class="segment">
+                      <button type="button" class="seg-btn">여아</button>
+                      <button type="button" class="seg-btn active">남아</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">입양일</label>
+                    <input class="input" type="text" value="2017.12.01">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">동물등록번호 <span class="opt">선택</span></label>
+                    <input class="input" type="text" placeholder="15자리 숫자 (선택 입력)">
+                    <div class="field-help">등록번호는 화면에 항상 마스킹되어 표시돼요.</div>
+                  </div>
+                  <div class="btn-row">
+                    <button class="btn btn-secondary btn-block" data-edit-cancel>취소</button>
+                    <button class="btn btn-primary btn-block" data-edit-save>저장</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ===== 새 반려견 등록 (F2, F38 요금제 한도) ===== -->
+          <section class="m-section">
+            <button class="btn btn-secondary btn-lg btn-block" id="addPetBtn"><i data-lucide="plus"></i> 새로운 아이 등록하기</button>
+            <p class="t-caption t-sub t-center add-note">무료 플랜은 최대 5마리까지 등록할 수 있어요.</p>
+          </section>
+
+          <div class="m-section"></div>
+        </main>
+
+        <div class="m-home"></div>
+
+        <!-- 토스트 -->
+        <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="paw-print" data-toast-ico></i><span id="toastMsg"></span></div>
+
+        <!-- 상태 전환 확인 모달 (F4 — 이별 준비 전환·복귀는 이 화면에서 직접) -->
+        <div class="modal-dim" id="stateModalDim">
+          <div class="modal" role="dialog" aria-label="상태 전환 확인">
+            <div class="modal-title" id="stateModalTitle">이별을 준비할까요?</div>
+            <p class="modal-desc t-balance" id="stateModalBody">천천히 준비해도 괜찮아요. 언제든 다시 되돌릴 수 있어요.</p>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" id="stateModalCancel">아니요</button>
+              <button class="btn btn-primary" id="stateModalConfirm">네, 전환할게요</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 새 반려견 등록 바텀시트 -->
+        <div class="sheet-dim" id="addPetDim"></div>
+        <div class="sheet" id="addPetSheet" role="dialog" aria-label="새로운 아이 등록">
+          <div class="sheet-grip"></div>
+          <div class="sheet-title">어떤 아이를 등록할까요?</div>
+
+          <div class="field">
+            <label class="field-label">이름<span class="req">*</span></label>
+            <input class="input" type="text" id="newPetName" placeholder="예: 초코">
+          </div>
+
+          <label class="check birth-unknown">
+            <input type="checkbox" id="birthUnknown">
+            <span class="box"><i data-lucide="check" class="ico-16"></i></span>
+            <span class="t-body-s">태어난 날짜를 몰라요</span>
+          </label>
+
+          <div class="field" id="birthDateField">
+            <label class="field-label">생년월일<span class="req">*</span></label>
+            <input class="input" type="text" id="newPetBirth" placeholder="예: 2020.05.10">
+          </div>
+          <div class="field" id="ageEstField" hidden>
+            <label class="field-label">추정 나이<span class="req">*</span></label>
+            <input class="input" type="text" id="newPetAge" placeholder="예: 약 7살로 추정">
+          </div>
+
+          <div class="field">
+            <label class="field-label">견종 <span class="opt">선택</span></label>
+            <input class="input" type="text" id="newPetBreed" placeholder="예: 믹스견">
+          </div>
+
+          <div class="field">
+            <label class="field-label">성별 <span class="opt">선택</span></label>
+            <div class="segment">
+              <button type="button" class="seg-btn active">여아</button>
+              <button type="button" class="seg-btn">남아</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">입양일 <span class="opt">선택</span></label>
+            <input class="input" type="text" id="newPetAdopt" placeholder="예: 2020.06.01">
+          </div>
+
+          <div class="field">
+            <label class="field-label">동물등록번호 <span class="opt">선택</span></label>
+            <input class="input" type="text" id="newPetRegno" placeholder="15자리 숫자">
+            <div class="field-help">등록번호는 화면에 항상 마스킹되어 표시돼요.</div>
+          </div>
+
+          <div class="sheet-actions">
+            <button class="btn btn-secondary btn-lg" id="addPetCancel">취소</button>
+            <button class="btn btn-primary btn-lg" id="addPetSave">등록하기</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // F8 글자 크기 — 알림·표시 설정에서 고른 값(lg|xl)을 화면 전체에 반영
+    try { var fs = localStorage.getItem('rd-font-scale'); if (fs === 'lg' || fs === 'xl') document.querySelector('.m-screen').setAttribute('data-font-scale', fs); } catch (e) {}
+
+    // 보리 카드 상태 — 홈(P4)·전환(P6)과 같은 저장값(rd-pet-state)을 따른다. ?state= 로 시연 가능
+    var STATE_KEY = 'rd-pet-state';
+    var boriCard = document.getElementById('boriCard');
+    function applyBoriState(state) {
+      var rainbow = state === 'rainbow';
+      boriCard.dataset.petState = state;
+      boriCard.querySelector('[data-badge-together]').hidden = state !== 'together';
+      boriCard.querySelector('[data-badge-preparing]').hidden = state !== 'preparing';
+      boriCard.querySelector('[data-badge-rainbow]').hidden = !rainbow;
+      boriCard.querySelectorAll('[data-alive-only]').forEach(function (el) { el.hidden = rainbow; });
+      boriCard.querySelectorAll('[data-rainbow-only]').forEach(function (el) { el.hidden = !rainbow; });
+      boriCard.querySelector('[data-state-toggle]').textContent = state === 'preparing' ? '함께하는 중으로 복귀' : '이별 준비로 전환';
+    }
+    (function () {
+      var q = new URLSearchParams(location.search).get('state');
+      var saved = null;
+      try { saved = localStorage.getItem(STATE_KEY); } catch (e) {}
+      var s = q || saved || 'together';
+      applyBoriState(['together', 'preparing', 'rainbow'].indexOf(s) > -1 ? s : 'together');
+    })();
+
+    // 토스트 — 3초
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // 상태 전환 확인 모달 (F4)
+    var modalDim = document.getElementById('stateModalDim');
+    var modalTitle = document.getElementById('stateModalTitle');
+    var modalBody = document.getElementById('stateModalBody');
+    var modalConfirmBtn = document.getElementById('stateModalConfirm');
+    var toggleCard = null;
+
+    function openStateModal(card) {
+      toggleCard = card;
+      var name = card.querySelector('[data-pet-name]').textContent;
+      var isPreparing = card.dataset.petState === 'preparing';
+      if (isPreparing) {
+        modalTitle.textContent = name + '이(가) 함께하는 중으로 돌아올까요?';
+        modalBody.textContent = '작성해둔 체크리스트와 편지는 그대로 남아있어요.';
+        modalConfirmBtn.textContent = '네, 되돌릴게요';
+      } else {
+        modalTitle.textContent = name + '의 이별을 준비할까요?';
+        modalBody.textContent = '천천히 준비해도 괜찮아요. 언제든 다시 되돌릴 수 있어요.';
+        modalConfirmBtn.textContent = '네, 전환할게요';
+      }
+      modalDim.classList.add('open');
+    }
+    document.getElementById('stateModalCancel').addEventListener('click', function () {
+      modalDim.classList.remove('open'); toggleCard = null;
+    });
+    modalConfirmBtn.addEventListener('click', function () {
+      if (!toggleCard) return;
+      var card = toggleCard;
+      var name = card.querySelector('[data-pet-name]').textContent;
+      var next = card.dataset.petState === 'preparing' ? 'together' : 'preparing';
+      card.dataset.petState = next;
+      card.querySelector('[data-badge-together]').hidden = next !== 'together';
+      card.querySelector('[data-badge-preparing]').hidden = next !== 'preparing';
+      card.querySelector('[data-state-toggle]').textContent = next === 'together' ? '이별 준비로 전환' : '함께하는 중으로 복귀';
+      if (card === boriCard) { try { localStorage.setItem(STATE_KEY, next); } catch (e) {} }
+      modalDim.classList.remove('open');
+      showToast(next === 'preparing' ? name + '의 이별 준비 모드로 바뀌었어요' : name + '이(가) 함께하는 중으로 돌아왔어요');
+      toggleCard = null;
+    });
+
+    // 카드·바텀시트 공통 위임 클릭 처리 — 새로 추가되는 카드에도 그대로 적용된다
+    document.addEventListener('click', function (e) {
+      var seg = e.target.closest('.seg-btn');
+      if (seg && seg.closest('.segment')) {
+        seg.closest('.segment').querySelectorAll('.seg-btn').forEach(function (b) { b.classList.toggle('active', b === seg); });
+      }
+
+      var photoBtn = e.target.closest('[data-edit-photo]');
+      if (photoBtn) { showToast('사진 선택 화면은 준비 중이에요'); }
+
+      var editToggle = e.target.closest('[data-edit-toggle]');
+      if (editToggle) {
+        var form = editToggle.closest('.pet-manage-card').querySelector('[data-edit-form]');
+        if (form) form.hidden = !form.hidden;
+      }
+
+      var cancelBtn = e.target.closest('[data-edit-cancel]');
+      if (cancelBtn && cancelBtn.closest('[data-edit-form]')) { cancelBtn.closest('[data-edit-form]').hidden = true; }
+
+      var saveBtn = e.target.closest('[data-edit-save]');
+      if (saveBtn && saveBtn.closest('[data-edit-form]')) {
+        var card = saveBtn.closest('.pet-manage-card');
+        var form = saveBtn.closest('[data-edit-form]');
+        var nameField = form.querySelector('input[type="text"]');
+        var name = (nameField && nameField.value.trim()) || card.querySelector('[data-pet-name]').textContent;
+        card.querySelector('[data-pet-name]').textContent = name;
+        form.hidden = true;
+        showToast(name + '의 정보를 저장했어요');
+      }
+
+      var stateBtn = e.target.closest('[data-state-toggle]');
+      if (stateBtn) { openStateModal(stateBtn.closest('.pet-manage-card')); }
+    });
+
+    // 생년월일 모름 체크 — 추정 나이 입력으로 전환 (F2)
+    document.getElementById('birthUnknown').addEventListener('change', function () {
+      document.getElementById('birthDateField').hidden = this.checked;
+      document.getElementById('ageEstField').hidden = !this.checked;
+    });
+
+    // 새로운 아이 등록 바텀시트
+    var addSheet = document.getElementById('addPetSheet');
+    var addDim = document.getElementById('addPetDim');
+    function openAddSheet() { addSheet.classList.add('open'); addDim.classList.add('open'); }
+    function closeAddSheet() { addSheet.classList.remove('open'); addDim.classList.remove('open'); }
+    document.getElementById('addPetBtn').addEventListener('click', openAddSheet);
+    document.getElementById('addPetCancel').addEventListener('click', closeAddSheet);
+    addDim.addEventListener('click', closeAddSheet);
+
+    document.getElementById('addPetSave').addEventListener('click', function () {
+      var nameInput = document.getElementById('newPetName');
+      var name = nameInput.value.trim();
+      if (!name) { nameInput.classList.add('is-error'); nameInput.focus(); return; }
+      nameInput.classList.remove('is-error');
+
+      var list = document.getElementById('petList');
+      var count = list.querySelectorAll('.pet-manage-card').length;
+      if (count >= 5) {
+        showToast('무료 플랜은 최대 5마리까지 등록할 수 있어요');
+        closeAddSheet();
+        return;
+      }
+
+      var breed = document.getElementById('newPetBreed').value.trim();
+      var genderBtn = document.querySelector('#addPetSheet .segment .seg-btn.active');
+      var gender = genderBtn ? genderBtn.textContent : '';
+      var metaParts = [breed, gender].filter(Boolean);
+      var meta = metaParts.length ? metaParts.join(' · ') : '견종·성별 미입력';
+
+      var card = document.createElement('div');
+      card.className = 'card pet-manage-card';
+      card.dataset.petState = 'together';
+      card.innerHTML =
+        '<div class="pm-top">' +
+          '<span class="avatar avatar-lg"><i data-lucide="dog"></i></span>' +
+          '<div class="grow">' +
+            '<div class="row"><span class="t-h3 clamp-1" data-pet-name></span>' +
+            '<span class="state-badge state-together" data-badge-together><i data-lucide="sun"></i> 함께하는 중</span>' +
+            '<span class="state-badge state-preparing" data-badge-preparing hidden><i data-lucide="sunset"></i> 이별 준비</span></div>' +
+            '<p class="meta" data-pet-meta></p>' +
+          '</div>' +
+          '<button class="icon-btn" data-edit-photo aria-label="대표 사진 바꾸기"><i data-lucide="camera"></i></button>' +
+        '</div>' +
+        '<div class="pm-facts">' +
+          '<p class="pm-fact pet-days"><i data-lucide="heart" class="ico-16"></i><span class="grow">오늘부터 함께해요</span></p>' +
+          '<p class="pm-fact is-sub"><i data-lucide="shield-x" class="ico-16"></i><span class="grow clamp-1">동물등록번호 미등록</span></p>' +
+        '</div>' +
+        '<div class="pm-actions">' +
+          '<div class="btn-row">' +
+            '<button class="btn btn-secondary btn-sm" data-edit-toggle>정보 수정</button>' +
+            '<button class="btn btn-outline btn-sm" data-state-toggle>이별 준비로 전환</button>' +
+          '</div>' +
+          '<a class="btn btn-ghost btn-sm btn-block" href="rainbow-transition.html" data-rainbow-link><i data-lucide="cloud"></i> 무지개다리를 건넜어요</a>' +
+        '</div>' +
+        '<div class="pet-edit-form" data-edit-form hidden>' +
+          '<div class="field"><label class="field-label">이름<span class="req">*</span></label><input class="input" type="text"></div>' +
+          '<div class="field"><label class="field-label">생년월일<span class="req">*</span></label><input class="input" type="text"></div>' +
+          '<div class="field"><label class="field-label">견종</label><input class="input" type="text"></div>' +
+          '<div class="field"><label class="field-label">성별</label><div class="segment"><button type="button" class="seg-btn active">여아</button><button type="button" class="seg-btn">남아</button></div></div>' +
+          '<div class="field"><label class="field-label">입양일</label><input class="input" type="text"></div>' +
+          '<div class="field"><label class="field-label">동물등록번호 <span class="opt">선택</span></label><input class="input" type="text" placeholder="15자리 숫자"><div class="field-help">등록번호는 화면에 항상 마스킹되어 표시돼요.</div></div>' +
+          '<div class="btn-row"><button class="btn btn-secondary btn-block" data-edit-cancel>취소</button><button class="btn btn-primary btn-block" data-edit-save>저장</button></div>' +
+        '</div>';
+
+      card.querySelector('[data-pet-name]').textContent = name;
+      card.querySelector('[data-pet-meta]').textContent = meta;
+      card.querySelector('[data-rainbow-link]').setAttribute('href', 'rainbow-transition.html?pet=' + encodeURIComponent(name));
+      list.appendChild(card);
+      lucide.createIcons();
+
+      document.getElementById('petCount').textContent = String(count + 1);
+      closeAddSheet();
+      nameInput.value = '';
+      document.getElementById('newPetBreed').value = '';
+      document.getElementById('newPetBirth').value = '';
+      document.getElementById('newPetAdopt').value = '';
+      document.getElementById('newPetRegno').value = '';
+      showToast(name + '이(가) 등록됐어요');
+    });
+  </script>
+
+  <script src="../assets/js/spec-config.js" defer></script>
+  <script src="../specs/user/pet-manage.tc.js" defer></script>
+  <script src="../assets/js/spec-viewer.js" defer></script>
+</body>
+</html>
