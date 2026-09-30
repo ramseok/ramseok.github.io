@@ -165,6 +165,9 @@
   .quote .sub2{font:600 7.5pt/1 var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:5mm}
   .closing{border-top:.6pt solid var(--ink);margin-top:auto;padding-top:5mm;margin-bottom:10mm}
   .flexcol{display:flex;flex-direction:column}
+  .ovsec .lab{font:800 13pt/1.1 var(--disp);letter-spacing:-.02em;gap:2.8mm;margin-bottom:4mm}
+  .ovsec .lab::before{width:2.8mm;height:2.8mm}
+  .ovsec .block > p{font-size:9.6pt}
   .spread .phead{margin-bottom:10mm}
   .spread .block{margin-bottom:14mm}
   .spread .lab{margin-bottom:4.6mm}
@@ -313,7 +316,7 @@
 </section>
 
 <!-- 03 PM Station 개요 -->
-<section class="page spread">
+<section class="page spread ovsec">
   <div class="phead"><div class="kicker">PROJECT 01</div><h2>PM Station</h2><div class="sub">프로젝트 관리 · 알림 · 보고 · 회의록 자동화</div></div>
   <div class="block">
     <div class="lab r">문제</div>
@@ -603,7 +606,7 @@
 </section>
 
 <!-- 11 PRD Toolkit 개요 -->
-<section class="page">
+<section class="page ovsec">
   <div class="phead"><div class="kicker">PROJECT 02</div><h2>PRD Toolkit</h2><div class="sub">계약서 → 기획서 · 화면 시안 자동 생성</div></div>
   <div class="callout">
     <div class="t">이 장의 화면에 대하여</div>
