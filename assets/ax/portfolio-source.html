@@ -165,6 +165,33 @@
   .quote .sub2{font:600 7.5pt/1 var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:5mm}
   .closing{border-top:.6pt solid var(--ink);margin-top:auto;padding-top:5mm;margin-bottom:10mm}
   .flexcol{display:flex;flex-direction:column}
+  /* 2쪽 한 장 요약 */
+  .ov-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6mm;margin:4mm 0 15mm}
+  .ov-kpi > div{border-top:1.4pt solid var(--ink);padding-top:3.6mm}
+  .ov-kpi .v{font:800 21pt/1 var(--disp);letter-spacing:-.04em;color:var(--ink);white-space:nowrap}
+  .ov-kpi .v small{font-size:11pt;font-weight:700;color:var(--accent);letter-spacing:-.02em;margin-left:.6mm}
+  .ov-kpi .t{font-size:9pt;font-weight:700;color:var(--ink);margin-top:3.6mm}
+  .ov-kpi .d{font-size:8pt;line-height:1.5;color:var(--muted);margin-top:.8mm}
+  .ov-cmp{display:grid;grid-template-columns:17mm 1fr 1fr;column-gap:7mm;margin-bottom:12mm}
+  .ov-cmp .hd{padding-bottom:3mm;border-bottom:1.4pt solid var(--ink)}
+  .ov-cmp .hd .nm{font:800 14pt/1.1 var(--disp);letter-spacing:-.03em;color:var(--ink)}
+  .ov-cmp .hd .mt{font-size:7.8pt;color:var(--muted);margin-top:1.4mm}
+  .ov-cmp .lb,.ov-cmp .cl{padding:3.6mm 0;border-bottom:.5pt solid var(--line)}
+  .ov-cmp .lb{font:700 7.4pt/1.6 var(--disp);letter-spacing:.1em;color:var(--accent)}
+  .ov-cmp .cl{font-size:9.4pt;line-height:1.6;color:var(--ink)}
+  .ov-cmp .cl.dim{color:var(--body)}
+  .ov-cmp .cl b{color:var(--accent);font-weight:700}
+  .ov-note{display:grid;grid-template-columns:17mm 1fr;column-gap:7mm;align-items:baseline;margin-bottom:12mm}
+  .ov-note .lb{font:700 7.4pt/1.6 var(--disp);letter-spacing:.1em;color:var(--accent)}
+  .ov-note p{font:800 13pt/1.45 var(--disp);letter-spacing:-.03em;color:var(--ink)}
+  .ov-note p span{display:block;font:500 8.6pt/1.6 "Pretendard Variable",Pretendard,sans-serif;letter-spacing:0;color:var(--muted);margin-top:2mm}
+  .ov-idx{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm;position:absolute;left:17mm;right:17mm;bottom:24mm}
+  .ov-idx::before{content:"CONTENTS";position:absolute;left:0;top:-7mm;font:700 7pt/1 var(--disp);letter-spacing:.16em;color:var(--muted)}
+  .ov-idx > div{border-top:.6pt solid var(--ink);padding-top:3mm}
+  .ov-idx .p{font:700 8pt/1 var(--disp);color:var(--accent);letter-spacing:.04em}
+  .ov-idx .n{font:800 11pt/1.2 var(--disp);color:var(--ink);letter-spacing:-.02em;margin-top:2mm}
+  .ov-idx .d{font-size:7.8pt;line-height:1.55;color:var(--muted);margin-top:1.2mm}
+
   /* 마무리 */
   .fin{background:#0f1012;color:#c9ccd2;padding:17mm 17mm 16mm;display:flex;flex-direction:column}
   .fin-top{display:flex;justify-content:space-between;border-bottom:.6pt solid #34363b;padding-bottom:3mm;
@@ -208,43 +235,45 @@
 
 <!-- 02 한 장 요약 -->
 <section class="page">
-  <div class="phead"><div class="kicker">OVERVIEW</div><h2>한 장 요약</h2><div class="sub">문제 · 해결 · 성과</div></div>
-  <div class="stats">
-    <div class="stat"><div class="v">1~2주<br><small>→ 30분~1시간</small></div><div class="k">착수 기획 산출물 초안<br>작성 시간</div></div>
-    <div class="stat"><div class="v">2<small>개</small></div><div class="k">직접 설계 · 구축해<br>운영 중인 시스템</div></div>
-    <div class="stat"><div class="v">5<small>개 영역</small></div><div class="k">업무 관리 · 알림 · 보고 ·<br>회의록 · 문서 조회 통합</div></div>
-    <div class="stat"><div class="v">0<small>건</small></div><div class="k">별도 솔루션 구매<br>기존 AI 구독 · API로 구축</div></div>
+  <div class="phead"><div class="kicker">OVERVIEW</div><h2>한 장 요약</h2><div class="sub">두 시스템 · 문제 → 해결 → 성과</div></div>
+
+  <div class="ov-kpi">
+    <div><div class="v">1~2주<small>→ 1시간</small></div><div class="t">기획 초안 작성</div><div class="d">30분~1시간 내외로 단축</div></div>
+    <div><div class="v">2<small>개</small></div><div class="t">직접 만든 시스템</div><div class="d">설계부터 배포 · 운영까지</div></div>
+    <div><div class="v">5<small>개 영역</small></div><div class="t">한 곳으로 통합</div><div class="d">업무 · 알림 · 보고 · 회의록 · 문서</div></div>
+    <div><div class="v">0<small>건</small></div><div class="t">별도 솔루션 구매</div><div class="d">기존 AI 구독 · API로 구축</div></div>
   </div>
-  <div class="cards2" style="margin-bottom:6mm">
-    <div class="card">
-      <h3>PM Station</h3>
-      <div class="meta">프로젝트 관리 · 알림 · 보고 · 회의록 자동화 · 2026.08~</div>
-      <div class="row"><em>문제</em>매뉴얼은 아무도 열어보지 않고, 마감 · 회신 대기는 메신저 · 엑셀 · 메모에 분산</div>
-      <div class="row"><em>해결</em>PM 업무 전체를 한 서비스로 재설계, Claude Code로 직접 구축</div>
-      <div class="row"><em>성과</em>지표 보고 매일 30분 → 자동 발행, 회의록 15~20분 → 1분 내외</div>
-    </div>
-    <div class="card">
-      <h3>PRD Toolkit</h3>
-      <div class="meta">계약서 → 기획서 · 화면 시안 자동 생성 · 2026.06~</div>
-      <div class="row"><em>문제</em>화면을 한 장씩 그려 초안까지 1~2주, 관련 문서는 4종으로 파편화</div>
-      <div class="row"><em>해결</em>계약서를 넣으면 시안 · 기획서 · 테스트케이스까지 한 번에 생성</div>
-      <div class="row"><em>성과</em>문서 4종 → 링크 1개, 고객 검토 · 요구사항 조율 시간 대폭 단축</div>
-    </div>
+
+  <div class="ov-cmp">
+    <div class="hd"></div>
+    <div class="hd"><div class="nm">PM Station</div><div class="mt">프로젝트 관리 · 알림 · 보고 · 회의록 · 2026.08~</div></div>
+    <div class="hd"><div class="nm">PRD Toolkit</div><div class="mt">계약서 → 기획서 · 화면 시안 자동 생성 · 2026.06~</div></div>
+
+    <div class="lb">문제</div>
+    <div class="cl dim">매뉴얼은 안 읽히고, 마감 · 회신 대기는 메신저 · 엑셀 · 메모에 흩어짐</div>
+    <div class="cl dim">화면을 한 장씩 그려 초안까지 1~2주, 관련 문서는 4종으로 파편화</div>
+
+    <div class="lb">해결</div>
+    <div class="cl">PM 업무 전체를 한 서비스로 재설계, Claude Code로 직접 구축</div>
+    <div class="cl">계약서를 넣으면 시안 · 기획서 · 테스트케이스까지 한 번에 생성</div>
+
+    <div class="lb">성과</div>
+    <div class="cl">지표 보고 <b>매일 30분 → 자동</b><br>회의록 <b>15~20분 → 1분 내외</b></div>
+    <div class="cl">흩어진 문서 <b>4종 → 링크 1개</b><br>고객 검토 · 요구사항 조율 시간 대폭 단축</div>
   </div>
-  <div class="block">
-    <div class="lab">공통 기준</div>
-    <p>두 시스템 모두 같은 판단에서 출발했습니다. <b>자동화의 성패는 기술이 아니라 "사람이 도구 앞으로 가야 하느냐, 도구가 사람에게 오느냐"에서 갈립니다.</b>
-      접속해야만 쓸 수 있는 형태였다면 챗봇도 알림도 쓰이지 않았을 것입니다. 그래서 알림은 서버에서 먼저 보내고, 보고서는 사용자가 이미 보고 있는 자리에 자동으로 놓이게 했습니다.</p>
+
+  <div class="ov-note">
+    <div class="lb">공통 기준</div>
+    <p>사람이 도구 앞으로 가지 않아도,<br>도구가 먼저 사람에게 가도록.
+      <span>알림은 서버가 먼저 보내고, 보고서와 기획서는 사용자가 이미 보고 있는 자리에 놓이게 했습니다.</span></p>
   </div>
-  <div class="block">
-    <div class="lab">문서 구성</div>
-    <table class="ba">
-      <tr><th style="width:22mm">페이지</th><th>내용</th></tr>
-      <tr><td class="k">03 – 13</td><td class="a"><b>PM Station</b> — 문제 · 해결 · 성과와 실제 화면 (대시보드 · WBS · 정기 업무 · 알림 · 운영 보고서 · 보고서 본문 · AI 회의록 · AI 챗봇 · 변경 이력)</td></tr>
-      <tr><td class="k">14 – 19</td><td class="a"><b>PRD Toolkit</b> — 문제 · 해결 · 성과와 산출물 (시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트 · 관리자 시안 · 디자인 가이드)</td></tr>
-      <tr><td class="k">20</td><td class="a">마무리</td></tr>
-    </table>
+
+  <div class="ov-idx">
+    <div><div class="p">03 — 13</div><div class="n">PM Station</div><div class="d">대시보드 · WBS · 정기 업무 · 알림 · 운영 보고서 · AI 회의록 · 챗봇 · 변경 이력</div></div>
+    <div><div class="p">14 — 19</div><div class="n">PRD Toolkit</div><div class="d">시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트 · 관리자 시안 · 디자인 가이드</div></div>
+    <div><div class="p">20</div><div class="n">마무리</div><div class="d">일하는 방식과 입사 후 계획</div></div>
   </div>
+
   <div class="runhead">AI 업무 자동화 포트폴리오</div>
   <div class="pnum">02</div>
 </section>
