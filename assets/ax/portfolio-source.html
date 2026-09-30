@@ -115,27 +115,6 @@
   .quote .sub2{font-size:9pt;color:var(--muted);font-weight:500;margin-top:4mm}
   .closing{border-top:1.5px solid var(--ink);margin-top:auto;padding-top:5mm;margin-bottom:10mm}
   .flexcol{display:flex;flex-direction:column}
-  /* 뒤표지 (마지막 페이지) */
-  .endhero{position:absolute;left:0;right:0;top:0;height:128mm;background:var(--ink);padding:22mm 16mm 0;
-    background-image:radial-gradient(120mm 80mm at 100% 0%, rgba(76,91,212,.38), rgba(76,91,212,0) 70%)}
-  .endhero .eyebrow{color:#9ea8f5}
-  .endhero h1{font-size:25pt;line-height:1.36;color:#fff;font-weight:800;letter-spacing:-.02em}
-  .endhero .rule{background:#8c97f2}
-  .endhero .lead{font-size:10pt;line-height:1.75;color:#c3c8d3;max-width:160mm}
-  .endhero .lead b{color:#fff}
-  .endstats{display:flex;gap:3.5mm;margin-top:8mm}
-  .endstats .es{flex:1;border:1px solid rgba(255,255,255,.14);border-radius:3mm;padding:4mm 4.5mm;background:rgba(255,255,255,.04)}
-  .endstats .v{font-size:14pt;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2}
-  .endstats .v small{font-size:9pt;color:#aab3ff;font-weight:700}
-  .endstats .k{font-size:8pt;color:#9aa3b2;margin-top:1.5mm;line-height:1.45}
-  .endbody{position:absolute;left:16mm;right:16mm;top:138mm;bottom:52mm;display:flex;flex-direction:column}
-  .endbody .flow{margin-bottom:5mm}
-  .endbody .cards2{margin-bottom:0}
-  .endpromise{margin-top:auto;border-left:2.5px solid var(--accent);background:var(--accent-soft);border-radius:0 2mm 2mm 0;
-    padding:4mm 5mm;font-size:9.5pt;line-height:1.7;color:var(--body)}
-  .endpromise b{color:var(--ink)}
-  .coverband .thanks{color:#fff;font-size:20pt;font-weight:800;letter-spacing:.08em;text-align:right;line-height:1}
-  .coverband .thanks small{display:block;color:#6f7787;font-size:8.5pt;letter-spacing:.06em;font-weight:600;margin-top:2.5mm}
 
 </style>
 </head>
@@ -538,51 +517,41 @@
   <div class="pnum">16</div>
 </section>
 
-<!-- 17 마무리 (뒤표지) -->
-<section class="page nopn">
-  <div class="endhero">
-    <div class="eyebrow">CLOSING</div>
-    <h1>반복되는 일은 사람이 기억하는 대신<br>시스템이 기억하게 만들었습니다</h1>
-    <div class="rule"></div>
-    <p class="lead">두 시스템 모두 아이디어나 보고서로 끝난 제안이 아니라 <b>제가 매일 여는 도구</b>입니다.
-      문제를 찾으면 동작하는 형태로 만들어 업무에 붙이고, 실제로 쓰이는지 확인하며 고쳐 왔습니다.</p>
-    <div class="endstats">
-      <div class="es"><div class="v">1~2주 <small>→ 30분~1시간</small></div><div class="k">착수 기획 산출물<br>초안 작성 시간</div></div>
-      <div class="es"><div class="v">매일 <small>자동 발행</small></div><div class="k">수기 확인 · 구두 보고를<br>대체한 운영 보고서</div></div>
-      <div class="es"><div class="v">1일 3회</div><div class="k">서버가 먼저 보내는<br>Teams 업무 알림</div></div>
-      <div class="es"><div class="v">2<small>개</small></div><div class="k">설계부터 배포 · 운영까지<br>직접 한 시스템</div></div>
+<!-- 16 마무리 -->
+<section class="page flexcol">
+  <div class="phead"><div class="kicker">CLOSING</div><h2>일하는 순서</h2><div class="sub">문제 발견 → 도구 제작 → 확인과 개선</div></div>
+  <div class="block">
+    <p>두 시스템 모두 <b>아이디어나 보고서로 끝난 제안이 아니라 제가 매일 여는 도구</b>입니다.
+      문제를 발견하면 문서로 남기는 데서 멈추지 않고, 동작하는 형태로 만들어 업무에 붙이고, 실제로 쓰이는지 확인하며 고쳐 왔습니다.</p>
+  </div>
+  <div class="flow" style="margin-bottom:6mm">
+    <div class="st"><div class="n">STEP 01</div><div class="t">어디에서 시간이<br>새는지 찾기</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">STEP 02</div><div class="t">효과 · 실행 가능성으로<br>우선순위 정리</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">STEP 03</div><div class="t">동작하는 형태로<br>만들어 붙이기</div></div><div class="ar">→</div>
+    <div class="st"><div class="n">STEP 04</div><div class="t">전후를 기록해<br>다음 과제 근거로</div></div>
+  </div>
+  <div class="cards2">
+    <div class="card">
+      <h3>도구가 사람에게 가야 합니다</h3>
+      <div class="meta">두 시스템을 만들며 세운 기준</div>
+      <div class="row" style="padding-left:0">접속해야만 쓸 수 있는 형태였다면 챗봇도 알림도 쓰이지 않았을 것입니다. 그래서 알림은 서버에서 Teams로 먼저 보내고, 보고서는 사용자가 이미 보고 있는 자리에 자동으로 놓이게 했습니다.</div>
+    </div>
+    <div class="card">
+      <h3>문서로 끝내지 않습니다</h3>
+      <div class="meta">매뉴얼에서 시스템까지</div>
+      <div class="row" style="padding-left:0">매뉴얼을 문서로 쌓는 방식은 끝내 해결이 되지 않았습니다. 한 번 실패한 접근을 버리고 다시 설계해, 지금은 업무 관리 · 알림 · 보고 · 회의록 · 문서 조회가 한 곳에서 끝납니다.</div>
     </div>
   </div>
-
-  <div class="endbody">
-    <div class="lab" style="margin-bottom:3mm;align-self:flex-start">일하는 순서</div>
-    <div class="flow">
-      <div class="st"><div class="n">STEP 01</div><div class="t">어디에서 시간이<br>새는지 찾기</div></div><div class="ar">→</div>
-      <div class="st"><div class="n">STEP 02</div><div class="t">효과 · 실행 가능성으로<br>우선순위 정리</div></div><div class="ar">→</div>
-      <div class="st"><div class="n">STEP 03</div><div class="t">동작하는 형태로<br>만들어 붙이기</div></div><div class="ar">→</div>
-      <div class="st"><div class="n">STEP 04</div><div class="t">전후를 기록해<br>다음 과제 근거로</div></div>
-    </div>
-    <div class="cards2">
-      <div class="card">
-        <h3>도구가 사람에게 가야 합니다</h3>
-        <div class="row" style="padding-left:0">접속해야만 쓸 수 있었다면 챗봇도 알림도 쓰이지 않았을 것입니다. 알림은 서버가 먼저 보내고, 보고서는 이미 보고 있는 자리에 놓이게 했습니다.</div>
-      </div>
-      <div class="card">
-        <h3>문서로 끝내지 않습니다</h3>
-        <div class="row" style="padding-left:0">매뉴얼을 쌓는 방식이 통하지 않자 접근을 버리고 다시 설계했습니다. 지금은 업무 관리 · 알림 · 보고 · 회의록 · 문서 조회가 한 곳에서 끝납니다.</div>
-      </div>
-    </div>
-    <div class="endpromise">새로운 조직에서도 같은 순서로 일하겠습니다. <b>어디에서 시간이 새는지 먼저 찾고, 가장 빨리 체감되는 것부터 만들어 붙이고,
-      전후를 기록해 다음 과제의 근거로 쓰겠습니다.</b></div>
+  <div class="quote">
+    <p>반복되는 일은 사람이 기억하는 대신<br>시스템이 기억하게 만들었습니다.</p>
+    <div class="sub2">PM Station · PRD Toolkit — 설계부터 배포 · 운영까지 직접</div>
   </div>
-
-  <div class="coverband">
-    <div>
-      <div class="who">김석남 <span>AI 서비스 기획 · PM</span></div>
-      <div class="contact">ramseok.github.io · rlatjrska1674@gmail.com</div>
-    </div>
-    <div class="thanks">THANK YOU<small>2026.09 · PORTFOLIO</small></div>
+  <div class="closing">
+    <p>새로운 조직에서도 같은 순서로 일하겠습니다. <b>어디에서 시간이 새는지 먼저 찾고, 가장 빨리 체감되는 것부터 만들어 붙이고, 전후를 기록해 다음 과제의 근거로 쓰는 것</b>입니다.</p>
+    <p style="margin-top:4mm;font-size:9pt;color:var(--muted)">김석남 · AI 서비스 기획 · PM &nbsp;·&nbsp; ramseok.github.io &nbsp;·&nbsp; rlatjrska1674@gmail.com</p>
   </div>
+  <div class="runhead">AI 업무 자동화 포트폴리오</div>
+  <div class="pnum">17</div>
 </section>
 
 
