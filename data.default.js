@@ -361,7 +361,6 @@ window.PORTFOLIO_DEFAULT = {
       "scale": "API 71 · 테이블 21 · 명세서 6차 개정 · 점검 10건 종결",
       "tier": "sub",
       "duties": [
-        "기획",
         "PM"
       ]
     },
