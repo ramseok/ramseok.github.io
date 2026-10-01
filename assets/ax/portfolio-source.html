@@ -516,9 +516,9 @@
   <div class="block">
     <div class="lab g">성과</div>
     <ul class="feat">
-      <li><b>지표 보고 매일 약 30분 → 0분</b> — 매일 08:10 자동 발행, 월 약 10시간 절감 (검토 · 검수 시간 제외)</li>
+      <li><b>지표 보고 매일 약 30분 → 0분</b> — 매일 08:10 자동 발행, 월 약 10시간 절감 (검수 시간 제외)</li>
       <li><b>회의록 작성 15~20분 → 1분 내외</b> — 녹음 · 텍스트를 넣으면 초안 완성</li>
-      <li><b>업무 확인 경로 4곳 → 1곳</b> — 병행 프로젝트 8건을 한 화면에서</li>
+      <li><b>업무 확인 경로 4곳(메신저 · 엑셀 · 개인 메모 · 매뉴얼 문서) → 1곳</b> — 병행 프로젝트 8건을 한 화면에서</li>
       <li><b>알림 시각 복수 선택</b> — 원하는 시각을 골라 두면 그 시각마다 담당 업무 자동 발송</li>
       <li><b>매뉴얼 조회 → 10초 이내</b> — Teams → 채널 → 파일 → 워드 문서를 열어 찾던 것을, 챗봇에 질문하면 학습한 매뉴얼 기반으로 바로 답변</li>
     </ul>
@@ -612,21 +612,21 @@
 <section class="page">
   <div class="phead"><div class="kicker">PM STATION · 화면 04</div><h2>매일 아침의 구두 보고를 없앤 자리</h2><div class="sub">운영 보고서 자동 발행</div></div>
   <figure>
-    <img src="crops/pm-report-metrics.png" alt="운영 보고서 지표 타일">
-    <figcaption><span class="tag">지표</span><b>지표 12개와 증감</b> — 직전 보고서 이후 구간을 같은 길이의 직전 구간과 비교해 증감을 함께 표시</figcaption>
-  </figure>
-  <figure>
-    <img src="crops/pm-report-pdf-failsafe.png" alt="보고서 제목 · PDF 다운로드 · 일부 수집 실패 표시">
-    <figcaption><span class="tag">PDF · 장애 내성</span><b>PDF로 바로 받기 · 일부 수집 실패 표시</b> — 보고서마다 PDF가 함께 만들어지고, 어드민 API 한 곳이 실패해도 보고서는 멈추지 않고 빈 항목과 확인할 곳을 적어 둠 (중간 섹션은 생략해 표시)</figcaption>
+    <img src="crops/pm-report-head-kpi.png" alt="운영 보고서 지표와 PDF 다운로드">
+    <figcaption><span class="tag">지표 · PDF</span><b>지표 12개와 증감 · PDF 다운로드</b> — 직전 보고서 이후 구간을 같은 길이의 직전 구간과 비교해 증감을 함께 표시하고, 보고서마다 PDF로 바로 받음</figcaption>
   </figure>
   <figure style="width:82%">
     <img src="crops/pm-report-insight.png" alt="조치 필요와 인사이트">
     <figcaption><span class="tag">조치 · 인사이트</span><b>오늘 할 일과 해석</b> — 당일 처리할 항목을 먼저 띄우고, 지표마다 "해석 → 다음 행동"을 붙임</figcaption>
   </figure>
+  <figure>
+    <img src="crops/pm-report-failsafe2.png" alt="일부 데이터 수집 실패 표시">
+    <figcaption><span class="tag">장애 내성</span><b>일부 수집 실패 표시</b> — 어드민 API 한 곳이 실패해도 보고서는 멈추지 않고 빈 항목과 확인할 곳을 적어 둠</figcaption>
+  </figure>
   <div class="block" style="margin-top:3mm;margin-bottom:0">
     <ul class="feat">
       <li><b>매일 08:10 자동 발행</b> — 서버가 자사 서비스의 어드민 데이터를 읽어 보고서와 PDF를 만들어 기록 탭에 쌓음</li>
-      <li><b>매일 약 30분 → 0분</b> (검토 · 검수 시간 제외) — 사용자 이름 · 아이디는 유저 A~K, 서비스명은 F사로 치환해 촬영</li>
+      <li><b>매일 약 30분 → 0분</b> (검수 시간 제외) — 사용자 이름 · 아이디는 유저 A~K, 서비스명은 F사로 치환해 촬영</li>
     </ul>
   </div>
   <div class="runhead">PM Station</div>
