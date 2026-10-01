@@ -168,19 +168,11 @@
   .quote .sub2{font:600 7.5pt/1 var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:5mm}
   .closing{border-top:.6pt solid var(--ink);margin-top:auto;padding-top:5mm;margin-bottom:10mm}
   .flexcol{display:flex;flex-direction:column}
-  .tsel-lead{font:800 15pt/1.45 var(--disp);letter-spacing:-.03em;color:var(--ink)}
-  .tsel-lead span{display:block;font:500 9.4pt/1.7 "Pretendard Variable",Pretendard,sans-serif;letter-spacing:0;color:var(--body);margin-top:3mm}
-  .tsel-tools{display:flex;flex-wrap:wrap;gap:2.4mm;margin-top:3mm}
-  .tsel-tools span{font:600 9pt/1 var(--disp);color:var(--ink);border:.6pt solid var(--ink);padding:2.4mm 3.6mm}
-  .tsel-crit{display:grid;grid-template-columns:repeat(4,1fr);gap:5mm;margin-top:3mm}
-  .tsel-crit > div{border-top:1.4pt solid var(--ink);padding-top:3mm}
-  .tsel-crit .n{font:800 7.4pt/1 var(--disp);color:var(--accent);letter-spacing:.06em}
-  .tsel-crit .t{font:800 11.5pt/1.2 var(--disp);color:var(--ink);margin-top:2mm;letter-spacing:-.02em}
-  .tsel-crit .d{font-size:8.4pt;line-height:1.6;color:var(--muted);margin-top:1.6mm}
-
   .ovsec .lab{font:800 13pt/1.1 var(--disp);letter-spacing:-.02em;gap:2.8mm;margin-bottom:4mm}
   .ovsec .lab::before{width:2.8mm;height:2.8mm}
   .ovsec .block > p{font-size:9.6pt}
+  .ovsec table.ba td{padding:2.2mm 3mm 2.2mm 0}
+  .ovsec table.ba th{padding:2mm 3mm 2mm 0}
   .spread .phead{margin-bottom:10mm}
   .spread .block{margin-bottom:14mm}
   .spread .lab{margin-bottom:4.6mm}
@@ -290,9 +282,9 @@
   </div>
 
   <div class="ov-idx">
-    <div><div class="p">03 — 09</div><div class="n">PRD Toolkit</div><div class="d">시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트 · 관리자 시안 · 디자인 가이드 · 도구 선정</div></div>
-    <div><div class="p">10 — 18</div><div class="n">PM Station</div><div class="d">대시보드 · WBS · 알림 · 운영 보고서 · AI 회의록 · 챗봇 · 변경 이력</div></div>
-    <div><div class="p">19</div><div class="n">마무리</div><div class="d">일하는 방식과 입사 후 계획</div></div>
+    <div><div class="p">03 — 08</div><div class="n">PRD Toolkit</div><div class="d">시안 허브 · 화면별 기획서 · 테스트케이스 · 고객사 코멘트 · 관리자 시안 · 디자인 가이드</div></div>
+    <div><div class="p">09 — 17</div><div class="n">PM Station</div><div class="d">대시보드 · WBS · 알림 · 운영 보고서 · AI 회의록 · 챗봇 · 변경 이력</div></div>
+    <div><div class="p">18</div><div class="n">마무리</div><div class="d">일하는 방식과 입사 후 계획</div></div>
   </div>
 
   <div class="runhead">AI 업무 자동화 포트폴리오</div>
@@ -301,7 +293,7 @@
 
 <!-- PRD Toolkit 도입 -->
 <section class="page nopn dv">
-  <div class="dv-top"><span>Project 01</span><span class="r">04 — 09</span></div>
+  <div class="dv-top"><span>Project 01</span><span class="r">04 — 08</span></div>
   <div class="dv-head">
     <div class="dv-no">01</div>
     <div>
@@ -357,6 +349,7 @@
       <li><b>디자인 · 컴포넌트 가이드</b> — DESIGN.md 토큰으로 전 화면 통일</li>
       <li><b>품질 게이트</b> — 생성과 검토를 분리, 내용 기준으로 완료 판정</li>
       <li><b>링크 전달</b> — 자동 배포 후 링크 하나로 공유, 피드백은 DB에 기록</li>
+      <li><b>도구 선정</b> — Claude Design · Lovable · UX Pilot · Vercel · Stitch · gpt-image 등 7종을 같은 프롬프트로 비교해 결정</li>
     </ul>
   </div>
   <div class="block">
@@ -456,45 +449,9 @@
   <div class="pnum">08</div>
 </section>
 
-<!-- PRD 도구 선정 -->
-<section class="page">
-  <div class="phead"><div class="kicker">PRD TOOLKIT · 도구 선정</div><h2>최신 도구보다, 맞는 도구를</h2><div class="sub">디자인 자동화 도구 비교</div></div>
-
-  <p class="tsel-lead">새 AI 기술을 그대로 들이는 것이 아니라,<br>성능 · 속도 · 비용을 비교해 가장 맞는 방법을 고르는 것까지가 AX라고 생각합니다.
-    <span>디자인 자동화를 붙일 때도 먼저 현재 쓸 수 있는 AI 디자인 도구를 조사하고, 같은 조건에서 직접 비교한 뒤 파이프라인에 넣을 방식을 정했습니다.</span></p>
-
-  <div class="block">
-    <div class="lab">비교한 도구</div>
-    <div class="tsel-tools"><span>Claude Design</span><span>Lovable</span><span>UX Pilot</span><span>Vercel</span><span>Stitch</span><span>gpt-image 2.0</span><span>gpt-image 2.5</span></div>
-  </div>
-
-  <div class="block">
-    <div class="lab">같은 프롬프트, 네 가지 기준</div>
-    <div class="tsel-crit">
-      <div><div class="n">01</div><div class="t">품질</div><div class="d">같은 화면 요구를 줬을 때 결과물이 디자인 기준에 얼마나 가까운지</div></div>
-      <div><div class="n">02</div><div class="t">비용</div><div class="d">화면 수십 장을 반복 생성할 때의 요금과 사용량 부담</div></div>
-      <div><div class="n">03</div><div class="t">Claude Code 연동</div><div class="d">결과물을 파이프라인 안에서 바로 이어 쓸 수 있는지</div></div>
-      <div><div class="n">04</div><div class="t">공수</div><div class="d">결과물을 실제로 쓰기까지 사람이 손봐야 하는 정도</div></div>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="lab">진행 순서</div>
-    <div class="flow">
-      <div class="st"><div class="n">01</div><div class="t">현존 도구<br>자료 조사</div></div>
-      <div class="st"><div class="n">02</div><div class="t">같은 프롬프트로<br>결과물 생성</div></div>
-      <div class="st"><div class="n">03</div><div class="t">품질 · 비용 · 연동 ·<br>공수 비교</div></div>
-      <div class="st"><div class="n">04</div><div class="t">파이프라인에<br>맞는 방식 적용</div></div>
-    </div>
-  </div>
-
-  <div class="runhead">PRD Toolkit</div>
-  <div class="pnum">09</div>
-</section>
-
 <!-- PM Station 도입 -->
 <section class="page nopn dv dark">
-  <div class="dv-top"><span>Project 02</span><span class="r">11 — 18</span></div>
+  <div class="dv-top"><span>Project 02</span><span class="r">10 — 17</span></div>
   <div class="dv-head">
     <div class="dv-no">02</div>
     <div>
@@ -558,7 +515,7 @@
     </ul>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">11</div>
+  <div class="pnum">10</div>
 </section>
 
 <!-- 04 홈 대시보드 -->
@@ -580,7 +537,7 @@
     </ul>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">12</div>
+  <div class="pnum">11</div>
 </section>
 
 <!-- 05 WBS + 프로젝트 상세 -->
@@ -599,7 +556,7 @@
   <p class="note">WBS는 <b>엑셀로 내보내</b> 고객사 보고에 그대로 쓰고, 여기서 관리하는 할 일과 이슈는 마감일이 있으면 자동으로 알림 대상에 편입됩니다.
     일정표와 알림이 다른 문서에 있으면 둘 중 하나는 반드시 낡기 때문에, 같은 데이터를 두 화면으로 보여주는 구조로 잡았습니다.</p>
   <div class="runhead">PM Station</div>
-  <div class="pnum">13</div>
+  <div class="pnum">12</div>
 </section>
 
 
@@ -641,7 +598,7 @@
     </div>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">14</div>
+  <div class="pnum">13</div>
 </section>
 
 <!-- 08 운영 보고서 -->
@@ -670,7 +627,7 @@
     </ul>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">15</div>
+  <div class="pnum">14</div>
 </section>
 
 
@@ -708,7 +665,7 @@
     </div>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">16</div>
+  <div class="pnum">15</div>
 </section>
 
 <!-- 09 AI 챗봇 -->
@@ -725,7 +682,7 @@
       화면 맨 아래 안내처럼 <b>등록된 학습 데이터에 없는 내용은 답하지 않도록</b> 제한해, 업무에 쓸 수 없는 그럴듯한 답을 막았습니다.</figcaption>
   </figure>
   <div class="runhead">PM Station</div>
-  <div class="pnum">17</div>
+  <div class="pnum">16</div>
 </section>
 
 <!-- 12 변경 이력 -->
@@ -749,7 +706,7 @@
     </ul>
   </div>
   <div class="runhead">PM Station</div>
-  <div class="pnum">18</div>
+  <div class="pnum">17</div>
 </section>
 
 <!-- 20 마무리 -->
