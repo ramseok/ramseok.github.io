@@ -97,7 +97,11 @@ window.PORTFOLIO_DEFAULT = {
         "권한 설계"
       ],
       "grouped": false,
-      "scale": "화면 90+ · API 750 · 테이블 133 · 도메인 14"
+      "scale": "화면 90+ · API 750 · 테이블 133 · 도메인 14",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "url": "",
@@ -126,7 +130,11 @@ window.PORTFOLIO_DEFAULT = {
         "개인정보 · 감사"
       ],
       "grouped": false,
-      "scale": "화면 16 · 데이터 모델 17 · 분류 축 9 · 검증 게이트 3"
+      "scale": "화면 16 · 데이터 모델 17 · 분류 축 9 · 검증 게이트 3",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "url": "",
@@ -155,7 +163,11 @@ window.PORTFOLIO_DEFAULT = {
         "QA"
       ],
       "grouped": false,
-      "scale": "화면 21 · API 141 · 테이블 33 · 도메인 16"
+      "scale": "화면 21 · API 141 · 테이블 33 · 도메인 16",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "url": "",
@@ -185,7 +197,11 @@ window.PORTFOLIO_DEFAULT = {
         "납품 프로세스 표준화"
       ],
       "grouped": false,
-      "scale": "공공기관 납품 13곳 · 30개 언어 지원"
+      "scale": "공공기관 납품 13곳 · 30개 언어 지원",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "url": "",
@@ -210,7 +226,11 @@ window.PORTFOLIO_DEFAULT = {
         "정기결제 심사",
         "앱 스토어 출시"
       ],
-      "grouped": false
+      "grouped": false,
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "name": "PRD Toolkit — 계약서 → 기획서 · 화면 시안 자동 생성 파이프라인",
@@ -257,7 +277,10 @@ window.PORTFOLIO_DEFAULT = {
           "caption": "고객사 코멘트 — 화면에 붙는 요청과 답변 이력, 상태별 관리"
         }
       ],
-      "tier": "self"
+      "tier": "self",
+      "duties": [
+        "기획"
+      ]
     },
     {
       "end": "",
@@ -304,7 +327,10 @@ window.PORTFOLIO_DEFAULT = {
       ],
       "solution": "PM 업무 전체를 한 서비스로 다시 설계하고 Claude Code로 구축했습니다.\n\n① 대시보드 — 마감 있는 모든 항목을 기한 초과 · 오늘 · 3일 내 · 받아야 할 것으로 자동 분류\n② 누락 감지 — 고객사 회신 대기, 7일 이상 정체된 이슈, 기한 미지정 항목\n③ 정기 업무 — 일 · 주 · 월 주기 체크, 연속 달성 · 누락 추적\n④ Teams 알림 — 정해진 시각에 서버가 업무 리스트 발송, 앱을 꺼둬도 도착\n⑤ 변경 이력 — DB 트리거로 누가 무엇을 바꿨는지 자동 기록\n⑥ 계정 · 권한 — 개인 업무에 먼저 적용해 효과를 확인한 뒤, 팀 내 공유를 대비해 회원가입 신청 → 관리자 승인, 프로젝트 참여 신청 → 담당자 등록, 담당 프로젝트만 노출하는 구조를 미리 구축 (팀원 적용 전)\n⑦ AI 회의록 · 문서 챗봇 — 녹음 · 텍스트로 회의록 초안 생성(논의 · 결정 · 후속 조치 · 확인 필요, 원문 키워드 검색), 매뉴얼은 질문하면 근거 문서와 함께 답변\n⑧ 운영 보고서 — 자사 서비스의 어드민 데이터를 읽어 지표 12개 · 조치 필요 · 인사이트 · PDF를 매일 08:10 자동 발행, API 일부가 실패해도 생성",
       "tier": "self",
-      "scale": "기능 영역 15 · 알림 시각 복수 선택 · 지표 12종"
+      "scale": "기능 영역 15 · 알림 시각 복수 선택 · 지표 12종",
+      "duties": [
+        "기획"
+      ]
     },
     {
       "url": "",
@@ -333,7 +359,11 @@ window.PORTFOLIO_DEFAULT = {
       ],
       "grouped": false,
       "scale": "API 71 · 테이블 21 · 명세서 6차 개정 · 점검 10건 종결",
-      "tier": "sub"
+      "tier": "sub",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "name": "기업용 생성 AI 업무 플랫폼 구축",
@@ -361,7 +391,11 @@ window.PORTFOLIO_DEFAULT = {
       "url": "",
       "images": [],
       "scale": "화면 15 · API 56 · 테이블 14 · 모델 공급사 3",
-      "tier": "sub"
+      "tier": "sub",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "url": "",
@@ -389,7 +423,11 @@ window.PORTFOLIO_DEFAULT = {
       ],
       "grouped": false,
       "scale": "화면 96 · URL 194 · 모델 26 · 산출물 5종",
-      "tier": "sub"
+      "tier": "sub",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "url": "",
@@ -417,7 +455,11 @@ window.PORTFOLIO_DEFAULT = {
       ],
       "grouped": false,
       "scale": "화면 16 · API 86 · 테이블 22 · 3차 개발",
-      "tier": "sub"
+      "tier": "sub",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "url": "",
@@ -442,7 +484,11 @@ window.PORTFOLIO_DEFAULT = {
         "8개사 9건"
       ],
       "grouped": true,
-      "tier": "sub"
+      "tier": "sub",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "url": "",
@@ -466,7 +512,11 @@ window.PORTFOLIO_DEFAULT = {
         "6개사 6건"
       ],
       "grouped": true,
-      "tier": "sub"
+      "tier": "sub",
+      "duties": [
+        "기획",
+        "PM"
+      ]
     },
     {
       "name": "AI 서비스 구축 프로젝트 (3개사 · 5차수)",
@@ -491,7 +541,11 @@ window.PORTFOLIO_DEFAULT = {
       "grouped": true,
       "tier": "sub",
       "url": "",
-      "images": []
+      "images": [],
+      "duties": [
+        "기획",
+        "PM"
+      ]
     }
   ],
   "portfolio": {

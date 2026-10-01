@@ -34,7 +34,9 @@
       { k: 'summary', label: '요약 (굵게 표시)' }, { k: 'bullets', label: '담당 업무', type: 'lines', hint: '한 줄에 하나' },
     ] },
     { key: 'project', label: '프로젝트', kind: 'array', itemLabel: function (o) { return o.name; }, fields: [
-      { k: 'name', label: '프로젝트명' }, { k: 'org', label: '조직 / 고객사' }, { k: 'role', label: '역할' },
+      { k: 'name', label: '프로젝트명' }, { k: 'org', label: '조직 / 고객사' },
+      { k: 'duties', label: '담당', type: 'multi', options: ['기획', 'PM'], hint: '해당하는 것을 모두 선택 — 하나만 또는 둘 다' },
+      { k: 'role', label: '역할', hint: '담당 범위를 짧게 — 예) 요구정의 / 범위 협의 / QA' },
       { k: 'start', label: '시작', hint: 'YYYY.MM' }, { k: 'end', label: '종료', hint: 'YYYY.MM' }, { k: 'current', label: '진행 중', type: 'bool' },
       { k: 'grouped', label: '묶음 카드 (여러 건을 하나로)', type: 'bool' },
       { k: 'tier', label: '노출 위계', type: 'select', options: [['', '고객사 — 대표'], ['sub', '고객사 — 그 외'], ['self', '직접 만든 업무 자동화']], hint: '고객사 프로젝트는 대표·그 외로, 직접 만든 자동화 도구는 별도 그룹으로 표시됩니다' },
@@ -76,7 +78,7 @@
     for (var i = 0; i < ks.length - 1; i++) { if (o[ks[i]] == null) o[ks[i]] = /^\d+$/.test(ks[i + 1]) ? [] : {}; o = o[ks[i]]; }
     o[ks[ks.length - 1]] = v;
   }
-  function emptyItem(fields) { var o = {}; fields.forEach(function (f) { o[f.k] = f.type === 'bool' ? false : (f.type === 'lines' || f.type === 'list' || f.type === 'array' || f.type === 'images') ? [] : ''; }); return o; }
+  function emptyItem(fields) { var o = {}; fields.forEach(function (f) { o[f.k] = f.type === 'bool' ? false : (f.type === 'lines' || f.type === 'list' || f.type === 'array' || f.type === 'images' || f.type === 'multi') ? [] : ''; }); return o; }
   function setStatus(msg, kind) { var el = $('#status'); el.textContent = msg || ''; el.className = 'status ' + (kind || ''); }
   function markDirty() { dirty = true; $('#btn-save').disabled = false; setStatus('저장되지 않은 변경 사항이 있습니다', 'warn'); }
 
@@ -125,6 +127,12 @@
           '<div class="chip-head"><label>' + esc(f.label || f.k) + '</label><small>' + esc(hint) + '</small>' +
           '<button type="button" class="btn sm ' + (editing ? '' : 'ghost') + '" data-chip-mode="' + path + '">' + (editing ? '완료' : '수정') + '</button></div>' +
           '<div class="chips' + (f.primary ? ' primary' : '') + (editing ? ' editing' : '') + (f.pool ? ' pool-box' : '') + '" data-chips="' + path + '"' + (f.pool ? ' data-major="' + f.majorPath + '"' : '') + '>' + chips + addBox + '</div></div>';
+      case 'multi':
+        var mv = Array.isArray(val) ? val : [];
+        return '<div class="field">' + label + '<div class="multi" role="group" aria-label="' + esc(f.label) + '">' + f.options.map(function (o) {
+          var on = mv.indexOf(o) >= 0;
+          return '<button type="button" class="multi-opt' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-multi="' + path + '|' + esc(o) + '">' + (on ? '✓ ' : '') + esc(o) + '</button>';
+        }).join('') + '</div></div>';
       case 'bool':
         return '<div class="field check"><label><input type="checkbox" id="' + id + '" data-path="' + path + '" data-type="bool"' + (val ? ' checked' : '') + '> ' + esc(f.label) + '</label></div>';
       case 'color':
@@ -272,6 +280,14 @@
   });
 
   $('#form').addEventListener('click', function (e) {
+    var mo = e.target.closest('[data-multi]');
+    if (mo) {
+      var mp = mo.dataset.multi.split('|'), arr = getPath(state, mp[0]); if (!Array.isArray(arr)) arr = [];
+      var at = arr.indexOf(mp[1]); if (at >= 0) arr.splice(at, 1); else arr.push(mp[1]);
+      var opts = (fieldsAt(mp[0].split('.').slice(0, -2).join('.')).filter(function (x) { return x.k === mp[0].split('.').pop(); })[0] || {}).options || [];
+      if (opts.length) arr.sort(function (a, b) { return opts.indexOf(a) - opts.indexOf(b); });
+      setPath(state, mp[0], arr); markDirty(); renderSection(active); return;
+    }
     var sw = e.target.closest('[data-swatch]');
     if (sw) {
       var parts = sw.dataset.swatch.split('|');

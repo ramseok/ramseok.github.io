@@ -144,7 +144,10 @@
 
   function projectCard(p, idx) {
     {
-      var sub = [p.org, p.role].filter(has).map(function (s) { return '<span>' + fmt(s) + '</span>'; }).join('');
+      var duties = list(p.duties);
+      var roleText = duties.length ? String(p.role || '').replace(/^\s*(?:(?:PM|기획)\s*[·\/,]?\s*)+(?:—|-|:)\s*/, '') : p.role;
+      var dutyHtml = duties.length ? '<span class="duties">' + duties.map(function (d) { return '<em class="duty">' + fmt(d) + '</em>'; }).join('') + '</span>' : '';
+      var sub = dutyHtml + [p.org, roleText].filter(has).map(function (s) { return '<span>' + fmt(s) + '</span>'; }).join('');
       var res = list(p.results);
       var body = '';
       if (has(p.problem)) body += '<p><b>문제점</b><br>' + fmt(p.problem) + '</p>';
