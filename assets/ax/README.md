@@ -6,7 +6,7 @@
 
 | 파일 | 설명 |
 |---|---|
-| `portfolio-source.html` | **원본.** A4 18페이지. 여기만 고치면 됩니다 |
+| `portfolio-source.html` | **원본.** A4 19페이지. 여기만 고치면 됩니다 |
 | `portfolio.pdf` | 생성 결과 (영문 파일명 — 모바일·메신저 전달용) |
 | `AI업무자동화_포트폴리오.pdf` | 같은 파일의 한글 파일명 사본 |
 | `*.png` | 원본 스크린샷 (PM Station 11장 · PRD Toolkit 6장) |
@@ -62,7 +62,7 @@ python3 tools/crop.py <원본.png> <저장경로.png> <x> <y> <너비> <높이>
 
 `sips`(macOS 기본 내장)를 씁니다. Windows에서는 Python `Pillow` 로 대체하거나 그림판/캡처 도구로 잘라도 됩니다.
 
-## 구조 (18페이지)
+## 구조 (19페이지)
 
 | 페이지 | 내용 |
 |---|---|
@@ -71,9 +71,10 @@ python3 tools/crop.py <원본.png> <저장경로.png> <x> <y> <너비> <높이>
 | — | PRD Toolkit 도입 (Project 01, 노트북 + 폰 목업, 쪽번호 없음) |
 | 04 | PRD Toolkit 개요 — 가상 예시 고지 · 문제 · 해결 · 성과 · 이전→이후 표 |
 | 05–08 | PRD Toolkit 산출물 — 시안 허브 / 화면별 기획서 / TC·코멘트 / 관리자 시안·디자인 가이드 |
+| 09 | PRD Toolkit 도구 선정 — 디자인 자동화 도구 7종을 품질 · 비용 · Claude Code 연동 · 공수로 비교 |
 | — | PM Station 도입 (Project 02, 노트북 목업, 쪽번호 없음) |
-| 10 | PM Station 개요 — 문제 · 해결 · 성과 |
-| 11–17 | PM Station 화면 — 대시보드 / WBS·상세 / Teams 알림 / 운영 보고서 / AI 회의록 / AI 챗봇 / 변경 이력 |
+| 11 | PM Station 개요 — 문제 · 해결 · 성과 |
+| 12–18 | PM Station 화면 — 대시보드 / WBS·상세 / Teams 알림 / 운영 보고서 / AI 회의록 / AI 챗봇 / 변경 이력 |
 | — | 마무리 (쪽번호 없음) |
 
 ## 손댈 때 주의
