@@ -150,9 +150,14 @@
       var sub = dutyHtml + [p.org, roleText].filter(has).map(function (s) { return '<span>' + fmt(s) + '</span>'; }).join('');
       var res = list(p.results);
       var body = '';
-      if (has(p.problem)) body += '<p><b>문제점</b><br>' + fmt(p.problem) + '</p>';
+      if (has(p.problem)) body += '<p><b>문제</b><br>' + fmt(p.problem) + '</p>';
       if (has(p.solution)) body += '<p><b>해결</b><br>' + fmt(p.solution) + '</p>';
       if (res.length) body += '<p><b>성과</b></p><ul>' + res.map(function (b) { return '<li>' + hl(fmt(b)) + '</li>'; }).join('') + '</ul>';
+      var con = list(p.contribution);
+      if (con.length) body += '<p><b>내 역할 · 기여</b></p><ul class="contrib">' + con.map(function (b) {
+        var m = String(b).match(/^\s*(기획|PM)\s*(?:—|-|:)\s*/);
+        return '<li>' + (m ? '<em class="duty">' + m[1] + '</em>' + fmt(String(b).slice(m[0].length)) : fmt(b)) + '</li>';
+      }).join('') + '</ul>';
       var imgs = (p.images || []).filter(function (im) { return im && has(im.url); });
       if (imgs.length) {
         body += '<div class="img-grid col-' + Math.min(imgs.length, 3) + '">' + imgs.map(function (im) {
