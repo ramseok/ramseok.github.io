@@ -555,7 +555,19 @@
     if (isMain()) {
       overrides = {}; vmeta = {};
       state = JSON.parse(JSON.stringify(baseData || {}));
-      renderVerBar(); renderSection(active); return Promise.resolve();
+      renderVerBar(); renderSection(active);
+      // 일회성 정리: '그 외' 묶음 카드로 합친 개별 카드 제거 — 저장 후에는 대상이 없어 아무 일도 하지 않음
+      var MERGED_AWAY = ['코인 자동매매 앱 구축', '기업용 생성 AI 업무 플랫폼 구축', 'AI 챗봇 구축 프로젝트 (7개사 · 8건)',
+        'AI 서비스 구축 프로젝트 (3개사 · 5차수)', 'AI 전화 상담 시스템 구축 (1 · 2차)', 'AI 시나리오 제작 플랫폼 구축 (1 · 2차)'];
+      var plist = Array.isArray(state.project) ? state.project : [];
+      var hasGroup = plist.some(function (p) { return p && p.grouped && /^그 외 고객사 프로젝트/.test(p.name || ''); });
+      var gone = plist.filter(function (p) { return p && MERGED_AWAY.indexOf(String(p.name || '').trim()) >= 0; });
+      if (hasGroup && gone.length) {
+        state.project = plist.filter(function (p) { return gone.indexOf(p) < 0; });
+        markDirty(); renderSection(active);
+        setStatus('묶음 카드로 합친 개별 프로젝트 ' + gone.length + '건을 정리했습니다 — 저장을 눌러야 반영됩니다', 'warn');
+      }
+      return Promise.resolve();
     }
     return client.from('portfolio').select('data').eq('id', VERSION).maybeSingle().then(function (r) {
       var ov = (r.data && r.data.data) || {};
