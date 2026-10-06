@@ -584,6 +584,17 @@
         state.__sync = SYNC_VER;
         if (n) notes.push('고객사 · 자사 서비스 카드 ' + n + '건을 최신 요약본으로 교체');
       }
+      // 일회성 동기화 2: 소개 강점 6개를 2×3 카드용 짧은 문장으로 (다른 항목은 건드리지 않음)
+      var SYNC_INTRO = '2026-10-06-intro-grid';
+      if (state.__syncIntro !== SYNC_INTRO) {
+        var di = ((window.PORTFOLIO_DEFAULT || {}).intro || {}).bullets;
+        if (Array.isArray(di) && di.length) {
+          state.intro = state.intro || {};
+          state.intro.bullets = JSON.parse(JSON.stringify(di));
+          notes.push('소개 강점 6개를 짧은 문장으로 교체');
+        }
+        state.__syncIntro = SYNC_INTRO;
+      }
       if (notes.length) {
         markDirty(); renderSection(active);
         setStatus(notes.join(' · ') + ' — 저장을 눌러야 반영됩니다', 'warn');
