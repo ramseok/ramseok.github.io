@@ -123,6 +123,9 @@
       var bucket = p.tier === 'self' ? self : (p.tier === 'sub' || p.grouped ? sub : main);
       bucket.push({ p: p, i: i });
     });
+    // '그 외 고객사 프로젝트' 묶음 카드가 있으면 그 외 그룹은 묶음 카드만 보여 준다 (개별 카드는 묶음에 포함됨)
+    var merged = sub.filter(function (x) { return /^그 외 고객사 프로젝트/.test(String(x.p.name).trim()); });
+    if (merged.length) sub = merged;
     // 티어를 아무것도 지정하지 않았으면 예전처럼 한 덩어리로
     if (!self.length && (!main.length || !sub.length)) {
       return '<ul class="item-text pcards">' + arr.map(function (p, i) { return projectCard(p, i); }).join('') + '</ul>';
