@@ -617,6 +617,14 @@
         state.__syncMain = SYNC_MAIN;
         if (changed.length) notes.push(changed.join(' · '));
       }
+      // 일회성 동기화 5: 활동에서 데이터사이언스 · 머신러닝 교육 이수 항목 제거
+      var SYNC_ACT = '2026-10-06-act-ml';
+      if (state.__syncAct !== SYNC_ACT) {
+        var acts = Array.isArray(state.activity) ? state.activity : [];
+        var keepActs = acts.filter(function (a) { return !(a && /데이터사이언스|부스트코스/.test(String(a.name || ''))); });
+        if (keepActs.length !== acts.length) { state.activity = keepActs; notes.push('활동에서 교육 이수 ' + (acts.length - keepActs.length) + '건 제거'); }
+        state.__syncAct = SYNC_ACT;
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
