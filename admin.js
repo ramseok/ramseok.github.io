@@ -562,10 +562,23 @@
       var plist = Array.isArray(state.project) ? state.project : [];
       var hasGroup = plist.some(function (p) { return p && p.grouped && /^그 외 고객사 프로젝트/.test(p.name || ''); });
       var gone = plist.filter(function (p) { return p && MERGED_AWAY.indexOf(String(p.name || '').trim()) >= 0; });
+      var notes = [];
       if (hasGroup && gone.length) {
         state.project = plist.filter(function (p) { return gone.indexOf(p) < 0; });
+        notes.push('묶음 카드로 합친 개별 프로젝트 ' + gone.length + '건 정리');
+      }
+      // 일회성 교체: 옛 '자사 AI 채팅 구독 앱' 카드 → 배포본의 '자사 AI 팬덤 플랫폼' 카드 (결제 심사 내용 정정)
+      var defFandom = ((window.PORTFOLIO_DEFAULT || {}).project || []).filter(function (p) { return /^자사 AI 팬덤 플랫폼/.test(p.name || ''); })[0];
+      var oldIdx = (state.project || []).findIndex(function (p) { return p && /^자사 AI 채팅 구독 앱/.test(String(p.name || '').trim()); });
+      if (defFandom && oldIdx >= 0) {
+        var keepImgs = state.project[oldIdx].images;
+        state.project[oldIdx] = JSON.parse(JSON.stringify(defFandom));
+        if (Array.isArray(keepImgs) && keepImgs.length && !(defFandom.images || []).length) state.project[oldIdx].images = keepImgs;
+        notes.push('자사 AI 채팅 구독 앱 카드를 팬덤 플랫폼 카드로 교체');
+      }
+      if (notes.length) {
         markDirty(); renderSection(active);
-        setStatus('묶음 카드로 합친 개별 프로젝트 ' + gone.length + '건을 정리했습니다 — 저장을 눌러야 반영됩니다', 'warn');
+        setStatus(notes.join(' · ') + ' — 저장을 눌러야 반영됩니다', 'warn');
       }
       return Promise.resolve();
     }
