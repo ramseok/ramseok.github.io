@@ -617,6 +617,29 @@
         state.__syncMain = SYNC_MAIN;
         if (changed.length) notes.push(changed.join(' · '));
       }
+      // 일회성 동기화 6: 최종 검토 — 도슨트 중복 카드 정리, PRD Toolkit · PM Station 해결 · 성과의 중복 문장 정리
+      var SYNC_FINAL = '2026-10-06-final';
+      if (state.__syncFinal !== SYNC_FINAL) {
+        var PF = state.project = state.project || [];
+        var fixes = [];
+        var named = PF.findIndex(function (p) { return p && /^자사 서비스 — 공공기관 AI 도슨트/.test(String(p.name || '').trim()); });
+        var plain = PF.findIndex(function (p) { return p && /^공공기관 AI 도슨트/.test(String(p.name || '').trim()); });
+        if (named >= 0 && plain >= 0) {
+          var keepDoc = PF[named];
+          PF.splice(Math.max(named, plain), 1); PF.splice(Math.min(named, plain), 1);
+          PF.splice(Math.min(named, plain), 0, keepDoc);
+          fixes.push('도슨트 중복 카드 1건 정리');
+        }
+        var defP = (window.PORTFOLIO_DEFAULT || {}).project || [];
+        [/^PRD Toolkit/, /^PM Station/].forEach(function (re) {
+          var dp = defP.filter(function (p) { return re.test(p.name || ''); })[0];
+          var si = PF.findIndex(function (p) { return p && re.test(String(p.name || '')); });
+          if (dp && si >= 0) { PF[si].solution = dp.solution; PF[si].results = JSON.parse(JSON.stringify(dp.results)); }
+        });
+        fixes.push('PRD Toolkit · PM Station 중복 문장 정리');
+        state.__syncFinal = SYNC_FINAL;
+        notes.push(fixes.join(' · '));
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
