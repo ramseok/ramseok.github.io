@@ -567,14 +567,22 @@
         state.project = plist.filter(function (p) { return gone.indexOf(p) < 0; });
         notes.push('묶음 카드로 합친 개별 프로젝트 ' + gone.length + '건 정리');
       }
-      // 일회성 교체: 옛 '자사 AI 채팅 구독 앱' 카드 → 배포본의 '자사 AI 팬덤 플랫폼' 카드 (결제 심사 내용 정정)
-      var defFandom = ((window.PORTFOLIO_DEFAULT || {}).project || []).filter(function (p) { return /^자사 AI 팬덤 플랫폼/.test(p.name || ''); })[0];
-      var oldIdx = (state.project || []).findIndex(function (p) { return p && /^자사 AI 채팅 구독 앱/.test(String(p.name || '').trim()); });
-      if (defFandom && oldIdx >= 0) {
-        var keepImgs = state.project[oldIdx].images;
-        state.project[oldIdx] = JSON.parse(JSON.stringify(defFandom));
-        if (Array.isArray(keepImgs) && keepImgs.length && !(defFandom.images || []).length) state.project[oldIdx].images = keepImgs;
-        notes.push('자사 AI 채팅 구독 앱 카드를 팬덤 플랫폼 카드로 교체');
+      // 일회성 동기화: 배포본에서 다시 쓴 SI 카드로 저장본을 교체 (이름이 바뀐 카드 포함). 버전 표시로 한 번만 실행
+      var SYNC_VER = '2026-10-06-si-trim';
+      if (state.__sync !== SYNC_VER) {
+        var SYNC = [/피트니스 프랜차이즈 CRM/, /^온프레미스 AI 챗봇/, /^장애인복지관 그룹웨어/, /공공기관 AI 도슨트/, /^자사 AI (팬덤 플랫폼|채팅 구독 앱)/, /^그 외 고객사 프로젝트/];
+        var defs = (window.PORTFOLIO_DEFAULT || {}).project || [], n = 0;
+        SYNC.forEach(function (re) {
+          var dp = defs.filter(function (p) { return re.test(String(p.name || '').trim()); })[0];
+          var at = (state.project || []).findIndex(function (p) { return p && re.test(String(p.name || '').trim()); });
+          if (!dp || at < 0) return;
+          var keep = state.project[at].images;
+          state.project[at] = JSON.parse(JSON.stringify(dp));
+          if (Array.isArray(keep) && keep.length && !(dp.images || []).length) state.project[at].images = keep;
+          n++;
+        });
+        state.__sync = SYNC_VER;
+        if (n) notes.push('고객사 · 자사 서비스 카드 ' + n + '건을 최신 요약본으로 교체');
       }
       if (notes.length) {
         markDirty(); renderSection(active);
