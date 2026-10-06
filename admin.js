@@ -39,7 +39,7 @@
       { k: 'role', label: '역할', hint: '담당 범위를 짧게 — 예) 요구정의 / 범위 협의 / QA' },
       { k: 'start', label: '시작', hint: 'YYYY.MM' }, { k: 'end', label: '종료', hint: 'YYYY.MM' }, { k: 'current', label: '진행 중', type: 'bool' },
       { k: 'grouped', label: '묶음 카드 (여러 건을 하나로)', type: 'bool' },
-      { k: 'tier', label: '노출 위계', type: 'select', options: [['', '고객사 — 대표'], ['sub', '고객사 — 그 외'], ['self', '직접 만든 업무 자동화']], hint: '고객사 프로젝트는 대표·그 외로, 직접 만든 자동화 도구는 별도 그룹으로 표시됩니다' },
+      { k: 'tier', label: '노출 위계', type: 'select', options: [['', '고객사 — 대표'], ['sub', '고객사 — 그 외'], ['self', '사내 AX 프로젝트']], hint: '고객사 프로젝트는 대표·그 외로, 직접 만든 자동화 도구는 별도 그룹으로 표시됩니다' },
       { k: 'scale', label: '규모', hint: "접힌 카드에 칩으로 표시 · 가운뎃점(·)으로 구분 — 예) 화면 21 · API 141 · 테이블 33" },
       { k: 'tags', label: '태그', type: 'chips', hint: '카드 접힌 상태에서 보입니다 · 클릭하면 한 칸 앞으로 이동' },
       { k: 'problem', label: '문제 (고객사가 겪던 문제)', type: 'textarea' }, { k: 'solution', label: '해결 (어떻게 풀었나 · 내 역할)', type: 'textarea', hint: '맨 아래 **내 역할 · 기여** 줄 다음에 "기획 — …" / "PM — …"로 쓰면 배지로 표시됩니다' },
