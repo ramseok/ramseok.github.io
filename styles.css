@@ -234,3 +234,7 @@ section .inner::after{content:""; display:block; clear:both}
 .duties{display:inline-flex; gap:4px; margin-right:8px; vertical-align:1px}
 .duty{display:inline-block; font-size:11px; font-weight:700; font-style:normal; padding:2px 8px; border-radius:4px; border:1px solid var(--point); color:var(--point); line-height:1.4; letter-spacing:-.01em}
 .sol .duty{margin-right:6px; vertical-align:1px}
+
+/* 저장본 도착 전에는 화면을 가려 옛 내용이 잠깐 보이는 깜빡임을 막는다 */
+html.pf-loading .side, html.pf-loading .t-content{visibility:hidden}
+html.pf-loading body::after{content:"불러오는 중…"; position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); font-size:14px; color:#8a8f98}

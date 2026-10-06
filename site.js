@@ -328,22 +328,37 @@
     document.body.appendChild(box);
   });
 
-  // 초기 렌더 + Supabase 동기화
-  render(window.PORTFOLIO_DEFAULT || {});
-  if (cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase) {
+  // 초기 렌더 — 저장본(Supabase)이 있으면 그것만 한 번 그린다.
+  // 기본본을 먼저 그렸다가 저장본으로 다시 그리면 옛 내용이 잠깐 보였다 바뀌므로, 도착할 때까지 화면을 가려 둔다.
+  var shown = false;
+  function show(d) {
+    render(d || {});
+    shown = true;
+    document.documentElement.classList.remove('pf-loading');
+  }
+  var useDb = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase);
+  if (!useDb) { show(window.PORTFOLIO_DEFAULT); }
+  else {
+    document.documentElement.classList.add('pf-loading');
+    // 저장본이 늦거나 실패하면 기본본으로 대신 보여 준다
+    var fallback = setTimeout(function () { if (!shown) show(window.PORTFOLIO_DEFAULT); }, 5000);
+    var done = function (d) { clearTimeout(fallback); show(d); };
+    var fail = function () { clearTimeout(fallback); if (!shown) show(window.PORTFOLIO_DEFAULT); };
+  }
+  if (useDb) {
     var client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
     // 버전 슬러그: 폴더 페이지가 심어 준 값 > ?v= 파라미터 > 기본값
     var slug = window.PORTFOLIO_VARIANT ||
       (new URLSearchParams(location.search).get('v') || '').trim() || cfg.ROW_ID || 'main';
     // get_portfolio: 기본 문서에 해당 버전이 덮어쓴 항목만 적용해 1건만 반환 (목록 열거 불가)
     client.rpc('get_portfolio', { slug: slug }).then(function (r) {
-      if (!r.error && r.data) { render(r.data); return; }
+      if (!r.error && r.data) { done(r.data); return; }
       // 아직 함수가 없는 환경(초기 설정 전)에서는 기존 방식으로 조회
       client.from('portfolio').select('data,updated_at').eq('id', slug).maybeSingle().then(function (q) {
-        if (q.error || !q.data || !q.data.data) return;
+        if (q.error || !q.data || !q.data.data) { fail(); return; }
         var d = q.data.data; d.updatedAt = d.updatedAt || q.data.updated_at || "";
-        render(d);
-      });
-    });
+        done(d);
+      }, fail);
+    }, fail);
   }
 })();

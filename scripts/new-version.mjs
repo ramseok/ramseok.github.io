@@ -21,8 +21,8 @@ if (fs.existsSync(dir)) { console.error('이미 있는 폴더입니다: ' + slug
 
 const shell = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
   .replace(/(href|src)="(?!https?:|\/\/|#|mailto:|tel:|data:|\.\.\/)([^"]+)"/g, '$1="../$2"')
-  .replace('<script src="../site.js"></script>',
-    '<script>window.PORTFOLIO_VARIANT = ' + JSON.stringify(slug) + ';</script>\n<script src="../site.js"></script>');
+  .replace(/<script src="\.\.\/site\.js(\?[^"]*)?"><\/script>/,
+    m => '<script>window.PORTFOLIO_VARIANT = ' + JSON.stringify(slug) + ';</script>\n' + m);
 
 fs.mkdirSync(dir);
 fs.writeFileSync(path.join(dir, 'index.html'), shell);
