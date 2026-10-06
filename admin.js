@@ -595,6 +595,28 @@
         }
         state.__syncIntro = SYNC_INTRO;
       }
+      // 일회성 동기화 4: 대표 프로젝트 재구성 — AI 영어 학습 앱 추가, 온프레미스 AI 챗봇은 '그 외' 묶음으로
+      var SYNC_MAIN = '2026-10-06-main-edu';
+      if (state.__syncMain !== SYNC_MAIN) {
+        var dps = (window.PORTFOLIO_DEFAULT || {}).project || [];
+        var pick = function (re) { return dps.filter(function (p) { return re.test(String(p.name || '')); })[0]; };
+        var P = state.project = state.project || [];
+        var find = function (re) { return P.findIndex(function (p) { return p && re.test(String(p.name || '').trim()); }); };
+        var changed = [];
+        var edu = pick(/^AI 영어 학습 앱/);
+        if (edu) {
+          var ei = P.findIndex(function (p) { return p && /AI 영어 학습 앱/.test(String(p.name || '')) && p.tier !== 'sub'; });
+          if (ei >= 0) P[ei] = JSON.parse(JSON.stringify(edu));
+          else { var wi = find(/^장애인복지관 그룹웨어/); P.splice(wi >= 0 ? wi + 1 : 0, 0, JSON.parse(JSON.stringify(edu))); }
+          changed.push('AI 영어 학습 앱 대표 추가');
+        }
+        var oi = find(/^온프레미스 AI 챗봇/);
+        if (oi >= 0) { P.splice(oi, 1); changed.push('온프레미스 AI 챗봇을 그 외로'); }
+        var grp = pick(/^그 외 고객사 프로젝트/), gi = find(/^그 외 고객사 프로젝트/);
+        if (grp && gi >= 0) P[gi] = JSON.parse(JSON.stringify(grp));
+        state.__syncMain = SYNC_MAIN;
+        if (changed.length) notes.push(changed.join(' · '));
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
