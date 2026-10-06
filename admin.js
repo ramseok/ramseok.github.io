@@ -595,6 +595,17 @@
         }
         state.__syncIntro = SYNC_INTRO;
       }
+      // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
+      var SYNC_EXP = '2026-10-06-exp-trim';
+      if (state.__syncExp !== SYNC_EXP) {
+        var de = (((window.PORTFOLIO_DEFAULT || {}).experience) || [])[0];
+        var se = (state.experience || [])[0];
+        if (de && se && de.org === se.org && Array.isArray(de.bullets)) {
+          se.bullets = JSON.parse(JSON.stringify(de.bullets));
+          notes.push('경력 담당 업무를 5줄로 정리');
+        }
+        state.__syncExp = SYNC_EXP;
+      }
       if (notes.length) {
         markDirty(); renderSection(active);
         setStatus(notes.join(' · ') + ' — 저장을 눌러야 반영됩니다', 'warn');
