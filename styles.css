@@ -240,3 +240,24 @@ html.pf-loading .side, html.pf-loading .t-content{visibility:hidden}
 html.pf-loading body::after{content:"불러오는 중…"; position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); font-size:14px; color:#8a8f98}
 
 @media print{ .basic .head-points li{break-inside:avoid} }
+
+/* ── 상단(이름~숫자 요약) 높이 압축 — 내용은 그대로, 여백 · 크기 · 배치만 조정 ── */
+.main-head{padding-top:56px}
+.basic{padding-bottom:24px}
+.basic .name span{font-size:34px; margin-bottom:2px}
+.basic .job-title{font-size:20px; margin-bottom:14px; padding-bottom:14px}
+.basic .contact{font-size:15px}
+.basic .headline{font-size:17px; line-height:1.65; margin-top:18px; max-width:none; padding-right:160px}
+.basic .head-points{margin-top:20px; gap:10px}
+.basic .head-points li{padding:13px 16px; line-height:1.65}
+.basic .head-points li::before{position:absolute; top:13px; right:16px; margin:0}
+.basic .head-points li b:first-child{margin-bottom:4px; padding-right:28px}
+.stats{padding-bottom:20px}
+.stats .stat{padding:11px 14px}
+.stats .stat b{font-size:22px}
+@media (min-width:1280px){ .basic .head-points{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:768px){
+  .main-head{padding-top:40px}
+  .basic .headline{padding-right:0; font-size:16px}
+}
+@media (max-width:768px){ .stats{grid-template-columns:repeat(3,1fr); gap:6px} .stats .stat{padding:10px} .stats .stat b{font-size:17px} .stats .stat span{font-size:11.5px} }
