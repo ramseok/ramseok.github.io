@@ -240,3 +240,9 @@ html.pf-loading .side, html.pf-loading .t-content{visibility:hidden}
 html.pf-loading body::after{content:"불러오는 중…"; position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); font-size:14px; color:#8a8f98}
 
 @media print{ .basic .head-points li{break-inside:avoid} }
+
+/* 프로젝트 카드 하단 링크 — 오른쪽 아래 한 줄, 작은 아이콘 */
+.pcards .pcard-body a.link{display:flex; align-items:center; gap:5px; width:max-content; max-width:100%; margin:12px 0 0 auto; font-size:12px; font-weight:500; line-height:1.4; white-space:nowrap; text-decoration:none; color:var(--sub)}
+.pcards .pcard-body a.link span{overflow:hidden; text-overflow:ellipsis; text-decoration:underline; text-underline-offset:2px}
+.pcards .pcard-body a.link .ico{width:13px; height:13px; flex:none; fill:currentColor}
+.pcards .pcard-body a.link:hover{color:var(--point)}
