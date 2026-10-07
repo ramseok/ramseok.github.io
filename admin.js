@@ -632,7 +632,7 @@
           fixes.push('도슨트 중복 카드 1건 정리');
         }
         var defP = (window.PORTFOLIO_DEFAULT || {}).project || [];
-        [/^PRD Toolkit/, /^PM Station/].forEach(function (re) {
+        [/^(PRD Toolkit|기획 산출물 자동 생성 파이프라인)/, /^PM Station/].forEach(function (re) {
           var dp = defP.filter(function (p) { return re.test(p.name || ''); })[0];
           var si = PF.findIndex(function (p) { return p && re.test(String(p.name || '')); });
           if (dp && si >= 0) { PF[si].solution = dp.solution; PF[si].results = JSON.parse(JSON.stringify(dp.results)); }
@@ -691,7 +691,7 @@
       var SYNC_OV = '2026-10-07-overview';
       if (state.__syncOv !== SYNC_OV) {
         var dpo = (window.PORTFOLIO_DEFAULT || {}).project || [];
-        var KEYS_OV = [/피트니스 프랜차이즈 CRM/, /^장애인복지관 그룹웨어/, /AI 영어 학습 (앱|플랫폼)/, /공공기관 AI 도슨트/, /^자사 AI 팬덤 플랫폼/, /^PRD Toolkit/, /^PM Station/, /^그 외 고객사 프로젝트/];
+        var KEYS_OV = [/피트니스 프랜차이즈 CRM/, /^장애인복지관 그룹웨어/, /AI 영어 학습 (앱|플랫폼)/, /공공기관 AI 도슨트/, /^자사 AI 팬덤 플랫폼/, /^(PRD Toolkit|기획 산출물 자동 생성 파이프라인)/, /^PM Station/, /^그 외 고객사 프로젝트/];
         var addOv = 0;
         KEYS_OV.forEach(function (re) {
           var dp = dpo.filter(function (p) { return re.test(String(p.name || '')); })[0];
@@ -740,6 +740,30 @@
           notes.push('AI 영어 학습 플랫폼 카드 내용 갱신');
         }
         state.__syncEdu3 = SYNC_EDU3;
+      }
+      // 일회성 동기화 14: 'PRD Toolkit' 명칭을 '기획 산출물 자동 생성 파이프라인'으로 (저장본 전체 문구)
+      var SYNC_RENAME = '2026-10-08-prd-rename';
+      if (state.__syncRename !== SYNC_RENAME) {
+        var RN = [
+          ['PRD Toolkit — 계약서 → 기획서 · 화면 시안 자동 생성 파이프라인', '기획 산출물 자동 생성 파이프라인 — 계약서 → 기획서 · 화면 시안'],
+          ['기획 산출물 자동 생성(PRD Toolkit)', '기획 산출물 자동 생성 파이프라인'],
+          ['PRD TOOLKIT', '기획 산출물 자동 생성 파이프라인'],
+          ['PRD Toolkit', '기획 산출물 자동 생성 파이프라인']
+        ];
+        var rnCount = 0;
+        var walk = function (o) {
+          Object.keys(o).forEach(function (k) {
+            if (/^__/.test(k)) return;
+            var v = o[k];
+            if (typeof v === 'string') {
+              var nv = RN.reduce(function (a, r) { return a.split(r[0]).join(r[1]); }, v);
+              if (nv !== v) { o[k] = nv; rnCount++; }
+            } else if (v && typeof v === 'object') walk(v);
+          });
+        };
+        walk(state);
+        if (rnCount) notes.push('PRD Toolkit 명칭 ' + rnCount + '곳 변경');
+        state.__syncRename = SYNC_RENAME;
       }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
