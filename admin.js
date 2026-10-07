@@ -708,6 +708,17 @@
         if (addOv) notes.push('프로젝트 개요 ' + addOv + '건 추가');
         state.__syncOv = SYNC_OV;
       }
+      // 일회성 동기화 11: 공공기관 AI 도슨트 — 키오스크만이 아닌 실제 기능 구성으로 본문 교체 (이름 · 기간 · 이미지는 유지)
+      var SYNC_DOC = '2026-10-07-docent';
+      if (state.__syncDocent !== SYNC_DOC) {
+        var dd = ((window.PORTFOLIO_DEFAULT || {}).project || []).filter(function (p) { return /공공기관 AI 도슨트/.test(p.name || ''); })[0];
+        var sd = (state.project || []).filter(function (p) { return p && /공공기관 AI 도슨트/.test(String(p.name || '')); })[0];
+        if (dd && sd) {
+          ['overview', 'role', 'scale', 'tags', 'problem', 'solution', 'results'].forEach(function (f) { sd[f] = JSON.parse(JSON.stringify(dd[f])); });
+          notes.push('공공기관 AI 도슨트 카드 내용 갱신');
+        }
+        state.__syncDocent = SYNC_DOC;
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
