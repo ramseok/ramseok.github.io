@@ -640,6 +640,22 @@
         state.__syncFinal = SYNC_FINAL;
         notes.push(fixes.join(' · '));
       }
+      // 일회성 동기화 7: 경력 '규모' · '운영 · 관리' 줄의 '기획 · PM 겸임' 중복 제거 (요약 줄에 이미 있음, 다른 줄은 유지)
+      var SYNC_EXP2 = '2026-10-07-exp-dedupe';
+      if (state.__syncExp2 !== SYNC_EXP2) {
+        var ex0 = (state.experience || [])[0], cnt = 0;
+        if (ex0 && Array.isArray(ex0.bullets)) {
+          ex0.bullets = ex0.bullets.map(function (b) {
+            var nb = String(b)
+              .replace(/^(\*\*규모\*\* — .*?SI 프로젝트)를 기획 · PM 겸임으로 수행,/, '$1 수행,')
+              .replace(/^(\*\*운영 · 관리\*\* — )기획 · PM 겸임으로 여러 프로젝트 병렬 운영,/, '$1여러 프로젝트를 병렬로 운영,');
+            if (nb !== b) cnt++;
+            return nb;
+          });
+        }
+        if (cnt) notes.push('경력의 \'기획 · PM 겸임\' 중복 ' + cnt + '곳 정리');
+        state.__syncExp2 = SYNC_EXP2;
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
