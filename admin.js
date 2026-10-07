@@ -670,6 +670,22 @@
         }
         state.__syncExp3 = SYNC_EXP3;
       }
+      // 일회성 동기화 9: AI 영어 학습 앱 — '이의신청' 표현 정정 (해당 문구만 교체)
+      var SYNC_EDU2 = '2026-10-07-edu-review';
+      if (state.__syncEdu2 !== SYNC_EDU2) {
+        var ed = (state.project || []).filter(function (p) { return p && /AI 영어 학습 앱/.test(String(p.name || '')); })[0], hit = 0;
+        if (ed) {
+          var s0 = String(ed.solution || '');
+          ed.solution = s0.replace('심사 반려는 이의신청으로 승인', '심사 반려는 거절 사유를 파악 · 원인 분석해 수정 후 승인');
+          if (ed.solution !== s0) hit++;
+          ed.results = (ed.results || []).map(function (r) {
+            var nr = String(r).replace('구글 · 애플 인앱 결제 심사 통과 (반려 후 이의신청으로 승인)', '구글 · 애플 인앱 결제 심사 통과 — 반려 사유를 파악 · 원인 분석해 수정 후 승인, 거절 사유와 해결 방법은 매뉴얼로 정리');
+            if (nr !== r) hit++; return nr;
+          });
+        }
+        if (hit) notes.push('AI 영어 학습 앱 심사 문구 정정');
+        state.__syncEdu2 = SYNC_EDU2;
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
