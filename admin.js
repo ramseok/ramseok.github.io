@@ -719,6 +719,17 @@
         }
         state.__syncDocent = SYNC_DOC;
       }
+      // 일회성 동기화 12: 장애인복지관 그룹웨어 — 사용자 설명 기준으로 본문 교체 (이름 · 기간 · 이미지는 유지)
+      var SYNC_WEL = '2026-10-07-welfare';
+      if (state.__syncWelfare !== SYNC_WEL) {
+        var dw = ((window.PORTFOLIO_DEFAULT || {}).project || []).filter(function (p) { return /^장애인복지관 그룹웨어/.test(p.name || ''); })[0];
+        var sw = (state.project || []).filter(function (p) { return p && /^장애인복지관 그룹웨어/.test(String(p.name || '').trim()); })[0];
+        if (dw && sw) {
+          ['overview', 'role', 'scale', 'tags', 'problem', 'solution', 'results'].forEach(function (f) { sw[f] = JSON.parse(JSON.stringify(dw[f])); });
+          notes.push('장애인복지관 그룹웨어 카드 내용 갱신');
+        }
+        state.__syncWelfare = SYNC_WEL;
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
