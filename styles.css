@@ -251,3 +251,4 @@ html.pf-loading body::after{content:"불러오는 중…"; position:fixed; left:
 .img-grid .grid-link a.link{aspect-ratio:auto; border:0; border-radius:0; background:none; overflow:visible; margin:0; padding-bottom:1px}
 .img-grid .grid-link a.link span{display:block}
 @media (max-width:768px){ .img-grid .grid-link{grid-column:1 / -1} }
+.pcards .pcard-body>p.overview{color:var(--text)}

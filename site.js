@@ -153,7 +153,8 @@
       var sub = dutyHtml + [p.org, roleText].filter(has).map(function (s) { return '<span>' + fmt(s) + '</span>'; }).join('');
       var res = list(p.results);
       var body = '';
-      if (has(p.problem)) body += '<p><b>' + (p.grouped ? '프로젝트 개요' : '문제') + '</b><br>' + fmt(p.problem) + '</p>';
+      if (has(p.overview)) body += '<p class="overview"><b>개요</b><br>' + fmt(p.overview) + '</p>';
+      if (has(p.problem)) body += '<p><b>' + (p.grouped ? '포함 프로젝트' : '문제') + '</b><br>' + fmt(p.problem) + '</p>';
       if (has(p.solution)) body += '<p class="sol"><b>' + (p.grouped ? '수행 내용' : '해결') + '</b><br>' + fmt(p.solution).replace(/(^|<br>)(기획|PM) — /g, '$1<em class="duty">$2</em>') + '</p>';
       if (res.length) body += '<p><b>성과</b></p><ul>' + res.map(function (b) { return '<li>' + hl(fmt(b)) + '</li>'; }).join('') + '</ul>';
       var imgs = (p.images || []).filter(function (im) { return im && has(im.url); });

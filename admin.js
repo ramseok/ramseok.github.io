@@ -42,6 +42,7 @@
       { k: 'tier', label: '노출 위계', type: 'select', options: [['', '고객사 — 대표'], ['sub', '고객사 — 그 외'], ['self', 'AI 업무 전환(AX) 프로젝트']], hint: '고객사 프로젝트는 대표·그 외로, 직접 만든 자동화 도구는 별도 그룹으로 표시됩니다' },
       { k: 'scale', label: '규모', hint: "접힌 카드에 칩으로 표시 · 가운뎃점(·)으로 구분 — 예) 화면 21 · API 141 · 테이블 33" },
       { k: 'tags', label: '태그', type: 'chips', hint: '카드 접힌 상태에서 보입니다 · 클릭하면 한 칸 앞으로 이동' },
+      { k: 'overview', label: '개요 (어떤 서비스인지 한두 줄)', type: 'textarea', hint: '카드를 펼치면 맨 위에 보입니다 — 예) ~하는 ~ 서비스입니다' },
       { k: 'problem', label: '문제 (고객사가 겪던 문제)', type: 'textarea' }, { k: 'solution', label: '해결 (어떻게 풀었나 · 내 역할)', type: 'textarea', hint: '맨 아래 **내 역할 · 기여** 줄 다음에 "기획 — …" / "PM — …"로 쓰면 배지로 표시됩니다' },
       { k: 'results', label: '성과', type: 'lines', hint: '한 줄에 하나 — 숫자를 넣을 것. 첫 줄이 접힌 카드의 요약으로 표시됩니다' },
       { k: 'url', label: '관련 링크' },
@@ -685,6 +686,27 @@
         }
         if (hit) notes.push('AI 영어 학습 앱 심사 문구 정정');
         state.__syncEdu2 = SYNC_EDU2;
+      }
+      // 일회성 동기화 10: 프로젝트마다 '개요' 추가 (비어 있는 카드만), 팬덤 카드 문제 첫 줄의 중복 제거
+      var SYNC_OV = '2026-10-07-overview';
+      if (state.__syncOv !== SYNC_OV) {
+        var dpo = (window.PORTFOLIO_DEFAULT || {}).project || [];
+        var KEYS_OV = [/피트니스 프랜차이즈 CRM/, /^장애인복지관 그룹웨어/, /AI 영어 학습 앱/, /공공기관 AI 도슨트/, /^자사 AI 팬덤 플랫폼/, /^PRD Toolkit/, /^PM Station/, /^그 외 고객사 프로젝트/];
+        var addOv = 0;
+        KEYS_OV.forEach(function (re) {
+          var dp = dpo.filter(function (p) { return re.test(String(p.name || '')); })[0];
+          (state.project || []).forEach(function (p) {
+            if (p && dp && re.test(String(p.name || '').trim()) && !String(p.overview || '').trim() && dp.overview) { p.overview = dp.overview; addOv++; }
+          });
+        });
+        (state.project || []).forEach(function (p) {
+          if (p && /^자사 AI 팬덤 플랫폼/.test(String(p.name || ''))) {
+            p.problem = String(p.problem || '').split('\n').filter(function (l) { return l.trim() !== '연예인 · 인플루언서 IP로 팬이 직접 대화하고 콘텐츠를 즐기는 자사 B2C 팬덤 플랫폼이었습니다.'; }).join('\n');
+          }
+        });
+        (state.project || []).forEach(function (p) { if (p && /AI 영어 학습 앱/.test(String(p.name || ''))) p.problem = String(p.problem || '').replace('영어를 말할 상대가 없어 학습이 멈춘다는 문제를, AI 아바타와 실시간으로 대화하는 앱으로 풀려는 고객사였습니다.', '영어를 말할 상대가 없어 학습이 멈춘다는 문제를 풀려는 고객사였습니다.'); });
+        if (addOv) notes.push('프로젝트 개요 ' + addOv + '건 추가');
+        state.__syncOv = SYNC_OV;
       }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
