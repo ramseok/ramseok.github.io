@@ -246,3 +246,8 @@ html.pf-loading body::after{content:"불러오는 중…"; position:fixed; left:
 .pcards .pcard-body a.link span{overflow:hidden; text-overflow:ellipsis; text-decoration:underline; text-underline-offset:2px}
 .pcards .pcard-body a.link .ico{width:13px; height:13px; flex:none; fill:currentColor}
 .pcards .pcard-body a.link:hover{color:var(--point)}
+/* 이미지가 있는 카드: 링크를 그리드 마지막 열 · 맨 아래에 두어 마지막 캡션과 높이를 맞춤 */
+.img-grid .grid-link{grid-column:-2 / -1; align-self:end; justify-self:end; min-width:0; max-width:100%}
+.img-grid .grid-link a.link{aspect-ratio:auto; border:0; border-radius:0; background:none; overflow:visible; margin:0; padding-bottom:1px}
+.img-grid .grid-link a.link span{display:block}
+@media (max-width:768px){ .img-grid .grid-link{grid-column:1 / -1} }

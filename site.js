@@ -157,13 +157,14 @@
       if (has(p.solution)) body += '<p class="sol"><b>' + (p.grouped ? '수행 내용' : '해결') + '</b><br>' + fmt(p.solution).replace(/(^|<br>)(기획|PM) — /g, '$1<em class="duty">$2</em>') + '</p>';
       if (res.length) body += '<p><b>성과</b></p><ul>' + res.map(function (b) { return '<li>' + hl(fmt(b)) + '</li>'; }).join('') + '</ul>';
       var imgs = (p.images || []).filter(function (im) { return im && has(im.url); });
+      var linkHtml = has(p.url) ? '<a class="link" href="' + esc(safeUrl(p.url)) + '" target="_blank" rel="noopener">' + ICON_LINK + '<span>' + esc(p.url) + '</span></a>' : '';
       if (imgs.length) {
+        // 링크는 이미지 그리드의 마지막 칸(오른쪽)에 두어 마지막 캡션과 같은 높이에 맞춘다
         body += '<div class="img-grid col-' + Math.min(imgs.length, 3) + '">' + imgs.map(function (im) {
           return '<figure><a href="' + esc(im.url) + '" class="lightbox" data-caption="' + esc(im.caption || '') + '"><img src="' + esc(im.url) + '" alt="' + esc(im.caption || '') + '" loading="lazy"></a>' +
             (has(im.caption) ? '<figcaption>' + fmt(im.caption) + '</figcaption>' : '') + '</figure>';
-        }).join('') + '</div>';
-      }
-      if (has(p.url)) body += '<a class="link" href="' + esc(safeUrl(p.url)) + '" target="_blank" rel="noopener">' + ICON_LINK + '<span>' + esc(p.url) + '</span></a>';
+        }).join('') + (linkHtml ? '<div class="grid-link">' + linkHtml + '</div>' : '') + '</div>';
+      } else if (linkHtml) body += linkHtml;
 
       var badge = p.current ? '<em class="badge live">진행 중</em>' : (has(p.end) ? '<em class="badge done">완료</em>' : '');
       var tagsHtml = list(p.tags).length ? '<ul class="item-tag tags">' + list(p.tags).map(function (t) { return '<li>' + fmt(t) + '</li>'; }).join('') + '</ul>' : '';
