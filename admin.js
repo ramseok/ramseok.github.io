@@ -709,7 +709,7 @@
         state.__syncOv = SYNC_OV;
       }
       // 일회성 동기화 11: 공공기관 AI 도슨트 — 키오스크만이 아닌 실제 기능 구성으로 본문 교체 (이름 · 기간 · 이미지는 유지)
-      var SYNC_DOC = '2026-10-07-docent';
+      var SYNC_DOC = '2026-10-07-docent-b';
       if (state.__syncDocent !== SYNC_DOC) {
         var dd = ((window.PORTFOLIO_DEFAULT || {}).project || []).filter(function (p) { return /공공기관 AI 도슨트/.test(p.name || ''); })[0];
         var sd = (state.project || []).filter(function (p) { return p && /공공기관 AI 도슨트/.test(String(p.name || '')); })[0];
