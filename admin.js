@@ -656,6 +656,20 @@
         if (cnt) notes.push('경력의 \'기획 · PM 겸임\' 중복 ' + cnt + '곳 정리');
         state.__syncExp2 = SYNC_EXP2;
       }
+      // 일회성 동기화 8: 경력 '규모' 줄을 '운영 · 관리'에 합치고 맨 위로 (다른 줄은 유지)
+      var SYNC_EXP3 = '2026-10-07-exp-merge';
+      if (state.__syncExp3 !== SYNC_EXP3) {
+        var ex1 = (state.experience || [])[0];
+        if (ex1 && Array.isArray(ex1.bullets)) {
+          var hasScale = ex1.bullets.some(function (b) { return /^\*\*규모\*\*/.test(b); });
+          var others = ex1.bullets.filter(function (b) { return !/^\*\*(규모|운영 · 관리)\*\*/.test(b); });
+          if (hasScale) {
+            ex1.bullets = ['**운영 · 관리** — AI 서비스 · 웹/앱 SI 프로젝트 20건 이상(고객사 20개 이상)을 병렬로 운영, 부팀장으로 팀원 2명의 업무 배분 · 일정 · 산출물 검수'].concat(others);
+            notes.push('경력의 규모 줄을 운영 · 관리에 합쳐 맨 위로');
+          }
+        }
+        state.__syncExp3 = SYNC_EXP3;
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
