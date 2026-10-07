@@ -604,9 +604,9 @@
         var P = state.project = state.project || [];
         var find = function (re) { return P.findIndex(function (p) { return p && re.test(String(p.name || '').trim()); }); };
         var changed = [];
-        var edu = pick(/^AI 영어 학습 앱/);
+        var edu = pick(/^AI 영어 학습 (앱|플랫폼)/);
         if (edu) {
-          var ei = P.findIndex(function (p) { return p && /AI 영어 학습 앱/.test(String(p.name || '')) && p.tier !== 'sub'; });
+          var ei = P.findIndex(function (p) { return p && /AI 영어 학습 (앱|플랫폼)/.test(String(p.name || '')) && p.tier !== 'sub'; });
           if (ei >= 0) P[ei] = JSON.parse(JSON.stringify(edu));
           else { var wi = find(/^장애인복지관 그룹웨어/); P.splice(wi >= 0 ? wi + 1 : 0, 0, JSON.parse(JSON.stringify(edu))); }
           changed.push('AI 영어 학습 앱 대표 추가');
@@ -674,7 +674,7 @@
       // 일회성 동기화 9: AI 영어 학습 앱 — '이의신청' 표현 정정 (해당 문구만 교체)
       var SYNC_EDU2 = '2026-10-07-edu-review';
       if (state.__syncEdu2 !== SYNC_EDU2) {
-        var ed = (state.project || []).filter(function (p) { return p && /AI 영어 학습 앱/.test(String(p.name || '')); })[0], hit = 0;
+        var ed = (state.project || []).filter(function (p) { return p && /AI 영어 학습 (앱|플랫폼)/.test(String(p.name || '')); })[0], hit = 0;
         if (ed) {
           var s0 = String(ed.solution || '');
           ed.solution = s0.replace('심사 반려는 이의신청으로 승인', '심사 반려는 거절 사유를 파악 · 원인 분석해 수정 후 승인');
@@ -691,7 +691,7 @@
       var SYNC_OV = '2026-10-07-overview';
       if (state.__syncOv !== SYNC_OV) {
         var dpo = (window.PORTFOLIO_DEFAULT || {}).project || [];
-        var KEYS_OV = [/피트니스 프랜차이즈 CRM/, /^장애인복지관 그룹웨어/, /AI 영어 학습 앱/, /공공기관 AI 도슨트/, /^자사 AI 팬덤 플랫폼/, /^PRD Toolkit/, /^PM Station/, /^그 외 고객사 프로젝트/];
+        var KEYS_OV = [/피트니스 프랜차이즈 CRM/, /^장애인복지관 그룹웨어/, /AI 영어 학습 (앱|플랫폼)/, /공공기관 AI 도슨트/, /^자사 AI 팬덤 플랫폼/, /^PRD Toolkit/, /^PM Station/, /^그 외 고객사 프로젝트/];
         var addOv = 0;
         KEYS_OV.forEach(function (re) {
           var dp = dpo.filter(function (p) { return re.test(String(p.name || '')); })[0];
@@ -704,7 +704,7 @@
             p.problem = String(p.problem || '').split('\n').filter(function (l) { return l.trim() !== '연예인 · 인플루언서 IP로 팬이 직접 대화하고 콘텐츠를 즐기는 자사 B2C 팬덤 플랫폼이었습니다.'; }).join('\n');
           }
         });
-        (state.project || []).forEach(function (p) { if (p && /AI 영어 학습 앱/.test(String(p.name || ''))) p.problem = String(p.problem || '').replace('영어를 말할 상대가 없어 학습이 멈춘다는 문제를, AI 아바타와 실시간으로 대화하는 앱으로 풀려는 고객사였습니다.', '영어를 말할 상대가 없어 학습이 멈춘다는 문제를 풀려는 고객사였습니다.'); });
+        (state.project || []).forEach(function (p) { if (p && /AI 영어 학습 (앱|플랫폼)/.test(String(p.name || ''))) p.problem = String(p.problem || '').replace('영어를 말할 상대가 없어 학습이 멈춘다는 문제를, AI 아바타와 실시간으로 대화하는 앱으로 풀려는 고객사였습니다.', '영어를 말할 상대가 없어 학습이 멈춘다는 문제를 풀려는 고객사였습니다.'); });
         if (addOv) notes.push('프로젝트 개요 ' + addOv + '건 추가');
         state.__syncOv = SYNC_OV;
       }
@@ -729,6 +729,17 @@
           notes.push('장애인복지관 그룹웨어 카드 내용 갱신');
         }
         state.__syncWelfare = SYNC_WEL;
+      }
+      // 일회성 동기화 13: AI 영어 학습 플랫폼 — 학습 3종 · SpeechAce 평가 기준으로 본문 교체 (이름 포함, 기간 · 이미지는 유지)
+      var SYNC_EDU3 = '2026-10-07-edu-platform';
+      if (state.__syncEdu3 !== SYNC_EDU3) {
+        var de3 = ((window.PORTFOLIO_DEFAULT || {}).project || []).filter(function (p) { return /AI 영어 학습 (앱|플랫폼)/.test(p.name || ''); })[0];
+        var se3 = (state.project || []).filter(function (p) { return p && /AI 영어 학습 (앱|플랫폼)/.test(String(p.name || '')) && p.tier !== 'sub'; })[0];
+        if (de3 && se3) {
+          ['name', 'overview', 'role', 'scale', 'tags', 'problem', 'solution', 'results'].forEach(function (f) { se3[f] = JSON.parse(JSON.stringify(de3[f])); });
+          notes.push('AI 영어 학습 플랫폼 카드 내용 갱신');
+        }
+        state.__syncEdu3 = SYNC_EDU3;
       }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
