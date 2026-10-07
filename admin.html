@@ -144,6 +144,21 @@ input[type=file]{font-size:12px; margin:6px 0}
 .inherit{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:11px 14px; border:1px solid #cfe0ff; background:#f2f7ff; border-radius:8px; font-size:13px; color:#2c4a80}
 .inherit b{font-weight:700}
 fieldset.locked{border:0; margin:0; padding:0; opacity:.62}
+/* 방문 기록 */
+.vz-back{position:fixed; inset:0; background:rgba(15,18,24,.45); z-index:50; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto}
+.vz{background:#fff; border-radius:12px; width:min(1100px,100%); padding:22px 24px; box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.vz-head{display:flex; align-items:center; gap:10px; margin-bottom:14px} .vz-head h2{margin:0; font-size:18px} .vz-head .sp{flex:1}
+.vz-sum{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:14px}
+.vz-sum div{border:1px solid var(--line); border-radius:8px; padding:10px 12px} .vz-sum b{display:block; font-size:22px} .vz-sum span{color:var(--sub); font-size:12px}
+.vz-filter{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px} .vz-filter select{width:auto}
+.vz-note{color:var(--sub); font-size:12px; margin:8px 0 0}
+.vz-table{width:100%; border-collapse:collapse; font-size:13px} .vz-table th{position:sticky; top:0; background:#fafbfc; text-align:left; font-weight:600; color:var(--sub); font-size:12px}
+.vz-table th,.vz-table td{border-bottom:1px solid var(--line); padding:7px 8px; vertical-align:top; white-space:nowrap}
+.vz-table td.wrap{white-space:normal; word-break:break-all; max-width:260px}
+.vz-scroll{max-height:60vh; overflow:auto; border:1px solid var(--line); border-radius:8px}
+.vz-badge{display:inline-block; font-size:11px; font-weight:700; padding:1px 6px; border-radius:4px; margin-left:4px; background:rgba(50,125,245,.1); color:var(--point)}
+.vz-empty{padding:28px; text-align:center; color:var(--sub)}
+@media (max-width:760px){ .vz-sum{grid-template-columns:repeat(2,1fr)} }
 </style>
 </head>
 <body>
@@ -187,6 +202,7 @@ fieldset.locked{border:0; margin:0; padding:0; opacity:.62}
     <a class="btn ghost sm" href="index.html" target="_blank">공개 페이지 보기</a>
     <button class="btn ghost sm" id="btn-load-default" type="button" title="배포본이 지난번 불러오기 이후 바뀐 부분만 반영합니다. 관리자에서 직접 고친 내용은 그대로 유지됩니다.">최신 내용 불러오기</button>
     <button class="btn ghost sm" id="btn-undo" type="button" hidden>되돌리기</button>
+    <button class="btn ghost sm" id="btn-visits" type="button">방문 기록</button>
     <button class="btn ghost sm" id="btn-export" type="button">JSON 내보내기</button>
     <label class="btn ghost sm" style="margin:0">JSON 가져오기<input id="import-file" type="file" accept="application/json" hidden></label>
     <button class="btn" id="btn-save" type="button" disabled>저장</button>
@@ -218,8 +234,8 @@ fieldset.locked{border:0; margin:0; padding:0; opacity:.62}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=20261007j"></script>
-<script src="data.default.js?v=20261007j"></script>
-<script src="admin.js?v=20261007j"></script>
+<script src="config.js?v=20261007k"></script>
+<script src="data.default.js?v=20261007k"></script>
+<script src="admin.js?v=20261007k"></script>
 </body>
 </html>

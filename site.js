@@ -362,5 +362,23 @@
         done(d);
       }, fail);
     }, fail);
+
+    // 방문 기록 — 관리자 본인 브라우저 · 검색 로봇 · 자동화 브라우저는 제외. 실패해도 화면에는 영향 없음
+    (function logVisit() {
+      var ls = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+      var ss = function (k, v) { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } };
+      var ua = navigator.userAgent || '';
+      if (ls('pf.owner') === '1' || navigator.webdriver || /bot|crawl|spider|slurp|preview|Headless|Lighthouse/i.test(ua)) return;
+      var rid = function () { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); };
+      var vid = ls('pf.vid'), isReturn = !!vid;
+      if (!vid) { vid = 'v-' + rid(); ls('pf.vid', vid); }
+      var sid = ss('pf.sid'); if (!sid) { sid = 's-' + rid(); ss('pf.sid', sid); }
+      var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+      client.rpc('log_portfolio_visit', {
+        p_visitor: vid, p_session: sid, p_slug: slug, p_path: location.pathname,
+        p_referrer: document.referrer || '', p_ua: ua, p_lang: navigator.language || '',
+        p_screen: (screen.width || 0) + 'x' + (screen.height || 0), p_tz: tz, p_return: isReturn
+      }).then(function () {}, function () {});
+    })();
   }
 })();

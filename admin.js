@@ -897,6 +897,90 @@
     var rd = new FileReader(); rd.onload = function () { try { var inc = JSON.parse(rd.result); snapshot('JSON 가져오기'); state = inc; markDirty(); renderSection(active); } catch (err) { setStatus('JSON 파싱 실패', 'err'); } }; rd.readAsText(f);
   });
   $('#btn-logout').addEventListener('click', function () { client.auth.signOut().then(function () { location.reload(); }); });
+
+  // ── 방문 기록: 공개 페이지가 log_portfolio_visit 으로 남긴 기록을 조회 (관리자만 읽기 가능) ──
+  function vzDevice(ua) {
+    ua = ua || '';
+    var dev = /iPad|Tablet/i.test(ua) ? '태블릿' : /Mobi|Android|iPhone/i.test(ua) ? '모바일' : 'PC';
+    var os = /Windows/i.test(ua) ? 'Windows' : /iPhone|iPad|iOS/i.test(ua) ? 'iOS' : /Mac OS X|Macintosh/i.test(ua) ? 'macOS' : /Android/i.test(ua) ? 'Android' : /Linux/i.test(ua) ? 'Linux' : '';
+    var br = /KAKAOTALK/i.test(ua) ? '카카오톡' : /NAVER/i.test(ua) ? '네이버앱' : /Whale/i.test(ua) ? '웨일' : /SamsungBrowser/i.test(ua) ? '삼성 인터넷'
+      : /Edg\//i.test(ua) ? 'Edge' : /Chrome|CriOS/i.test(ua) ? 'Chrome' : /Firefox|FxiOS/i.test(ua) ? 'Firefox' : /Safari/i.test(ua) ? 'Safari' : '기타';
+    return dev + ' · ' + [os, br].filter(Boolean).join(' ');
+  }
+  function vzRef(r) {
+    if (!r) return '직접 입력 · 북마크';
+    try { var u = new URL(r); if (u.hostname === location.hostname) return '사이트 내 이동'; return u.hostname.replace(/^www\./, ''); } catch (e) { return r; }
+  }
+  function vzTime(iso) {
+    var d = new Date(iso);
+    return d.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  var vzRows = [];
+  function vzRender() {
+    var box = document.querySelector('.vz'); if (!box) return;
+    var slugF = box.querySelector('#vz-slug').value, dayF = +box.querySelector('#vz-days').value;
+    var since = dayF ? Date.now() - dayF * 864e5 : 0;
+    var rows = vzRows.filter(function (r) { return (!slugF || r.slug === slugF) && new Date(r.at).getTime() >= since; });
+    var dayKey = function (iso) { return new Date(iso).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' }); };
+    var today = dayKey(new Date().toISOString());
+    var uniq = function (arr) { var m = {}; arr.forEach(function (r) { m[r.visitor_id || r.session_id] = 1; }); return Object.keys(m).length; };
+    var week = vzRows.filter(function (r) { return new Date(r.at).getTime() >= Date.now() - 7 * 864e5; });
+    box.querySelector('.vz-sum').innerHTML =
+      '<div><b>' + vzRows.filter(function (r) { return dayKey(r.at) === today; }).length + '</b><span>오늘 방문</span></div>' +
+      '<div><b>' + week.length + '</b><span>최근 7일 방문</span></div>' +
+      '<div><b>' + uniq(week) + '</b><span>최근 7일 방문자(브라우저 기준)</span></div>' +
+      '<div><b>' + vzRows.length + '</b><span>전체 기록 (최근 1,000건)</span></div>';
+    var body = rows.map(function (r) {
+      return '<tr><td>' + esc(vzTime(r.at)) + '</td>' +
+        '<td>' + esc(String(r.visitor_id || '').slice(-6)) + (r.is_return ? '<span class="vz-badge">재방문</span>' : '') + '</td>' +
+        '<td>' + esc(r.slug || 'main') + '</td>' +
+        '<td class="wrap" title="' + esc(r.referrer || '') + '">' + esc(vzRef(r.referrer)) + '</td>' +
+        '<td>' + esc(vzDevice(r.user_agent)) + '</td>' +
+        '<td>' + esc(r.screen || '') + '</td>' +
+        '<td>' + esc([r.lang, r.tz].filter(Boolean).join(' · ')) + '</td></tr>';
+    }).join('');
+    box.querySelector('.vz-body').innerHTML = rows.length
+      ? '<div class="vz-scroll"><table class="vz-table"><thead><tr><th>시각(한국)</th><th>방문자</th><th>링크</th><th>유입 경로</th><th>기기 · 브라우저</th><th>화면</th><th>언어 · 시간대</th></tr></thead><tbody>' + body + '</tbody></table></div>'
+      : '<div class="vz-empty">조건에 맞는 방문 기록이 없습니다.</div>';
+  }
+  function vzOpen() {
+    var back = document.createElement('div'); back.className = 'vz-back';
+    back.innerHTML = '<div class="vz"><div class="vz-head"><h2>방문 기록</h2><span class="sp"></span>' +
+      '<button class="btn ghost sm" type="button" id="vz-reload">새로고침</button><button class="btn ghost sm" type="button" id="vz-close">닫기</button></div>' +
+      '<div class="vz-sum"></div>' +
+      '<div class="vz-filter"><select id="vz-slug"><option value="">모든 링크</option></select>' +
+      '<select id="vz-days"><option value="7">최근 7일</option><option value="30" selected>최근 30일</option><option value="0">전체</option></select></div>' +
+      '<div class="vz-body"><div class="vz-empty">불러오는 중…</div></div>' +
+      '<p class="vz-note">로그인이 없는 공개 페이지라 누구인지는 알 수 없고, 브라우저마다 무작위 ID(끝 6자리)로 구분합니다. 같은 사람이라도 다른 기기 · 브라우저로 오면 다른 방문자로 보입니다. ' +
+      '이 관리자에 로그인한 브라우저(본인)와 검색 로봇은 기록하지 않으며, 같은 탭에서 30분 안에 다시 연 것은 한 번으로 셉니다. 유입 경로에 마우스를 올리면 전체 주소가 보입니다.</p></div>';
+    document.body.appendChild(back);
+    var close = function () { back.remove(); };
+    back.addEventListener('click', function (e) { if (e.target === back) close(); });
+    back.querySelector('#vz-close').addEventListener('click', close);
+    back.querySelector('#vz-slug').addEventListener('change', vzRender);
+    back.querySelector('#vz-days').addEventListener('change', vzRender);
+    var load = function () {
+      back.querySelector('.vz-body').innerHTML = '<div class="vz-empty">불러오는 중…</div>';
+      client.from('portfolio_visits').select('at,visitor_id,session_id,slug,path,referrer,user_agent,lang,screen,tz,is_return')
+        .order('at', { ascending: false }).limit(1000).then(function (r) {
+          if (r.error) {
+            var missing = /portfolio_visits|does not exist|schema cache/i.test(r.error.message || '');
+            back.querySelector('.vz-body').innerHTML = '<div class="vz-empty">' + (missing
+              ? '방문 기록 테이블이 아직 없습니다. Supabase SQL Editor에서 <b>setup/supabase-visits.sql</b>을 한 번 실행해 주세요.'
+              : '불러오지 못했습니다: ' + esc(r.error.message)) + '</div>';
+            return;
+          }
+          vzRows = r.data || [];
+          var slugs = {}; vzRows.forEach(function (x) { slugs[x.slug || 'main'] = 1; });
+          var sel = back.querySelector('#vz-slug'), cur = sel.value;
+          sel.innerHTML = '<option value="">모든 링크</option>' + Object.keys(slugs).sort().map(function (s) { return '<option' + (s === cur ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('');
+          vzRender();
+        });
+    };
+    back.querySelector('#vz-reload').addEventListener('click', load);
+    load();
+  }
+  $('#btn-visits').addEventListener('click', vzOpen);
   window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   // 섹션 내비
@@ -919,6 +1003,8 @@
   });
   function enter(session) {
     show('editor'); $('#who').textContent = session.user.email;
+    // 이 브라우저는 관리자 본인 — 공개 페이지 방문 기록에서 제외
+    try { localStorage.setItem('pf.owner', '1'); } catch (e) {}
     refreshUndo(); // 진입 시 되돌리기 버튼 노출 여부 갱신
     load();
   }
