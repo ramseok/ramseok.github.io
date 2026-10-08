@@ -252,3 +252,14 @@ html.pf-loading body::after{content:"불러오는 중…"; position:fixed; left:
 .img-grid .grid-link a.link span{display:block}
 @media (max-width:768px){ .img-grid .grid-link{grid-column:1 / -1} }
 .pcards .pcard-body>p.overview{color:var(--text)}
+
+/* 인쇄(PDF 저장) — 카드가 통째로 다음 쪽으로 넘어가며 생기던 빈 공간 제거, 제목 · 문단 · 목록은 쪽 경계에서 자르지 않음 */
+@media print{
+  html{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .pcards>li.pcard{break-inside:auto!important; box-shadow:none!important}
+  .pcards .chev{display:none!important}
+  .pcards .pcard-head{break-inside:avoid; break-after:avoid}
+  .pcards .pcard-body>p, .pcards .pcard-body li, .pcards .pcard-body figure{break-inside:avoid}
+  .pgroup-head, .section-title{break-after:avoid; break-inside:avoid}
+  a{text-decoration:none}
+}
