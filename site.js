@@ -368,6 +368,12 @@
       var ls = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
       var ss = function (k, v) { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } };
       var ua = navigator.userAgent || '';
+      try {
+        var sp = new URLSearchParams(location.search);
+        if (sp.get('owner') === '1' || sp.get('me') === '1') {
+          ls('pf.owner', '1');
+        }
+      } catch (e) {}
       if (ls('pf.owner') === '1' || navigator.webdriver || /bot|crawl|spider|slurp|preview|Headless|Lighthouse/i.test(ua)) return;
       var rid = function () { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); };
       var vid = ls('pf.vid'), isReturn = !!vid;

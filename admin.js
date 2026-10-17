@@ -1012,6 +1012,9 @@
   $('#sec-nav').addEventListener('click', function (e) { var a = e.target.closest('a'); if (!a) return; e.preventDefault(); renderSection(a.dataset.key); });
 
   // ── 인증 ──
+  // 관리자 페이지에 접근한 브라우저는 관리자 본인 — 공개 페이지 방문 기록에서 영구 제외
+  try { localStorage.setItem('pf.owner', '1'); } catch (e) {}
+
   function show(id) { ['setup', 'login', 'editor'].forEach(function (k) { $('#' + k).hidden = k !== id; }); }
   if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || !window.supabase) { show('setup'); return; }
   client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
