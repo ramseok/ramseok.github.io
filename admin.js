@@ -765,6 +765,28 @@
         if (rnCount) notes.push('PRD Toolkit 명칭 ' + rnCount + '곳 변경');
         state.__syncRename = SYNC_RENAME;
       }
+      // 일회성 동기화 15: Tutti 카드 추가(파이프라인 카드 바로 뒤), 소개 강점 · 경력 '업무 자동화' 줄만 Tutti 포함 문장으로
+      var SYNC_TUTTI = '2026-11-03-tutti';
+      if (state.__syncTutti !== SYNC_TUTTI) {
+        var DF = window.PORTFOLIO_DEFAULT || {}, tu = [];
+        var dt = (DF.project || []).filter(function (p) { return /^Tutti/.test(p.name || ''); })[0];
+        var PT = state.project = state.project || [];
+        if (dt && !PT.some(function (p) { return p && /^Tutti/.test(String(p.name || '').trim()); })) {
+          var pi = PT.findIndex(function (p) { return p && /^(PRD Toolkit|기획 산출물 자동 생성 파이프라인)/.test(String(p.name || '').trim()); });
+          PT.splice(pi >= 0 ? pi + 1 : PT.length, 0, JSON.parse(JSON.stringify(dt)));
+          tu.push('Tutti 카드 추가');
+        }
+        var swap = function (arr, defs, re) {
+          var dv = (defs || []).filter(function (b) { return re.test(b); })[0], at = (arr || []).findIndex(function (b) { return re.test(String(b)); });
+          if (dv && at >= 0 && arr[at] !== dv) { arr[at] = dv; return 1; }
+          return 0;
+        };
+        if (swap((state.intro || {}).bullets, (DF.intro || {}).bullets, /^\*\*반복 업무는 직접 시스템으로\*\*/)) tu.push('소개 강점');
+        var de0 = (DF.experience || [])[0], se0 = (state.experience || [])[0];
+        if (de0 && se0 && de0.org === se0.org && swap(se0.bullets, de0.bullets, /^\*\*업무 자동화\*\*/)) tu.push('경력 업무 자동화 줄');
+        if (tu.length) notes.push(tu.join(' · ') + ' (Tutti)');
+        state.__syncTutti = SYNC_TUTTI;
+      }
       // 일회성 동기화 3: 경력 첫 항목의 담당 업무 줄만 정리본으로 (직책 · 기간 등 직접 고친 값은 유지)
       var SYNC_EXP = '2026-10-06-exp-trim';
       if (state.__syncExp !== SYNC_EXP) {
