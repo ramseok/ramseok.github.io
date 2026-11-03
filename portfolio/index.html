@@ -10,26 +10,45 @@
 <meta property="og:image" content="https://ramseok.github.io/portfolio/pages/p01.jpg">
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-:root{--bg:#eceae6; --bar:rgba(255,255,255,.92); --ink:#111; --sub:#666; --line:#dcd9d3; --o:#e2461c}
+:root{--bg:#eceae6; --bar:rgba(255,255,255,.94); --ink:#111; --sub:#666; --line:#dcd9d3; --o:#e2461c; --barh:57px}
 *{box-sizing:border-box; margin:0; padding:0}
-html{scroll-behavior:smooth; scroll-padding-top:64px}
+html{scroll-behavior:smooth; scroll-padding-top:calc(var(--barh) + 56px)}
 body{background:var(--bg); color:var(--ink); font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif; -webkit-font-smoothing:antialiased}
-.bar{position:sticky; top:0; z-index:5; background:var(--bar); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
-.bar .in{max-width:960px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; gap:12px}
+.bar{position:sticky; top:0; z-index:6; background:var(--bar); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
+.bar .in{max-width:1200px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; gap:12px}
 .bar .nm{font-weight:800; font-size:15px; letter-spacing:-.02em; white-space:nowrap}
 .bar .nm span{color:var(--o)}
 .bar .pg{margin-left:auto; font-size:13px; color:var(--sub); font-variant-numeric:tabular-nums; white-space:nowrap}
 .bar a.dl{font-size:13px; font-weight:700; color:#fff; background:var(--ink); text-decoration:none; padding:9px 14px; border-radius:8px; white-space:nowrap}
-.bar a.dl:focus-visible, .toc a:focus-visible{outline:2px solid var(--o); outline-offset:2px}
-main{max-width:960px; margin:0 auto; padding:24px 16px 48px}
-.toc{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px}
-.toc a{font-size:13px; color:var(--ink); text-decoration:none; background:#fff; border:1px solid var(--line); padding:8px 12px; border-radius:999px}
-.toc a b{color:var(--o); margin-right:4px; font-variant-numeric:tabular-nums}
+a:focus-visible{outline:2px solid var(--o); outline-offset:2px}
+
+/* 목차: 좁은 화면은 머리 바로 아래 한 줄로 고정(옆으로 밀어 봄), 넓은 화면은 왼쪽 옆에 고정 */
+.toc{position:sticky; top:var(--barh); z-index:5; background:var(--bar); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+  display:flex; gap:6px; padding:8px 16px; overflow-x:auto; scrollbar-width:none}
+.toc::-webkit-scrollbar{display:none}
+.toc a{flex:none; font-size:13px; color:var(--ink); text-decoration:none; background:#fff; border:1px solid var(--line); padding:7px 12px; border-radius:999px; white-space:nowrap}
+.toc a b{color:var(--o); margin-right:5px; font-variant-numeric:tabular-nums}
+.toc a.on{background:var(--ink); border-color:var(--ink); color:#fff}
+.toc a.on b{color:#ffb39e}
+.wrap{max-width:1200px; margin:0 auto}
+main{max-width:960px; margin:0 auto; padding:20px 16px 48px}
 .page{background:#fff; margin:0 auto 20px; box-shadow:0 2px 14px rgba(0,0,0,.10); aspect-ratio:1500/2123; overflow:hidden}
 .page img{display:block; width:100%; height:100%}
 footer{max-width:960px; margin:0 auto; padding:0 16px 40px; font-size:12px; color:var(--sub); text-align:center; line-height:1.7}
 footer a{color:var(--sub)}
-@media (max-width:520px){ .bar .pg{display:none} .bar a.dl{margin-left:auto} main{padding-top:16px} .page{margin-bottom:12px} }
+
+@media (min-width:1100px){
+  html{scroll-padding-top:calc(var(--barh) + 20px)}
+  .wrap{display:grid; grid-template-columns:200px minmax(0,1fr); gap:24px; padding:0 16px}
+  .toc{top:calc(var(--barh) + 20px); align-self:start; flex-direction:column; gap:4px; padding:0; margin-top:20px; overflow:visible;
+    background:none; backdrop-filter:none; -webkit-backdrop-filter:none; border:0}
+  .toc a{background:none; border:0; border-left:2px solid var(--line); border-radius:0; padding:9px 12px; font-size:14px; color:#444}
+  .toc a:hover{color:var(--ink); border-left-color:#999}
+  .toc a.on{background:none; color:var(--ink); font-weight:700; border-left-color:var(--o)}
+  .toc a.on b{color:var(--o)}
+  main{padding:20px 0 48px; margin:0}
+}
+@media (max-width:520px){ .bar .pg{display:none} .bar a.dl{margin-left:auto} .page{margin-bottom:12px} main{padding-top:12px} }
 @media print{ .bar,.toc,footer{display:none} body{background:#fff} .page{box-shadow:none; margin:0; page-break-after:always} }
 </style>
 </head>
@@ -40,17 +59,17 @@ footer a{color:var(--sub)}
   <a class="dl" href="../assets/portfolio/kimseoknam-portfolio.pdf" download>PDF 받기</a>
 </div></header>
 
-<main>
-  <nav class="toc" aria-label="목차">
-    <a href="#p01"><b>01</b>표지</a>
-    <a href="#p02"><b>02</b>한 장 요약</a>
-    <a href="#p03"><b>03</b>기획 산출물 자동 생성</a>
-    <a href="#p09"><b>09</b>Tutti</a>
-    <a href="#p20"><b>20</b>PM Station</a>
-    <a href="#p29"><b>29</b>마무리</a>
+<div class="wrap">
+  <nav class="toc" id="toc" aria-label="목차">
+    <a href="#p01" data-from="1"><b>01</b>표지</a>
+    <a href="#p02" data-from="2"><b>02</b>한 장 요약</a>
+    <a href="#p03" data-from="3"><b>03</b>기획 산출물 자동 생성</a>
+    <a href="#p09" data-from="9"><b>09</b>Tutti</a>
+    <a href="#p20" data-from="20"><b>20</b>PM Station</a>
+    <a href="#p29" data-from="29"><b>29</b>마무리</a>
   </nav>
-  <div id="pages"></div>
-</main>
+  <main><div id="pages"></div></main>
+</div>
 <footer>
   <a href="https://ramseok.github.io">ramseok.github.io</a> · <a href="mailto:rlatjrska1674@gmail.com">rlatjrska1674@gmail.com</a><br>
   PM Station 화면의 고객사명 · 담당자명은 A사 · B사 형태로 치환했고, Tutti 화면은 데모 · 시험 데이터로 촬영했습니다.
@@ -59,15 +78,28 @@ footer a{color:var(--sub)}
 <script>
 (function () {
   var N = 29, box = document.getElementById('pages'), pg = document.getElementById('pg');
+  var links = [].slice.call(document.querySelectorAll('#toc a'));
   for (var i = 1; i <= N; i++) {
     var n = (i < 10 ? '0' : '') + i, d = document.createElement('section');
     d.className = 'page'; d.id = 'p' + n;
     d.innerHTML = '<img src="pages/p' + n + '.jpg" alt="포트폴리오 ' + i + '쪽" width="1500" height="2123"' + (i > 2 ? ' loading="lazy" decoding="async"' : '') + '>';
     box.appendChild(d);
   }
+  // 지금 보고 있는 쪽 번호와 그 쪽이 속한 목차를 표시한다
+  function mark(p) {
+    pg.textContent = p + ' / ' + N;
+    var cur = null;
+    links.forEach(function (a) { if (+a.dataset.from <= p) cur = a; });
+    links.forEach(function (a) { a.classList.toggle('on', a === cur); });
+    if (cur && getComputedStyle(cur.parentNode).flexDirection === 'row') {
+      var t = cur.parentNode, x = cur.offsetLeft - (t.clientWidth - cur.offsetWidth) / 2;
+      t.scrollTo({ left: Math.max(0, x), behavior: 'smooth' });
+    }
+  }
+  mark(1);
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (es) {
-      es.forEach(function (e) { if (e.isIntersecting) pg.textContent = parseInt(e.target.id.slice(1), 10) + ' / ' + N; });
+      es.forEach(function (e) { if (e.isIntersecting) mark(parseInt(e.target.id.slice(1), 10)); });
     }, { rootMargin: '-45% 0px -45% 0px' });
     [].forEach.call(box.children, function (s) { io.observe(s); });
   }
