@@ -410,8 +410,8 @@ window.PORTFOLIO_DEFAULT = {
     ],
     "links": [
       {
-        "name": "[PM Station 데모 / 소개 링크]",
-        "url": ""
+        "name": "김석남 포트폴리오 (웹에서 보기)",
+        "url": "https://ramseok.github.io/portfolio/"
       }
     ]
   },

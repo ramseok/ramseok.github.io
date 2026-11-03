@@ -84,7 +84,7 @@
       headline + points;
     $('#side-name').innerHTML = fmt(b.name);
     $('#side-job').textContent = b.jobTitle || '';
-    document.title = (b.name || '') + ' | ' + (b.jobTitle || '');
+    document.title = (b.name ? b.name + ' ' : '') + '경력기술서';
   }
 
   function renderIntro(i) {
