@@ -404,8 +404,8 @@ window.PORTFOLIO_DEFAULT = {
   "portfolio": {
     "files": [
       {
-        "name": "AI 업무 자동화 포트폴리오 (PDF)",
-        "url": "https://ramseok.github.io/assets/ax/AI업무자동화_포트폴리오.pdf"
+        "name": "김석남 포트폴리오 (PDF)",
+        "url": "https://ramseok.github.io/assets/portfolio/kimseoknam-portfolio.pdf"
       }
     ],
     "links": [
