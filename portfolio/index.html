@@ -82,7 +82,7 @@ footer a{color:var(--sub)}
   for (var i = 1; i <= N; i++) {
     var n = (i < 10 ? '0' : '') + i, d = document.createElement('section');
     d.className = 'page'; d.id = 'p' + n;
-    d.innerHTML = '<img src="pages/p' + n + '.jpg" alt="포트폴리오 ' + i + '쪽" width="1500" height="2123"' + (i > 2 ? ' loading="lazy" decoding="async"' : '') + '>';
+    d.innerHTML = '<img src="pages/p' + n + '.jpg?v=20261103c" alt="포트폴리오 ' + i + '쪽" width="1500" height="2123"' + (i > 2 ? ' loading="lazy" decoding="async"' : '') + '>';
     box.appendChild(d);
   }
   // 지금 보고 있는 쪽 번호와 그 쪽이 속한 목차를 표시한다
